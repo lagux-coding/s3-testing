@@ -122,14 +122,14 @@ class S3Testing_Page_EditJob
                         </tr>
                     </table>
 
-                    <h3 class="title hasdests"><?php esc_html_e('Job Destination', 'backwpup'); ?></h3>
+                    <h3 class="title hasdests"><?php esc_html_e('Job Destination'); ?></h3>
                     <p class="hasdests"></p>
                     <table class="form-table hasdests">
                         <tr>
-                            <th scope="row"><?php esc_html_e('Where should your backup file be stored?', 'backwpup'); ?></th>
+                            <th scope="row"><?php esc_html_e('Where should your backup file be stored?'); ?></th>
                             <td>
                                 <fieldset>
-                                    <legend class="screen-reader-text"><span><?php esc_html_e('Where should your backup file be stored?', 'backwpup'); ?></span>
+                                    <legend class="screen-reader-text"><span><?php esc_html_e('Where should your backup file be stored?'); ?></span>
                                     </legend><?php
                                     foreach ($destinations as $id => $dest) {
                                         $syncclass = '';

@@ -28,20 +28,20 @@ class S3Testing_Destination_S3
     {
         ?>
         <h3 class="title">
-            <?php esc_html_e('S3 Service', 'backwpup'); ?>
+            <?php esc_html_e('S3 Service'); ?>
         </h3>
         <table class="form-table">
             <tr>
                 <th scope="row">
                     <label for="s3region">
-                        <?php esc_html_e('Select a S3 service', 'backwpup'); ?>
+                        <?php esc_html_e('Select a S3 service'); ?>
                     </label>
                 </th>
                 <td>
 
                     <select name="s3region"
                             id="s3region"
-                            title="<?php esc_attr_e('S3 Region', 'backwpup'); ?>">
+                            title="<?php esc_attr_e('S3 Region'); ?>">
                         <?php foreach (S3Testing_S3_Destination::options() as $id => $option) { ?>
                             <option value="<?php echo esc_attr($id); ?>"
                                 <?php selected($id, S3Testing_Option::get($jobid, 's3region')); ?>
@@ -55,13 +55,13 @@ class S3Testing_Destination_S3
         </table>
 
         <h3 class="title">
-            <?php esc_html_e('S3 Access Keys', 'backwpup'); ?>
+            <?php esc_html_e('S3 Access Keys'); ?>
         </h3>
         <table class="form-table">
             <tr>
                 <th scope="row">
                     <label for="s3accesskey">
-                        <?php esc_html_e('Access Key', 'backwpup'); ?>
+                        <?php esc_html_e('Access Key'); ?>
                     </label>
                 </th>
                 <td>
@@ -75,7 +75,7 @@ class S3Testing_Destination_S3
                 </td>
             </tr>
             <tr>
-                <th scope="row"><label for="s3secretkey"><?php esc_html_e('Secret Key', 'backwpup'); ?></label></th>
+                <th scope="row"><label for="s3secretkey"><?php esc_html_e('Secret Key'); ?></label></th>
                 <td>
                     <input id="s3secretkey" name="s3secretkey" type="password"
                            value="" class="regular-text" autocomplete="off"/>
@@ -84,13 +84,13 @@ class S3Testing_Destination_S3
         </table>
 
         <h3 class="title">
-            <?php esc_html_e('S3 Bucket', 'backwpup'); ?>
+            <?php esc_html_e('S3 Bucket'); ?>
         </h3>
         <table class="form-table">
             <tr>
                 <th scope="row">
                     <label for="s3bucketselected">
-                        <?php esc_html_e('Bucket selection', 'backwpup'); ?>
+                        <?php esc_html_e('Bucket selection'); ?>
                     </label>
                 </th>
                 <td>
@@ -117,13 +117,13 @@ class S3Testing_Destination_S3
         </table>
 
         <h3 class="title">
-            <?php esc_html_e('S3 Backup settings', 'backwpup'); ?>
+            <?php esc_html_e('S3 Backup settings'); ?>
         </h3>
         <table class="form-table">
             <tr>
                 <th scope="row">
                     <label for="ids3dir">
-                        <?php esc_html_e('Folder in bucket', 'backwpup'); ?>
+                        <?php esc_html_e('Folder in bucket'); ?>
                     </label>
                 </th>
                 <td>
@@ -135,100 +135,46 @@ class S3Testing_Destination_S3
                     />
                 </td>
             </tr>
-            <tr>
-                <th scope="row"><?php esc_html_e('File deletion', 'backwpup'); ?></th>
-                <td>
-                    <?php
-                    if (S3Testing_Option::get($jobid, 'backuptype') === 'archive') {
-                        ?>
-                        <label for="ids3maxbackups">
-                            <input id="ids3maxbackups"
-                                   name="s3maxbackups"
-                                   type="number"
-                                   min="0"
-                                   step="1"
-                                   value="<?php echo esc_attr(S3Testing_Option::get($jobid, 's3maxbackups')); ?>"
-                                   class="small-text"
-                            />
-                            &nbsp;<?php esc_html_e('Number of files to keep in folder.', 'backwpup'); ?>
-                        </label>
-                        <p>
-                            <?php _e(
-                                '<strong>Warning</strong>: Files belonging to this job are now tracked. Old backup archives which are untracked will not be automatically deleted.',
-                                'backwpup'
-                            ); ?>
-                        </p>
-                        <?php
-                    } else { ?>
-                        <label for="ids3syncnodelete">
-                            <input class="checkbox" value="1"
-                                   type="checkbox"
-                                <?php checked(S3Testing_Option::get($jobid, 's3syncnodelete'), true); ?>
-                                   name="s3syncnodelete"
-                                   id="ids3syncnodelete"
-                            />
-                            <?php esc_html_e('Do not delete files while syncing to destination!', 'backwpup'); ?>
-                        </label>
-                    <?php } ?>
-                </td>
-            </tr>
         </table>
 
-        <h3 class="title"><?php esc_html_e('Amazon specific settings', 'backwpup'); ?></h3>
+        <h3 class="title"><?php esc_html_e('Amazon specific settings'); ?></h3>
         <table class="form-table">
             <tr>
                 <th scope="row">
                     <label for="ids3storageclass">
-                        <?php esc_html_e('Amazon: Storage Class', 'backwpup'); ?>
+                        <?php esc_html_e('Amazon: Storage Class'); ?>
                     </label>
                 </th>
                 <td>
                     <?php $storageClass = S3Testing_Option::get($jobid, 's3storageclass'); ?>
                     <select name="s3storageclass"
                             id="ids3storageclass"
-                            title="<?php esc_html_e('Amazon: Storage Class', 'backwpup'); ?>">
+                            title="<?php esc_html_e('Amazon: Storage Class'); ?>">
                         <option value=""
                             <?php selected('', $storageClass, true); ?>>
-                            <?php esc_html_e('Standard', 'backwpup'); ?>
+                            <?php esc_html_e('Standard'); ?>
                         </option>
                         <option value="STANDARD_IA"
                             <?php selected('STANDARD_IA', $storageClass, true); ?>>
-                            <?php esc_html_e('Standard-Infrequent Access', 'backwpup'); ?>
+                            <?php esc_html_e('Standard-Infrequent Access'); ?>
                         </option>
                         <option value="ONEZONE_IA"
                             <?php selected('ONEZONE_IA', $storageClass, true); ?>>
-                            <?php esc_html_e('One Zone-Infrequent Access', 'backwpup'); ?>
+                            <?php esc_html_e('One Zone-Infrequent Access'); ?>
                         </option>
                         <option value="REDUCED_REDUNDANCY"
                             <?php selected('REDUCED_REDUNDANCY', $storageClass, true); ?>>
-                            <?php esc_html_e('Reduced Redundancy', 'backwpup'); ?>
+                            <?php esc_html_e('Reduced Redundancy'); ?>
                         </option>
                         <option value="INTELLIGENT_TIERING"
                             <?php selected('INTELLIGENT_TIERING', $storageClass, true); ?>>
-                            <?php esc_html_e('Intelligent-Tiering', 'backwpup'); ?>
+                            <?php esc_html_e('Intelligent-Tiering'); ?>
                         </option>
                         <option value="GLACIER_IR"
                             <?php selected('GLACIER_IR', $storageClass, true); ?>>
-                            <?php esc_html_e('Glacier Instant Retrieval', 'backwpup'); ?>
+                            <?php esc_html_e('Glacier Instant Retrieval'); ?>
                         </option>
                     </select>
-                </td>
-            </tr>
-            <tr>
-                <th scope="row">
-                    <label for="ids3ssencrypt">
-                        <?php esc_html_e('Server side encryption', 'backwpup'); ?>
-                    </label>
-                </th>
-                <td>
-                    <input class="checkbox"
-                           value="AES256"
-                           type="checkbox"
-                        <?php checked(S3Testing_Option::get($jobid, 's3ssencrypt'), 'AES256'); ?>
-                           name="s3ssencrypt"
-                           id="ids3ssencrypt"
-                    />
-                    <?php esc_html_e('Save files encrypted (AES256) on server.', 'backwpup'); ?>
                 </td>
             </tr>
         </table>
@@ -257,7 +203,7 @@ class S3Testing_Destination_S3
 
         if (!empty($args['s3accesskey']) && !empty($args['s3secretkey'])) {
             $options = [
-                    'label' => __('Custom S3 destination', 'backwpup'),
+                    'label' => 'Custom S3 destination',
                 'endpoint' => $args['s3base_url'],
                 'region' => $args['s3base_region'],
             ];
@@ -279,15 +225,15 @@ class S3Testing_Destination_S3
         }
 
         if (empty($args['s3accesskey'])) {
-            esc_html_e('Missing access key!', 'backwpup');
+            esc_html_e('Missing access key!');
         } elseif (empty($args['s3secretkey'])) {
-            esc_html_e('Missing secret access key!', 'backwpup');
+            esc_html_e('Missing secret access key!');
         } elseif (!empty($error) && $error === 'Access Denied') {
             echo '<input type="text" name="s3bucket" id="s3bucket" value="' . esc_attr($args['s3bucketselected']) . '" >';
         } elseif (!empty($error)) {
             echo esc_html($error);
         } elseif (empty($buckets) || count($buckets['Buckets']) < 1) {
-            esc_html_e('No bucket found!', 'backwpup');
+            esc_html_e('No bucket found!');
         }
         echo '</span>';
 
@@ -327,8 +273,6 @@ class S3Testing_Destination_S3
                         $('#s3bucketerror').remove();
                         $('#s3bucket').remove();
                         $('#s3bucketselected').after(response);
-                    }).fail(function(jqXHR, textStatus, errorThrown) {
-                        console.log("AJAX request failed:", textStatus, errorThrown);
                     });
                 }
 

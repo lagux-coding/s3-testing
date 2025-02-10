@@ -6,9 +6,9 @@ class S3Testing_JobType_File extends S3Testing_JobTypes
         $this->info['ID'] = 'FILE';
         $this->info['name'] = 'Files';
         $this->info['description'] = 'File backup';
-        $this->info['URI'] = 'http://backwpup.com';
+        $this->info['URI'] = '';
         $this->info['author'] = 'WP Media';
-        $this->info['authorURI'] = 'https://wp-media.me';
+        $this->info['authorURI'] = '';
         $this->info['version'] = S3Testing::get_plugin_data('Version');
     }
 
