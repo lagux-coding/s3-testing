@@ -1,0 +1,17 @@
+{
+    "name": "lagux/s3-testing",
+    "description": "This is a plugin",
+    "type": "composer-plugin",
+    "autoload": {
+        "classmap": [
+            "inc/"
+        ]
+    },
+    "authors": [
+        {
+            "name": "Nguyen Hien Trung Nam",
+            "email": "nguyenhientrungnam@gmail.com"
+        }
+    ],
+    "require": {}
+}
