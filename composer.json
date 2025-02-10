@@ -13,5 +13,7 @@
             "email": "nguyenhientrungnam@gmail.com"
         }
     ],
-    "require": {}
+    "require": {
+        "aws/aws-sdk-php": "^3.339"
+    }
 }

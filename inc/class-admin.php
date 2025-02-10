@@ -77,5 +77,12 @@ final class S3Testing_Admin
         } else {
             add_action('admin_menu', [$this, 'admin_menu']);
         }
+
+        add_action('admin_init', [$this, 'admin_init']);
+    }
+
+    public function admin_init()
+    {
+        add_action('wp_ajax_s3testing_dest_s3', [new S3Testing_Destination_S3(), 'edit_ajax'], 10, 0);
     }
 }

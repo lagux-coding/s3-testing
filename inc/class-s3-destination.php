@@ -1,9 +1,10 @@
 <?php
+use Aws\S3\S3Client;
 class S3Testing_S3_Destination
 {
 
     private $options = [];
-    private function __construct($options)
+    public function __construct($options)
     {
         $default = [
             'label' => __('Custom S3 destination', 'backwpup'),
@@ -195,4 +196,72 @@ class S3Testing_S3_Destination
             ]
         );
     }
+
+    public function client($accessKey, $secretKey)
+    {
+        $s3Options = [
+            'signature' => $this->signature(),
+            'credentials' => [
+                'key' => $accessKey,
+                'secret' => $secretKey,
+            ],
+            'region' => $this->region(),
+            'http' => [
+                'verify' => false,
+            ],
+            'version' => $this->version(),
+            'use_path_style_endpoint' => $this->onlyPathStyleBucket(),
+        ];
+
+        if ($this->endpoint()) {
+            $s3Options['endpoint'] = $this->endpoint();
+            if (!$this->region()) {
+                $s3Options['bucket_endpoint'] = true;
+            }
+        }
+
+        $s3Options = apply_filters('s3_testing_options', $s3Options);
+
+        return new S3Client($s3Options);
+    }
+
+    public static function formOptionArray($optionsArr)
+    {
+    return new self($optionsArr);
+    }
+    public function label()
+    {
+        return $this->options['label'];
+    }
+
+    public function region()
+    {
+        return $this->options['region'];
+    }
+
+    public function endpoint()
+    {
+        return $this->options['endpoint'];
+    }
+
+    public function version()
+    {
+        return $this->options['version'];
+    }
+
+    public function signature()
+    {
+        return $this->options['signature'];
+    }
+
+    public function supportsMultipart()
+    {
+        return (bool) $this->options['multipart'];
+    }
+
+    public function onlyPathStyleBucket()
+    {
+        return (bool) $this->options['only_path_style_bucket'];
+    }
+
 }

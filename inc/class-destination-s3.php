@@ -1,4 +1,7 @@
 <?php
+
+use Aws\Exception\AwsException;
+
 class S3Testing_Destination_S3
 {
     public function option_defaults()
@@ -49,171 +52,6 @@ class S3Testing_Destination_S3
                     </select>
                 </td>
             </tr>
-<!--            <tr>-->
-<!--                <th scope="row">-->
-<!--                    <label for="s3base_url">-->
-<!--                        --><?php //esc_html_e('Or a S3 Server URL', 'backwpup'); ?>
-<!--                    </label>-->
-<!--                </th>-->
-<!--                <td>-->
-<!--                    <div class="card" style="margin-top:0;padding:10px">-->
-<!--                        <table class="form-table">-->
-<!--                            <tbody>-->
-<!--                            <tr>-->
-<!--                                <th scope="row">-->
-<!--                                    <label for="s3base_url-s3">--><?php //esc_html_e('Endpoint', 'backwpup'); ?><!--<span-->
-<!--                                            style="color:red">*</span></label>-->
-<!--                                </th>-->
-<!--                                <td>-->
-<!--                                    <input-->
-<!--                                        id="s3base_url"-->
-<!--                                        name="s3base_url"-->
-<!--                                        type="text"-->
-<!--                                        value="--><?php //echo esc_attr(
-//                                            BackWPup_Option::get($jobid, 's3base_url')
-//                                        ); ?><!--"-->
-<!--                                        class="regular-text"-->
-<!--                                        autocomplete="off"-->
-<!--                                    />-->
-<!--                                    <p class="description">--><?php //esc_html_e(
-//                                            'Leave it empty to use a destination from S3 service list',
-//                                            'backwpup'
-//                                        ); ?><!--</p>-->
-<!--                                </td>-->
-<!--                            </tr>-->
-<!---->
-<!--                            <tr>-->
-<!--                                <th scope="row">-->
-<!--                                    <label for="s3base_region">--><?php //esc_html_e(
-//                                            'Region',
-//                                            'backwpup'
-//                                        ); ?><!--<span style="color:red">*</span></label>-->
-<!--                                </th>-->
-<!--                                <td>-->
-<!--                                    <input type="text" name="s3base_region" value="--><?php //echo esc_attr(
-//                                        BackWPup_Option::get($jobid, 's3base_region')
-//                                    ); ?><!--" class="regular-text" autocomplete="off">-->
-<!--                                    <p class="description">--><?php //esc_html_e(
-//                                            'Specify S3 region like "us-west-1"',
-//                                            'backwpup'
-//                                        ); ?><!--</p>-->
-<!--                                </td>-->
-<!--                            </tr>-->
-<!--                            </tbody>-->
-<!---->
-<!--                            <tbody class="custom_s3_advanced">-->
-<!--                            <tr>-->
-<!--                                <th scope="row">--><?php //esc_html_e('Multipart', 'backwpup'); ?><!--</th>-->
-<!--                                <td>-->
-<!--                                    <fieldset>-->
-<!--                                        <legend class="screen-reader-text">-->
-<!--                                            <span>--><?php //esc_html_e(
-//                                                    'Multipart',
-//                                                    'backwpup'
-//                                                ); ?><!--</span>-->
-<!--                                        </legend>-->
-<!--                                        <label for="s3base_multipart">-->
-<!--                                            <input name="s3base_multipart" type="checkbox"-->
-<!--                                                   value="1"--><?php //echo checked(
-//                                                BackWPup_Option::get(
-//                                                    $jobid,
-//                                                    's3base_multipart'
-//                                                ),
-//                                                true
-//                                            ); ?><!-->-->
-<!--                                            --><?php //esc_html_e(
-//                                                'Destination supports multipart',
-//                                                'backwpup'
-//                                            ); ?><!-- </label>-->
-<!--                                    </fieldset>-->
-<!--                                </td>-->
-<!--                            </tr>-->
-<!--                            <tr>-->
-<!--                                <th scope="row">--><?php //esc_html_e(
-//                                        'Pathstyle-Only Bucket',
-//                                        'backwpup'
-//                                    ); ?><!--</th>-->
-<!--                                <td>-->
-<!--                                    <fieldset>-->
-<!--                                        <legend class="screen-reader-text">-->
-<!--                                            <span>--><?php //esc_html_e(
-//                                                    'Pathstyle-Only Bucket',
-//                                                    'backwpup'
-//                                                ); ?><!--</span>-->
-<!--                                        </legend>-->
-<!--                                        <label-->
-<!--                                            for="s3base_pathstylebucket">-->
-<!--                                            <input name="s3base_pathstylebucket" type="checkbox"-->
-<!--                                                   value="1"--><?php //echo checked(
-//                                                BackWPup_Option::get(
-//                                                    $jobid,
-//                                                    's3base_pathstylebucket'
-//                                                ),
-//                                                true
-//                                            ); ?><!-->-->
-<!--                                            --><?php //esc_html_e(
-//                                                'Destination provides only Pathstyle buckets',
-//                                                'backwpup'
-//                                            ); ?><!--    </label>-->
-<!--                                        <p class="description">--><?php //esc_html_e(
-//                                                'Example: http://s3.example.com/bucket-name',
-//                                                'backwpup'
-//                                            ); ?><!--</p>-->
-<!---->
-<!--                                    </fieldset>-->
-<!--                                </td>-->
-<!--                            </tr>-->
-<!--                            <tr>-->
-<!--                                <th scope="row">-->
-<!--                                    <label for="s3base_version">Version</label>-->
-<!--                                </th>-->
-<!--                                <td>-->
-<!--                                    <input type="text" name="s3base_version"-->
-<!--                                           value="--><?php //echo !empty(
-//                                           BackWPup_Option::get(
-//                                               $jobid,
-//                                               's3base_version'
-//                                           )
-//                                           ) ? esc_attr(
-//                                               BackWPup_Option::get($jobid, 's3base_version')
-//                                           ) : 'latest'; ?><!--"-->
-<!--                                           placeholder="latest">-->
-<!--                                    <p class="description">--><?php //esc_html_e(
-//                                            'The S3 version for the API like "2006-03-01", default "latest"',
-//                                            'backwpup'
-//                                        ); ?><!--</p>-->
-<!--                                </td>-->
-<!--                            </tr>-->
-<!--                            <tr>-->
-<!--                                <th scope="row">-->
-<!--                                    <label-->
-<!--                                        for="s3base_signature">--><?php //esc_html_e(
-//                                            'Signature',
-//                                            'backwpup'
-//                                        ); ?><!--</label>-->
-<!--                                </th>-->
-<!--                                <td>-->
-<!--                                    <input type="text" name="s3base_signature"-->
-<!--                                           value="--><?php //echo !empty(
-//                                           BackWPup_Option::get(
-//                                               $jobid,
-//                                               's3base_signature'
-//                                           )
-//                                           ) ? esc_attr(
-//                                               BackWPup_Option::get($jobid, 's3base_signature')
-//                                           ) : 'v4'; ?><!--"-->
-<!--                                           placeholder="v4">-->
-<!--                                    <p class="description">--><?php //esc_html_e(
-//                                            'The signature for the API like "v4"',
-//                                            'backwpup'
-//                                        ); ?><!--</p>-->
-<!--                                </td>-->
-<!--                            </tr>-->
-<!--                            </tbody><!-- advanced section-->-->
-<!--                        </table>-->
-<!--                    </div>-->
-<!--                </td><!-- custom s3 section-->-->
-<!--            </tr>-->
         </table>
 
         <h3 class="title">
@@ -240,10 +78,7 @@ class S3Testing_Destination_S3
                 <th scope="row"><label for="s3secretkey"><?php esc_html_e('Secret Key', 'backwpup'); ?></label></th>
                 <td>
                     <input id="s3secretkey" name="s3secretkey" type="password"
-                           value="<?php echo esc_attr(BackWPup_Encryption::decrypt(BackWPup_Option::get(
-                               $jobid,
-                               's3secretkey'
-                           ))); ?>" class="regular-text" autocomplete="off"/>
+                           value="" class="regular-text" autocomplete="off"/>
                 </td>
             </tr>
         </table>
@@ -262,55 +97,23 @@ class S3Testing_Destination_S3
                     <input id="s3bucketselected"
                            name="s3bucketselected"
                            type="hidden"
-                           value="<?php echo esc_attr(BackWPup_Option::get($jobid, 's3bucket')); ?>"
+                           value="<?php echo esc_attr(S3Testing_Option::get($jobid, 's3bucket')); ?>"
                     />
                     <?php
-                    if (BackWPup_Option::get($jobid, 's3accesskey')
-                        && BackWPup_Option::get($jobid, 's3secretkey')
+                    if (S3Testing_Option::get($jobid, 's3accesskey')
+                        && S3Testing_Option::get($jobid, 's3secretkey')
                     ) {
                         $this->edit_ajax(
                             [
-                                's3accesskey' => BackWPup_Option::get($jobid, 's3accesskey'),
-                                's3secretkey' => BackWPup_Option::get($jobid, 's3secretkey'),
-                                's3bucketselected' => BackWPup_Option::get($jobid, 's3bucket'),
-                                's3region' => BackWPup_Option::get($jobid, 's3region'),
-                                's3base_url' => BackWPup_Option::get($jobid, 's3base_url'),
-                                's3base_region' => BackWPup_Option::get($jobid, 's3base_region'),
-                                's3base_multipart' => BackWPup_Option::get(
-                                    $jobid,
-                                    's3base_multipart'
-                                ),
-                                's3base_pathstylebucket' => BackWPup_Option::get(
-                                    $jobid,
-                                    's3base_pathstylebucket'
-                                ),
-                                's3base_version' => BackWPup_Option::get($jobid, 's3base_version'),
-                                's3base_signature' => BackWPup_Option::get(
-                                    $jobid,
-                                    's3base_signature'
-                                ),
+                                's3accesskey' => S3Testing_Option::get($jobid, 's3accesskey'),
+                                's3secretkey' => S3Testing_Option::get($jobid, 's3secretkey'),
+                                's3region' => S3Testing_Option::get($jobid, 's3region'),
                             ]
                         );
                     } ?>
-                </td>
+                 </td>
             </tr>
-            <tr>
-                <th scope="row">
-                    <label for="s3newbucket">
-                        <?php esc_html_e('Create a new bucket', 'backwpup'); ?>
-                    </label>
-                </th>
-                <td>
-                    <input id="s3newbucket"
-                           name="s3newbucket"
-                           type="text"
-                           value=""
-                           size="63"
-                           class="regular-text"
-                           autocomplete="off"
-                    />
-                </td>
-            </tr>
+
         </table>
 
         <h3 class="title">
@@ -327,7 +130,7 @@ class S3Testing_Destination_S3
                     <input id="ids3dir"
                            name="s3dir"
                            type="text"
-                           value="<?php echo esc_attr(BackWPup_Option::get($jobid, 's3dir')); ?>"
+                           value="<?php echo esc_attr(S3Testing_Option::get($jobid, 's3dir')); ?>"
                            class="regular-text"
                     />
                 </td>
@@ -336,7 +139,7 @@ class S3Testing_Destination_S3
                 <th scope="row"><?php esc_html_e('File deletion', 'backwpup'); ?></th>
                 <td>
                     <?php
-                    if (BackWPup_Option::get($jobid, 'backuptype') === 'archive') {
+                    if (S3Testing_Option::get($jobid, 'backuptype') === 'archive') {
                         ?>
                         <label for="ids3maxbackups">
                             <input id="ids3maxbackups"
@@ -344,7 +147,7 @@ class S3Testing_Destination_S3
                                    type="number"
                                    min="0"
                                    step="1"
-                                   value="<?php echo esc_attr(BackWPup_Option::get($jobid, 's3maxbackups')); ?>"
+                                   value="<?php echo esc_attr(S3Testing_Option::get($jobid, 's3maxbackups')); ?>"
                                    class="small-text"
                             />
                             &nbsp;<?php esc_html_e('Number of files to keep in folder.', 'backwpup'); ?>
@@ -360,7 +163,7 @@ class S3Testing_Destination_S3
                         <label for="ids3syncnodelete">
                             <input class="checkbox" value="1"
                                    type="checkbox"
-                                <?php checked(BackWPup_Option::get($jobid, 's3syncnodelete'), true); ?>
+                                <?php checked(S3Testing_Option::get($jobid, 's3syncnodelete'), true); ?>
                                    name="s3syncnodelete"
                                    id="ids3syncnodelete"
                             />
@@ -380,7 +183,7 @@ class S3Testing_Destination_S3
                     </label>
                 </th>
                 <td>
-                    <?php $storageClass = BackWPup_Option::get($jobid, 's3storageclass'); ?>
+                    <?php $storageClass = S3Testing_Option::get($jobid, 's3storageclass'); ?>
                     <select name="s3storageclass"
                             id="ids3storageclass"
                             title="<?php esc_html_e('Amazon: Storage Class', 'backwpup'); ?>">
@@ -421,7 +224,7 @@ class S3Testing_Destination_S3
                     <input class="checkbox"
                            value="AES256"
                            type="checkbox"
-                        <?php checked(BackWPup_Option::get($jobid, 's3ssencrypt'), 'AES256'); ?>
+                        <?php checked(S3Testing_Option::get($jobid, 's3ssencrypt'), 'AES256'); ?>
                            name="s3ssencrypt"
                            id="ids3ssencrypt"
                     />
@@ -430,6 +233,114 @@ class S3Testing_Destination_S3
             </tr>
         </table>
 
+        <?php
+    }
+
+    public function edit_ajax($args = [])
+    {
+        $buckets = [];
+        $buckets_list = [];
+        $error = '';
+        $ajax = false;
+
+        if (!$args) {
+            $args = [];
+            check_ajax_referer('s3testing_ajax_nonce');
+            $args['s3accesskey'] = sanitize_text_field($_POST['s3accesskey']);
+            $args['s3secretkey'] = sanitize_text_field($_POST['s3secretkey']);
+            $args['s3region'] = sanitize_text_field($_POST['s3region']);
+
+            $ajax = true;
+        }
+
+        echo '<span id="s3bucketerror" class="s3testing-message-error">';
+
+        if (!empty($args['s3accesskey']) && !empty($args['s3secretkey'])) {
+            $options = [
+                    'label' => __('Custom S3 destination', 'backwpup'),
+                'endpoint' => $args['s3base_url'],
+                'region' => $args['s3base_region'],
+            ];
+                $aws = S3Testing_S3_Destination::formOptionArray($options);
+
+
+            try {
+                $s3 = $aws->client($args['s3accesskey'], $args['s3secretkey']);
+                $buckets = $s3->listBuckets();
+                if (!empty($buckets['Buckets'])) {
+                    $buckets_list = $buckets['Buckets'];
+                }
+            } catch (Exception $e) {
+                $error = $e->getMessage();
+                if ($e instanceof AwsException) {
+                    $error = $e->getAwsErrorMessage();
+                }
+            }
+        }
+
+        if (empty($args['s3accesskey'])) {
+            esc_html_e('Missing access key!', 'backwpup');
+        } elseif (empty($args['s3secretkey'])) {
+            esc_html_e('Missing secret access key!', 'backwpup');
+        } elseif (!empty($error) && $error === 'Access Denied') {
+            echo '<input type="text" name="s3bucket" id="s3bucket" value="' . esc_attr($args['s3bucketselected']) . '" >';
+        } elseif (!empty($error)) {
+            echo esc_html($error);
+        } elseif (empty($buckets) || count($buckets['Buckets']) < 1) {
+            esc_html_e('No bucket found!', 'backwpup');
+        }
+        echo '</span>';
+
+        if (!empty($buckets_list)) {
+            echo '<select name="s3bucket" id="s3bucket">';
+
+            foreach ($buckets_list as $bucket) {
+                echo '<option ' . selected($args['s3bucketselected'], esc_attr($bucket['Name']), false) . '>'
+                    . esc_attr($bucket['Name'])
+                    . '</option>';
+            }
+            echo '</select>';
+        }
+
+        if ($ajax) {
+            exit();
+        }
+    }
+
+    public function edit_inline_js()
+    {
+        ?>
+        <script type="text/javascript">
+            jQuery(document).ready(function ($) {
+                function awsgetbucket() {
+                    var data = {
+                        action: 's3testing_dest_s3',
+                        s3accesskey: $('input[name="s3accesskey"]').val(),
+                        s3secretkey: $('input[name="s3secretkey"]').val(),
+                        s3bucketselected: $('input[name="s3bucketselected"]').val(),
+                        s3region: $('#s3region').val(),
+                        _ajax_nonce: $('#s3testingajaxnonce').val()
+                    };
+                    console.log("Sending AJAX request with data:", data);
+                    $.post(ajaxurl, data, function (response) {
+                        console.log("Response from server:", response);
+                        $('#s3bucketerror').remove();
+                        $('#s3bucket').remove();
+                        $('#s3bucketselected').after(response);
+                    }).fail(function(jqXHR, textStatus, errorThrown) {
+                        console.log("AJAX request failed:", textStatus, errorThrown);
+                    });
+                }
+
+                // Trigger bucket list update when region or keys change
+                $('select[name="s3region"]').change(function () {
+                    awsgetbucket();
+                });
+                $('input[name="s3accesskey"], input[name="s3secretkey"]').on('keyup', function () {
+                    awsgetbucket();
+                });
+            });
+        </script>
         <?php
     }
 }
