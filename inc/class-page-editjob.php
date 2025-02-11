@@ -69,7 +69,7 @@ class S3Testing_Page_EditJob
 
                 S3Testing_Option::update($jobid, 'destinations', $destinations_post);
 
-                $name = santilize_text_field(trim((string)$_POST['name']));
+                $name = sanitize_text_field(trim((string)$_POST['name']));
                 if (!$name || $name === __('New Job')) {
                     $name = sprintf(__('Job with ID %d'), $jobid);
                 }
@@ -80,6 +80,11 @@ class S3Testing_Page_EditJob
                     '.tar',
                     '.tar.gz',
                 ], true) ? $_POST['archiveformat'] : '.zip';
+
+                S3Testing_Option::update($jobid, 'archiveformat', $archiveformat);
+                S3Testing_Option::update($jobid, 'archivename', sanitize_text_field($_POST['archivename']));
+
+                break;
             default:
                 if (strstr((string)$tab, 'dest-')) {
                     $dest_class = S3Testing::get_destination(str_replace('dest-', '', (string)$tab));
