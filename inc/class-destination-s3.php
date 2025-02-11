@@ -253,6 +253,25 @@ class S3Testing_Destination_S3
         }
     }
 
+    public function edit_form_post_save($jobid)
+    {
+        S3Testing_Option::update($jobid, 's3accesskey', sanitize_text_field($_POST['s3accesskey']));
+        S3Testing_Option::update($jobid, 's3secretkey', sanitize_text_field($_POST['s3secretkey']));
+        BackWPup_Option::update($jobid, 's3region', sanitize_text_field($_POST['s3region']));
+        BackWPup_Option::update($jobid, 's3storageclass', sanitize_text_field($_POST['s3storageclass']));
+        BackWPup_Option::update(
+            $jobid,
+            's3bucket',
+            isset($_POST['s3bucket']) ? sanitize_text_field($_POST['s3bucket']) : ''
+        );
+
+        $_POST['s3dir'] = trailingslashit(str_replace(
+            '//',
+            '/',
+            str_replace('\\', '/', trim(sanitize_text_field($_POST['s3dir'])))
+        ));
+    }
+
     public function edit_inline_js()
     {
         ?>

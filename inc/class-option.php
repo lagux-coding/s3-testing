@@ -132,4 +132,24 @@ final class S3Testing_Option
 
         return false;
     }
+
+    public static function update_jobs_options($options)
+    {
+        return update_site_option('s3testing_jobs', $options);
+    }
+
+    public static function update($jobid, $option, $value)
+    {
+        $jobid = (int) $jobid;
+        $option = santize_key(trim($option));
+
+        if(empty($jobid) || empty($option)) {
+            return false;
+        }
+
+        $job_options = self::job_options(false);
+        $job_options[$jobid][$option] = $value;
+
+        return self::update_jobs_options($job_options);
+    }
 }

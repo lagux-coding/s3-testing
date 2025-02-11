@@ -79,10 +79,68 @@ final class S3Testing_Admin
         }
 
         add_action('admin_init', [$this, 'admin_init']);
+        add_action('admin_post_s3testing', [$this, 'save_post_form']);
     }
 
     public function admin_init()
     {
         add_action('wp_ajax_s3testing_dest_s3', [new S3Testing_Destination_S3(), 'edit_ajax'], 10, 0);
+    }
+
+    public function save_post_form()
+    {
+        $allow_pages = [
+            's3testingeditjob',
+        ];
+
+        check_admin_referer($_POST['page'] . '_page');
+
+        //build query for redirect
+        if (!isset($_POST['anchor'])) {
+            $_POST['anchor'] = null;
+        }
+        $query_args = [];
+        if (isset($_POST['page'])) {
+            $query_args['page'] = $_POST['page'];
+        }
+        if (isset($_POST['tab'])) {
+            $query_args['tab'] = $_POST['tab'];
+        }
+        if (isset($_POST['tab'], $_POST['nexttab']) && $_POST['tab'] !== $_POST['nexttab']) {
+            $query_args['tab'] = $_POST['nexttab'];
+        }
+
+        $jobid = null;
+        if (isset($_POST['jobid'])) {
+            $jobid = (int) $_POST['jobid'];
+            $query_args['jobid'] = $jobid;
+        }
+
+        if ($_POST['page'] === 's3testingeditjob') {
+            S3Testing_Page_EditJob::save_post_form($_POST['tab'], $jobid);
+        }
+
+        wp_safe_redirect(add_query_arg($query_args, network_admin_url('admin.php')) . $_POST['anchor']);
+        exit;
+    }
+
+    public static function message($message, $error = false)
+    {
+        if(empty($message)) {
+            return;
+        }
+
+        if ($error) {
+            $saved_message['error'][] = $message;
+        } else {
+            $saved_message['updated'][] = $message;
+        }
+
+        update_site_option('s3testing_message', $saved_message);
+    }
+
+    public static function get_message()
+    {
+        return get_site_option('s3testing_message', []);
     }
 }

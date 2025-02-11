@@ -19,6 +19,32 @@ class S3Testing_Page_EditJob
 //        }
     }
 
+    public static function save_post_form($tab, $jobid)
+    {
+        $job_types = S3Testing::get_job_types();
+
+        switch ($tab) {
+            case 'job':
+                echo '<h3>Job Name</h3>';
+            default:
+                if(strstr((string) $tab, 'dest-')) {
+                    $dest_class = S3Testing::get_destination(str_replace('dest-', '', (string) $tab));
+                    $dest_class->edit_form_post_save($jobid);
+                }
+                if (strstr((string) $tab, 'jobtype-')) {
+                    $id = strtoupper(str_replace('jobtype-', '', (string) $tab));
+                    $job_types[$id]->edit_form_post_save($jobid);
+                }
+        }
+
+        //saved message
+        $message = S3Testing_Admin::get_message();
+        if(empty($message['error'])) {
+            $url = 'https://google.com';
+            S3Testing_Admin::message(sprintf(__('Changes for job <i>%s</i> saved.'), S3Testing_Option::get($jobid, 'name')) . ' <a href="' . network_admin_url('admin.php') . '?page=s3testingjobs">' . __('Jobs overview') . '</a> | <a href="' . $url . '">' . __('Run now') . '</a>');
+        }
+    }
+
     public static function page()
     {
         if (!empty($_GET['jobid'])) {
@@ -80,6 +106,12 @@ class S3Testing_Page_EditJob
             }
         echo '</h2>';
         echo '<form name="editjob" id="editjob" method="post" action="' . esc_attr(admin_url('admin-post.php')) . '">';
+        echo '<input type="hidden" id="jobid" name="jobid" value="' . esc_attr($jobid) . '" />';
+        echo '<input type="hidden" name="tab" value="' . esc_attr($_GET['tab']) . '" />';
+        echo '<input type="hidden" name="nexttab" value="' . esc_attr($_GET['tab']) . '" />';
+        echo '<input type="hidden" name="page" value="s3testingeditjob" />';
+        echo '<input type="hidden" name="action" value="s3testing" />';
+        echo '<input type="hidden" name="anchor" value="" />';
         echo '<input type="hidden" name="tab" value="' . esc_attr($_GET['tab']) . '" />';
         wp_nonce_field('s3testingeditjob_page');
         wp_nonce_field('s3testing_ajax_nonce', 's3testingajaxnonce', false);
