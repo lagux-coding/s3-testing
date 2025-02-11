@@ -48,8 +48,8 @@ class ComposerStaticInitcd624fb20f889334c9790014fe69762d
         ),
         'Psr\\Http\\Message\\' => 
         array (
-            0 => __DIR__ . '/..' . '/psr/http-message/src',
-            1 => __DIR__ . '/..' . '/psr/http-factory/src',
+            0 => __DIR__ . '/..' . '/psr/http-factory/src',
+            1 => __DIR__ . '/..' . '/psr/http-message/src',
         ),
         'Psr\\Http\\Client\\' => 
         array (
@@ -104,6 +104,7 @@ class ComposerStaticInitcd624fb20f889334c9790014fe69762d
         'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',
         'S3Testing_Admin' => __DIR__ . '/../..' . '/inc/class-admin.php',
         'S3Testing_Destination_S3' => __DIR__ . '/../..' . '/inc/class-destination-s3.php',
+        'S3Testing_File' => __DIR__ . '/../..' . '/inc/class-file.php',
         'S3Testing_Install' => __DIR__ . '/../..' . '/inc/class-install.php',
         'S3Testing_JobType_File' => __DIR__ . '/../..' . '/inc/class-jobtype-file.php',
         'S3Testing_JobTypes' => __DIR__ . '/../..' . '/inc/class-jobtypes.php',
@@ -111,6 +112,7 @@ class ComposerStaticInitcd624fb20f889334c9790014fe69762d
         'S3Testing_Page_EditJob' => __DIR__ . '/../..' . '/inc/class-page-editjob.php',
         'S3Testing_Page_Jobs' => __DIR__ . '/../..' . '/inc/class-page-job.php',
         'S3Testing_Page_S3Testing' => __DIR__ . '/../..' . '/inc/class-page-s3testing.php',
+        'S3Testing_Path_Fixer' => __DIR__ . '/../..' . '/inc/class-path-fixer.php',
         'S3Testing_S3_Destination' => __DIR__ . '/../..' . '/inc/class-s3-destination.php',
     );
 
