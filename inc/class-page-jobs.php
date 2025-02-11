@@ -184,6 +184,19 @@ class S3Testing_Page_Jobs extends WP_List_Table
     {
         self::$listtable = new self();
 
+        switch (self::$listtable->current_action()) {
+            case 'delete': //Delete Job
+                if (is_array($_GET['jobs'])) {
+                    check_admin_referer('bulk-jobs');
+
+                    foreach ($_GET['jobs'] as $jobid) {
+                        wp_clear_scheduled_hook('backwpup_cron', ['arg' => absint($jobid)]);
+                        S3Testing_Option::delete_job(absint($jobid));
+                    }
+                }
+                break;
+        }
+
         do_action('s3testing_page_jobs_load', self::$listtable->current_action());
 
 

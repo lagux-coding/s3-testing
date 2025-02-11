@@ -153,4 +153,17 @@ final class S3Testing_Option
 
         return self::update_jobs_options($job_options);
     }
+
+    public static function delete_job($id)
+    {
+        if (!is_numeric($id)) {
+            return false;
+        }
+
+        $id = intval($id);
+        $jobs_options = self::jobs_options(false);
+        unset($jobs_options[$id]);
+
+        return self::update_jobs_options($jobs_options);
+    }
 }
