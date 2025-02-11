@@ -45,6 +45,8 @@ final class S3Testing_Admin
             ]
         );
 
+        add_action('load-' . $this->page_hooks['s3testingjob'], [\S3Testing_Page_Jobs::class, 'load']);
+
         return $page_hooks;
     }
 

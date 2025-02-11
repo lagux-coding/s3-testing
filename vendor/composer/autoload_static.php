@@ -110,7 +110,7 @@ class ComposerStaticInitcd624fb20f889334c9790014fe69762d
         'S3Testing_JobTypes' => __DIR__ . '/../..' . '/inc/class-jobtypes.php',
         'S3Testing_Option' => __DIR__ . '/../..' . '/inc/class-option.php',
         'S3Testing_Page_EditJob' => __DIR__ . '/../..' . '/inc/class-page-editjob.php',
-        'S3Testing_Page_Jobs' => __DIR__ . '/../..' . '/inc/class-page-job.php',
+        'S3Testing_Page_Jobs' => __DIR__ . '/../..' . '/inc/class-page-jobs.php',
         'S3Testing_Page_S3Testing' => __DIR__ . '/../..' . '/inc/class-page-s3testing.php',
         'S3Testing_Path_Fixer' => __DIR__ . '/../..' . '/inc/class-path-fixer.php',
         'S3Testing_S3_Destination' => __DIR__ . '/../..' . '/inc/class-s3-destination.php',

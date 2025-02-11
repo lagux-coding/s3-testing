@@ -38,7 +38,7 @@ return array(
     'S3Testing_JobTypes' => $baseDir . '/inc/class-jobtypes.php',
     'S3Testing_Option' => $baseDir . '/inc/class-option.php',
     'S3Testing_Page_EditJob' => $baseDir . '/inc/class-page-editjob.php',
-    'S3Testing_Page_Jobs' => $baseDir . '/inc/class-page-job.php',
+    'S3Testing_Page_Jobs' => $baseDir . '/inc/class-page-jobs.php',
     'S3Testing_Page_S3Testing' => $baseDir . '/inc/class-page-s3testing.php',
     'S3Testing_Path_Fixer' => $baseDir . '/inc/class-path-fixer.php',
     'S3Testing_S3_Destination' => $baseDir . '/inc/class-s3-destination.php',
