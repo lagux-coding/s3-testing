@@ -124,6 +124,47 @@ final class S3Testing_Admin
         exit;
     }
 
+    public static function display_message($echo = true)
+    {
+//        do_action('s3testing_admin_message');
+
+        $message_updated = '';
+        $message_error = '';
+        $saved_message = self::get_messages();
+        $message_id = ' id="message"';
+
+        if (empty($saved_message)) {
+            return '';
+        }
+
+        if (!empty($saved_message['updated'])) {
+            foreach ($saved_message['updated'] as $msg) {
+                $message_updated .= '<p>' . $msg . '</p>';
+            }
+        }
+        if (!empty($saved_message['error'])) {
+            foreach ($saved_message['error'] as $msg) {
+                $message_error .= '<p>' . $msg . '</p>';
+            }
+        }
+
+        update_site_option('s3testing_messagess', []);
+
+        if (!empty($message_updated)) {
+            $message_updated = '<div' . $message_id . ' class="updated">' . $message_updated . '</div>';
+            $message_id = '';
+        }
+        if (!empty($message_error)) {
+            $message_error = '<div' . $message_id . ' class="bwu-message-error">' . $message_error . '</div>';
+        }
+
+        if ($echo) {
+            echo $message_updated . $message_error;
+        }
+
+        return $message_updated . $message_error;
+    }
+
     public static function message($message, $error = false)
     {
         if(empty($message)) {
@@ -136,11 +177,11 @@ final class S3Testing_Admin
             $saved_message['updated'][] = $message;
         }
 
-        update_site_option('s3testing_message', $saved_message);
+        update_site_option('s3testing_messages', $saved_message);
     }
 
-    public static function get_message()
+    public static function get_messages()
     {
-        return get_site_option('s3testing_message', []);
+        return get_site_option('s3testing_messages', []);
     }
 }

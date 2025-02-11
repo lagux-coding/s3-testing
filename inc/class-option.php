@@ -3,7 +3,7 @@ final class S3Testing_Option
 {
     public static function default_site_options()
     {
-        add_site_option( 'backwpup_jobs', [] );
+        add_site_option( 's3testing_jobs', [] );
     }
 
     public static function get($jobid, $option, $default = null, $use_cache = true)
