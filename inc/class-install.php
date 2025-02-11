@@ -14,5 +14,6 @@ class S3Testing_Install
         }
 
         S3Testing_Option::default_site_options();
+
     }
 }

@@ -28,6 +28,8 @@ if(!class_exists(\S3Testing::class, false)) {
                 require_once __DIR__ . '/vendor/autoload.php';
             }
 
+            S3Testing_Install::activate();
+
             $admin = new S3Testing_Admin();
             $admin->init();
         }

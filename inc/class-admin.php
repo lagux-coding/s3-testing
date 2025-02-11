@@ -148,7 +148,7 @@ final class S3Testing_Admin
             }
         }
 
-        update_site_option('s3testing_messagess', []);
+        update_site_option('s3testing_messages', []);
 
         if (!empty($message_updated)) {
             $message_updated = '<div' . $message_id . ' class="updated">' . $message_updated . '</div>';
@@ -170,6 +170,8 @@ final class S3Testing_Admin
         if(empty($message)) {
             return;
         }
+
+        $saved_message = self::get_messages();
 
         if ($error) {
             $saved_message['error'][] = $message;

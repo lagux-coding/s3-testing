@@ -3,6 +3,7 @@ final class S3Testing_Option
 {
     public static function default_site_options()
     {
+        add_site_option('s3testing_version', '1.0.0');
         add_site_option( 's3testing_jobs', [] );
     }
 
