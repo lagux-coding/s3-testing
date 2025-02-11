@@ -70,7 +70,19 @@ class S3Testing_JobType_File extends S3Testing_JobTypes
 
     public function edit_form_post_save($id)
     {
+        $boolean_fields_def = [
+            'backuproot' => FILTER_VALIDATE_BOOLEAN,
+            'backupcontent' => FILTER_VALIDATE_BOOLEAN,
+        ];
 
+        $boolean_data = filter_input_array(INPUT_POST, $boolean_fields_def);
+        $boolean_data or $boolean_data = [];
+
+        foreach ($boolean_fields_def as $key => $value) {
+            S3Testing_Option::update($id, $key, !empty($boolean_data[$key]));
+        }
+
+        unset($boolean_fields_def, $boolean_data);
     }
 
     private function show_folder($id, $jobid, $path)
@@ -82,7 +94,7 @@ class S3Testing_JobType_File extends S3Testing_JobTypes
         }
         ?>
         <input class="checkbox"
-               type="checkbox"
+               type="checkbox"<?php checked(S3Testing_Option::get($jobid, 'backup' . $id)); ?>
                name="backup<?php echo esc_attr($id); ?>"
                id="idbackup<?php echo esc_attr($id); ?>"
                value="1"/>
