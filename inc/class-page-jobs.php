@@ -19,7 +19,7 @@ class S3Testing_Page_Jobs extends WP_List_Table
     }
     public function prepare_items()
     {
-        $items = S3Testing_Option::get_job_ids();
+        $this->items = S3Testing_Option::get_job_ids();
         $this->job_types = S3Testing::get_job_types();
         $this->destinations = S3Testing::get_registered_destinations();
 
@@ -110,30 +110,30 @@ class S3Testing_Page_Jobs extends WP_List_Table
 
         $r = '<strong title="' . sprintf(__('Job ID: %d'), $item) . '">' . esc_html(S3Testing_Option::get($item, 'name')) . '</strong>';
         $actions = [];
-//        if (current_user_can('backwpup_jobs_edit')) {
-//            $actions['edit'] = '<a href="' . wp_nonce_url(network_admin_url('admin.php') . '?page=backwpupeditjob&jobid=' . $item, 'edit-job') . '">' . esc_html__('Edit', 'backwpup') . '</a>';
-//            $actions['copy'] = '<a href="' . wp_nonce_url(network_admin_url('admin.php') . '?page=backwpupjobs&action=copy&jobid=' . $item, 'copy-job_' . $item) . '">' . esc_html__('Copy', 'backwpup') . '</a>';
-//            $actions['delete'] = '<a class="submitdelete" href="' . wp_nonce_url(network_admin_url('admin.php') . '?page=backwpupjobs&action=delete&jobs[]=' . $item, 'bulk-jobs') . '" onclick="return showNotice.warn();">' . esc_html__('Delete', 'backwpup') . '</a>';
+        //edit
+        $actions['edit'] = '<a href="' . wp_nonce_url(network_admin_url('admin.php') . '?page=s3testingeditjob&jobid=' . $item, 'edit-job') . '">' . esc_html__('Edit') . '</a>';
+        $actions['copy'] = '<a href="' . wp_nonce_url(network_admin_url('admin.php') . '?page=s3testingjobs&action=copy&jobid=' . $item, 'copy-job_' . $item) . '">' . esc_html__('Copy') . '</a>';
+        $actions['delete'] = '<a class="submitdelete" href="' . wp_nonce_url(network_admin_url('admin.php') . '?page=s3testingjobs&action=delete&jobs[]=' . $item, 'bulk-jobs') . '" onclick="return showNotice.warn();">' . esc_html__('Delete') . '</a>';
+
+//        if (current_user_can('s3testing_jobs_start')) {
+//            $url = s3testing_Job::get_jobrun_url('runnowlink', $item);
+//            $actions['runnow'] = '<a href="' . esc_attr($url['url']) . '">' . esc_html__('Run now', 's3testing') . '</a>';
 //        }
-//        if (current_user_can('backwpup_jobs_start')) {
-//            $url = BackWPup_Job::get_jobrun_url('runnowlink', $item);
-//            $actions['runnow'] = '<a href="' . esc_attr($url['url']) . '">' . esc_html__('Run now', 'backwpup') . '</a>';
-//        }
-//        if (current_user_can('backwpup_logs') && S3Testing_Option::get($item, 'logfile')) {
+//        if (current_user_can('s3testing_logs') && S3Testing_Option::get($item, 'logfile')) {
 //            $logfile = basename((string) S3Testing_Option::get($item, 'logfile'));
 //            if (is_object($this->job_object) && $this->job_object->job['jobid'] == $item) {
 //                $logfile = basename((string) $this->job_object->logfile);
 //            }
 //            $log_name = str_replace(['.html', '.gz'], '', basename($logfile));
-//            $actions['lastlog'] = '<a href="' . admin_url('admin-ajax.php') . '?&action=backwpup_view_log&log=' . $log_name . '&_ajax_nonce=' . wp_create_nonce('view-log_' . $log_name) . '&amp;TB_iframe=true&amp;width=640&amp;height=440\" title="' . esc_attr($logfile) . '" class="thickbox">' . __('Last log', 'backwpup') . '</a>';
+//            $actions['lastlog'] = '<a href="' . admin_url('admin-ajax.php') . '?&action=s3testing_view_log&log=' . $log_name . '&_ajax_nonce=' . wp_create_nonce('view-log_' . $log_name) . '&amp;TB_iframe=true&amp;width=640&amp;height=440\" title="' . esc_attr($logfile) . '" class="thickbox">' . __('Last log', 's3testing') . '</a>';
 //        }
-//        $actions = apply_filters('backwpup_page_jobs_actions', $actions, $item, false);
-//        $r .= '<div class="job-normal"' . $job_normal_hide . '>' . $this->row_actions($actions) . '</div>';
-//        if (is_object($this->job_object)) {
-//            $actionsrun = [];
-//            $actionsrun = apply_filters('backwpup_page_jobs_actions', $actionsrun, $item, true);
-//            $r .= '<div class="job-run">' . $this->row_actions($actionsrun) . '</div>';
-//        }
+        $actions = apply_filters('s3testing_page_jobs_actions', $actions, $item, false);
+        $r .= '<div class="job-normal"' . $job_normal_hide . '>' . $this->row_actions($actions) . '</div>';
+        if (is_object($this->job_object)) {
+            $actionsrun = [];
+            $actionsrun = apply_filters('s3testing_page_jobs_actions', $actionsrun, $item, true);
+            $r .= '<div class="job-run">' . $this->row_actions($actionsrun) . '</div>';
+        }
 
         return $r;
     }
@@ -154,9 +154,38 @@ class S3Testing_Page_Jobs extends WP_List_Table
         return $r;
     }
 
+    public function column_dest($item)
+    {
+        $r = '';
+        $backup_to = false;
+
+        foreach (S3Testing_Option::get($item, 'type') as $typeid) {
+            if (isset($this->job_types[$typeid]) && $this->job_types[$typeid]->creates_file()) {
+                $backup_to = true;
+                break;
+            }
+        }
+        if ($backup_to) {
+            foreach (S3Testing_Option::get($item, 'destinations') as $destid) {
+                if (isset($this->destinations[$destid]['info']['name'])) {
+                    $r .= $this->destinations[$destid]['info']['name'] . '<br />';
+                } else {
+                    $r .= $destid . '<br />';
+                }
+            }
+        } else {
+            $r .= '<i>' . __('Not needed or set') . '</i><br />';
+        }
+
+        return $r;
+    }
+
     public static function load()
     {
         self::$listtable = new self();
+
+        do_action('s3testing_page_jobs_load', self::$listtable->current_action());
+
 
         self::$listtable->prepare_items();
     }
@@ -164,7 +193,7 @@ class S3Testing_Page_Jobs extends WP_List_Table
     public static function page()
     {
         echo '<div class="wrap">';
-        echo '<h1>' . esc_html(sprintf(__('%s &rsaquo; Jobs'), S3Testing::get_plugin_data('name')));
+        echo '<h1>' . esc_html(sprintf(__('%s &rsaquo; Jobs'), S3Testing::get_plugin_data('name'))). '&nbsp;<a href="' . wp_nonce_url(network_admin_url('admin.php') . '?page=s3testingeditjob', 'edit-job') . '" class="add-new-h2">' . esc_html__('Add new') . '</a></h1>';
         S3Testing_Admin::display_message();
 
         //display jobs table?>

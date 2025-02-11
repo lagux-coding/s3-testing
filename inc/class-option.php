@@ -74,13 +74,13 @@ final class S3Testing_Option
 //        if (!$use_cache) {
 //            if (is_multisite()) {
 //                $network_id = $current_site->id;
-//                $cache_key = "{$network_id}:backwpup_jobs";
+//                $cache_key = "{$network_id}:s3testing_jobs";
 //                wp_cache_delete($cache_key, 'site-options');
 //            } else {
-//                wp_cache_delete('backwpup_jobs', 'options');
+//                wp_cache_delete('s3testing_jobs', 'options');
 //                $alloptions = wp_cache_get('alloptions', 'options');
-//                if (isset($alloptions['backwpup_jobs'])) {
-//                    unset($alloptions['backwpup_jobs']);
+//                if (isset($alloptions['s3testing_jobs'])) {
+//                    unset($alloptions['s3testing_jobs']);
 //                    wp_cache_set('alloptions', $alloptions, 'options');
 //                }
 //            }
@@ -104,7 +104,7 @@ final class S3Testing_Option
         $default['cronselect']            = 'basic';
         $default['cron']                  = '0 3 * * *';
         $default['mailaddresslog']        = sanitize_email( get_bloginfo( 'admin_email' ) );
-        $default['mailaddresssenderlog']  = 'BackWPup ' . get_bloginfo( 'name' ) . ' <' . sanitize_email( get_bloginfo( 'admin_email' ) ) . '>';
+        $default['mailaddresssenderlog']  = 's3testing ' . get_bloginfo( 'name' ) . ' <' . sanitize_email( get_bloginfo( 'admin_email' ) ) . '>';
         $default['mailerroronly']         = true;
         $default['backuptype']            = 'archive';
         $default['archiveformat']         = '.tar';

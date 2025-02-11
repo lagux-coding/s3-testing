@@ -238,7 +238,7 @@ class S3Testing_Page_EditJob
                                     </label></p>';
                         } else {
                             echo '<p><label for="idarchiveformat-zip"><input class="radio" type="radio"' . checked('.zip', $archive_format_option, false) . ' name="archiveformat" id="idarchiveformat-zip" value=".zip" disabled="disabled" /> ' . esc_html__('Zip') . '</label>';
-                            echo '<br /><span class="description">' . esc_html(__('ZipArchive PHP class is missing, so BackWPUp will use PclZip instead.')) . '</span></p>';
+                            echo '<br /><span class="description">' . esc_html(__('ZipArchive PHP class is missing, so s3testing will use PclZip instead.')) . '</span></p>';
                         }
                         echo '<p><label for="idarchiveformat-tar"><input class="radio" type="radio"' . checked('.tar', $archive_format_option, false) . ' name="archiveformat" id="idarchiveformat-tar" value=".tar" /> ' . esc_html__('Tar') . '</label></p>';
 

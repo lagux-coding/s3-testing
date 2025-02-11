@@ -44,7 +44,7 @@ class S3Testing_JobType_File extends S3Testing_JobTypes
     {
         $abs_path = realpath(S3Testing_Path_Fixer::fix_path(ABSPATH));
         $abs_path = dirname($abs_path); ?>
-        <h3 class="title"><?php esc_html_e('Folders to backup', 'backwpup'); ?></h3>
+        <h3 class="title"><?php esc_html_e('Folders to backup', 's3testing'); ?></h3>
         <p></p>
         <table class="form-table">
             <tr>
