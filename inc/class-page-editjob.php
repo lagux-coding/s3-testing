@@ -26,7 +26,60 @@ class S3Testing_Page_EditJob
 
         switch ($tab) {
             case 'job':
-                echo '<h3>Nguyen Hien Trung Nam</h3>';
+                S3Testing_Option::update($jobid, 'jobid', $jobid);
+
+                $backuptype = 'archive';
+                S3Testing_Option::update($jobid, 'backuptype', $backuptype);
+
+                $type_post = isset($_POST['type']) ? (array)$_POST['type'] : [];
+                foreach ($type_post as $key => $value) {
+                    if (!isset($job_types[$value])) {
+                        unset($type_post[$key]);
+                    }
+                }
+
+                sort($type_post);
+                S3Testing_Option::update($jobid, 'type', $type_post);
+
+                $makes_file = false;
+
+                foreach ($job_types as $type_id => $job_type) {
+                    if (in_array($type_id, $type_post, true)) {
+                        if ($job_type->creates_file()) {
+                            $makes_file = true;
+                            break;
+                        }
+                    }
+                }
+                if ($makes_file) {
+                    $destinations_post = isset($_POST['destinations']) ? (array)$_POST['destinations'] : [];
+                } else {
+                    $destinations_post = [];
+                }
+
+                $destinations = S3Testing::get_registered_destinations();
+
+                foreach ($destinations_post as $key => $dest_id) {
+                    if (!isset($destinations[$dest_id])) {
+                        unset($destinations_post[$key]);
+                        continue;
+                    }
+                }
+                sort($destinations_post);
+
+                S3Testing_Option::update($jobid, 'destinations', $destinations_post);
+
+                $name = santilize_text_field(trim((string)$_POST['name']));
+                if (!$name || $name === __('New Job')) {
+                    $name = sprintf(__('Job with ID %d'), $jobid);
+                }
+                S3Testing_Option::update($jobid, 'name', $name);
+
+                $archiveformat = in_array($_POST['archiveformat'], [
+                    '.zip',
+                    '.tar',
+                    '.tar.gz',
+                ], true) ? $_POST['archiveformat'] : '.zip';
             default:
                 if (strstr((string)$tab, 'dest-')) {
                     $dest_class = S3Testing::get_destination(str_replace('dest-', '', (string)$tab));
@@ -56,8 +109,8 @@ class S3Testing_Page_EditJob
         }
 
         $destinations = S3Testing::get_registered_destinations();
-        $job_types = S3Testing::get_job_types(); ?>
-
+        $job_types = S3Testing::get_job_types();
+        $archive_format_option = S3Testing_Option::get($jobid, 'archiveformat'); ?>
         <div class="wrap" id="s3testing-page">
         <?php
         echo '<h1>' . sprintf(esc_html__('%1$s &rsaquo; Job: %2$s'), S3Testing::get_plugin_data('name'), '<span id="h2jobtitle">' . esc_html(S3Testing_Option::get($jobid, 'name')) . '</span>') . '</h1>';
@@ -114,7 +167,6 @@ class S3Testing_Page_EditJob
         echo '<input type="hidden" name="page" value="s3testingeditjob" />';
         echo '<input type="hidden" name="action" value="s3testing" />';
         echo '<input type="hidden" name="anchor" value="" />';
-        echo '<input type="hidden" name="tab" value="' . esc_attr($_GET['tab']) . '" />';
         wp_nonce_field('s3testingeditjob_page');
         wp_nonce_field('s3testing_ajax_nonce', 's3testingajaxnonce', false);
 
@@ -154,6 +206,45 @@ class S3Testing_Page_EditJob
                             echo '</p>';
                         }
                         ?></fieldset>
+                </td>
+            </tr>
+        </table>
+
+        <h3 class="title hasdests"><?php esc_html_e('Backup File Creation'); ?></h3>
+        <p class="hasdests"></p>
+        <table class="form-table hasdests">
+            <tr class="nosync">
+                <th scope="row"><label for="archivename"><?php esc_html_e('Archive name'); ?></label></th>
+                <td>
+                    <input name="archivename" type="text" id="archivename" placeholder="my-backup"
+                           value="<?php echo esc_attr(S3Testing_Option::get($jobid, 'archivename')); ?>"
+                           class="regular-text code"/>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row"><?php esc_html_e('Archive Format'); ?></th>
+                <td>
+                    <fieldset>
+                        <legend class="screen-reader-text"><span><?php esc_html_e('Archive Format'); ?></span></legend>
+                        <?php
+                        if (class_exists(\ZipArchive::class)) {
+                            echo '<p><label for="idarchiveformat-zip">
+                                   <input class="radio" type="radio"' . checked('.zip', $archive_format_option, false) . ' name="archiveformat" id="archiveformat-zip" value=".zip"/> ' . esc_html__('Zip') . '
+                                    </label></p>';
+                        } else {
+                            echo '<p><label for="idarchiveformat-zip"><input class="radio" type="radio"' . checked('.zip', $archive_format_option, false) . ' name="archiveformat" id="idarchiveformat-zip" value=".zip" disabled="disabled" /> ' . esc_html__('Zip') . '</label>';
+                            echo '<br /><span class="description">' . esc_html(__('ZipArchive PHP class is missing, so BackWPUp will use PclZip instead.')) . '</span></p>';
+                        }
+                        echo '<p><label for="idarchiveformat-tar"><input class="radio" type="radio"' . checked('.tar', $archive_format_option, false) . ' name="archiveformat" id="idarchiveformat-tar" value=".tar" /> ' . esc_html__('Tar') . '</label></p>';
+
+                        if (function_exists('gzopen')) {
+                            echo '<p><label for="idarchiveformat-targz"><input class="radio" type="radio"' . checked('.tar.gz', $archive_format_option, false) . ' name="archiveformat" id="idarchiveformat-targz" value=".tar.gz" /> ' . esc_html__('Tar GZip') . '</label></p>';
+                        } else {
+                            echo '<p><label for="idarchiveformat-targz"><input class="radio" type="radio"' . checked('.tar.gz', $archive_format_option, false) . ' name="archiveformat" id="idarchiveformat-targz" value=".tar.gz" disabled="disabled" /> ' . esc_html__('Tar GZip') . '</label>';
+                            echo '<br /><span class="description">' . esc_html(sprintf(__('Disabled due to missing %s PHP function.'), 'gzopen()')) . '</span></p>';
+                        }
+                        ?>
+                    </fieldset>
                 </td>
             </tr>
         </table>

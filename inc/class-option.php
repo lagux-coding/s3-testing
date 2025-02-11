@@ -108,7 +108,7 @@ final class S3Testing_Option
         $default['mailerroronly']         = true;
         $default['backuptype']            = 'archive';
         $default['archiveformat']         = '.tar';
-        $default['archivename']           = '%Y-%m-%d_%H-%i-%s_%hash%';
+        $default['archivename']           = 'my-backup';
         $default['archivenamenohash']     = '%Y-%m-%d_%H-%i-%s_%hash%';
         // defaults vor destinations.
         foreach ( S3Testing::get_registered_destinations() as $dest_key => $dest ) {
