@@ -59,7 +59,29 @@ if(!class_exists(\S3Testing::class, false)) {
                     'plugin'
                 );
 
-                self::$plugin_data['name'] = trim(self::$plugin_data['name']);
+                self::$plugin_data['name']              = trim(self::$plugin_data['name']);
+                self::$plugin_data['hash']              = get_site_option( 's3testing_cfg_hash' );
+                if ( empty( self::$plugin_data['hash'] ) || strlen( self::$plugin_data['hash'] ) < 6
+                    || strlen(
+                        self::$plugin_data['hash']
+                    ) > 12 ) {
+                    self::$plugin_data['hash'] = self::get_generated_hash( 6 );
+                    update_site_option( 's3testing_cfg_hash', self::$plugin_data['hash'] );
+                }
+                if (defined('WP_TEMP_DIR') && is_dir(WP_TEMP_DIR)) {
+                    self::$plugin_data['temp'] = str_replace(
+                            '\\',
+                            '/',
+                            get_temp_dir()
+                        ) . 's3testing/' . self::$plugin_data['hash'] . '/';
+                } else {
+                    $upload_dir = wp_upload_dir();
+                    self::$plugin_data['temp'] = str_replace(
+                            '\\',
+                            '/',
+                            $upload_dir['basedir']
+                        ) . '/s3testing/' . self::$plugin_data['hash'] . '/temp/';
+                }
 
                 include ABSPATH . WPINC . '/version.php';
                 self::$plugin_data['wp_version'] = $wp_version;
@@ -70,6 +92,19 @@ if(!class_exists(\S3Testing::class, false)) {
             }
 
             return self::$plugin_data;
+        }
+
+        public static function get_generated_hash($length = 6)
+        {
+            $chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+
+            $hash = '';
+
+            for ($i = 0; $i < 254; ++$i) {
+                $hash .= $chars[random_int(0, 61)];
+            }
+
+            return substr(md5($hash), random_int(0, 31 - $length), $length);
         }
 
         public static function get_destination($key)

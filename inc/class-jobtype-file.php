@@ -101,4 +101,76 @@ class S3Testing_JobType_File extends S3Testing_JobTypes
         <code title="<?php echo esc_attr(sprintf(__('Path as set by user (symlink?): %s'), $path)); ?>"><?php echo esc_attr($folder); ?></code>
         <?php
     }
+
+    public function job_run(S3Testing_Job $job_object)
+    {
+        $abs_path = realpath(S3Testing_Path_Fixer::fix_path(ABSPATH));
+        $abs_path = trailingslashit(str_replace('\\', '/', $abs_path));
+
+        $folders_already_in = $job_object->get_folders_to_backup();
+
+        //backup root
+        if($abs_path && !empty($job_object->job['backuproot'])) {
+            $abs_path = trailingslashit(str_replace('\\', '/', $abs_path));
+            $excludes = $this->get_exclude_dirs($abs_path, $folders_already_in);
+
+            $this->get_folder_list($job_object, $abs_path, $excludes);
+        }
+
+        return true;
+    }
+
+    private function get_exclude_dirs($folder, $excludedir = [])
+    {
+        $folder = trailingslashit(str_replace('\\', '/', realpath(S3Testing_Path_Fixer::fix_path($folder))));
+        if (false !== strpos(trailingslashit(str_replace('\\', '/', realpath(WP_CONTENT_DIR))), $folder) && trailingslashit(str_replace('\\', '/', realpath(WP_CONTENT_DIR))) != $folder) {
+            $excludedir[] = trailingslashit(str_replace('\\', '/', realpath(WP_CONTENT_DIR)));
+        }
+        if (false !== strpos(trailingslashit(str_replace('\\', '/', realpath(WP_PLUGIN_DIR))), $folder) && trailingslashit(str_replace('\\', '/', realpath(WP_PLUGIN_DIR))) != $folder) {
+            $excludedir[] = trailingslashit(str_replace('\\', '/', realpath(WP_PLUGIN_DIR)));
+        }
+        if (false !== strpos(trailingslashit(str_replace('\\', '/', realpath(get_theme_root()))), $folder) && trailingslashit(str_replace('\\', '/', realpath(get_theme_root()))) != $folder) {
+            $excludedir[] = trailingslashit(str_replace('\\', '/', realpath(get_theme_root())));
+        }
+        if (false !== strpos(trailingslashit(str_replace('\\', '/', realpath(BackWPup_File::get_upload_dir()))), $folder) && trailingslashit(str_replace('\\', '/', realpath(BackWPup_File::get_upload_dir()))) != $folder) {
+            $excludedir[] = trailingslashit(str_replace('\\', '/', realpath(BackWPup_File::get_upload_dir())));
+        }
+
+        return array_unique($excludedir);
+
+    }
+
+    private function get_folder_list(&$job_object, $folder, $excludedirs = [])
+    {
+        $folder = trailingslashit($folder);
+        try {
+            $dir = new S3Testing_Directory($folder);
+
+            //add folder to folder list
+            $job_object->add_folders_to_backup($folder);
+
+            foreach ($dir as $file) {
+                if ($file->isDot()) {
+                    continue;
+                }
+                $path = str_replace('\\', '/', realpath($file->getPathname()));
+
+                if ($file->isDir()) {
+                    if (in_array(trailingslashit($path), $excludedirs, true)) {
+                        continue;
+                    }
+                    if (file_exists(trailingslashit($file->getPathname()) . '.donotbackup')) {
+                        continue;
+                    }
+
+                    $this->get_folder_list($job_object, trailingslashit($path), $excludedirs);
+
+                }
+            }
+        } catch (UnexpectedValueException $e) {
+            //do nothing
+        }
+
+        return true;
+    }
 }

@@ -78,7 +78,10 @@ class S3Testing_Destination_S3
                 <th scope="row"><label for="s3secretkey"><?php esc_html_e('Secret Key'); ?></label></th>
                 <td>
                     <input id="s3secretkey" name="s3secretkey" type="password"
-                           value="" class="regular-text" autocomplete="off"/>
+                           value="<?php echo esc_attr(S3Testing_Option::get(
+                               $jobid,
+                               's3secretkey'
+                           )); ?>" class="regular-text" autocomplete="off"/>
                 </td>
             </tr>
         </table>
@@ -108,6 +111,7 @@ class S3Testing_Destination_S3
                                 's3accesskey' => S3Testing_Option::get($jobid, 's3accesskey'),
                                 's3secretkey' => S3Testing_Option::get($jobid, 's3secretkey'),
                                 's3region' => S3Testing_Option::get($jobid, 's3region'),
+                                's3bucketselected' => S3Testing_Option::get($jobid, 's3bucket'),
                             ]
                         );
                     } ?>
@@ -202,13 +206,20 @@ class S3Testing_Destination_S3
         echo '<span id="s3bucketerror" class="s3testing-message-error">';
 
         if (!empty($args['s3accesskey']) && !empty($args['s3secretkey'])) {
-            $options = [
-                    'label' => 'Custom S3 destination',
-                'endpoint' => $args['s3base_url'],
-                'region' => $args['s3base_region'],
-            ];
-                $aws = S3Testing_S3_Destination::formOptionArray($options);
-
+            if (empty($args['s3base_url'])) {
+                $aws = S3Testing_S3_Destination::fromOption($args['s3region']);
+            } else {
+                $options = [
+                    'label' => __('Custom S3 destination', 'backwpup'),
+                    'endpoint' => $args['s3base_url'],
+                    'region' => $args['s3base_region'],
+                    'multipart' => !empty($args['s3base_multipart']) ? true : false,
+                    'only_path_style_bucket' => !empty($args['s3base_pathstylebucket']) ? true : false,
+                    'version' => $args['s3base_version'],
+                    'signature' => $args['s3base_signature'],
+                ];
+                $aws = S3Testing_S3_Destination::fromOptionArray($options);
+            }
 
             try {
                 $s3 = $aws->client($args['s3accesskey'], $args['s3secretkey']);

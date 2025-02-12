@@ -225,7 +225,13 @@ class S3Testing_S3_Destination
         return new S3Client($s3Options);
     }
 
-    public static function formOptionArray($optionsArr)
+    public static function fromOption($idOrUrl)
+    {
+        $destinations = self::options();
+        return new self($destinations[$idOrUrl]);
+    }
+
+    public static function fromOptionArray($optionsArr)
     {
     return new self($optionsArr);
     }
