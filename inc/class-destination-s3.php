@@ -7,20 +7,20 @@ class S3Testing_Destination_S3
     public function option_defaults()
     {
         return [
-            's3base_url' => '',
-            's3base_multipart' => true,
-            's3base_pathstylebucket' => false,
-            's3base_version' => 'latest',
-            's3base_signature' => 'v4',
+//            's3base_url' => '',
+//            's3base_multipart' => true,
+//            's3base_pathstylebucket' => false,
+//            's3base_version' => 'latest',
+//            's3base_signature' => 'v4',
             's3accesskey' => '',
             's3secretkey' => '',
             's3bucket' => '',
             's3region' => 'us-east-1',
-            's3ssencrypt' => '',
-            's3storageclass' => '',
+//            's3ssencrypt' => '',
+//            's3storageclass' => '',
             's3dir' => trailingslashit(sanitize_file_name(get_bloginfo('name'))),
-            's3maxbackups' => 15,
-            's3syncnodelete' => true,
+//            's3maxbackups' => 15,
+//            's3syncnodelete' => true,
         ];
     }
 
@@ -258,7 +258,6 @@ class S3Testing_Destination_S3
         S3Testing_Option::update($jobid, 's3accesskey', sanitize_text_field($_POST['s3accesskey']));
         S3Testing_Option::update($jobid, 's3secretkey', sanitize_text_field($_POST['s3secretkey']));
         S3Testing_Option::update($jobid, 's3region', sanitize_text_field($_POST['s3region']));
-        S3Testing_Option::update($jobid, 's3storageclass', sanitize_text_field($_POST['s3storageclass']));
         S3Testing_Option::update(
             $jobid,
             's3bucket',
@@ -270,6 +269,8 @@ class S3Testing_Destination_S3
             '/',
             str_replace('\\', '/', trim(sanitize_text_field($_POST['s3dir'])))
         ));
+
+        S3Testing_Option::update($jobid, 's3dir', $_POST['s3dir']);
     }
 
     public function edit_inline_js()
