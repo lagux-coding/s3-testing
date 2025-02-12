@@ -59,4 +59,33 @@ class S3Testing_Job
             file_put_contents($file, $content, FILE_APPEND);
         }
     }
+
+    public static function get_jobrun_url($starttype, $jobid = 0)
+    {
+        $query_args = [
+            '_nonce' => substr(wp_hash(wp_nonce_tick() . 's3testing_job_run-' . $starttype, 'nonce'), -12, 10),
+        ];
+
+        if (in_array($starttype, ['runnow'], true)) {
+            $query_args['s3testing_run'] = $starttype;
+        }
+
+        if (in_array($starttype, ['runnowlink', 'runnow'], true) && !empty($jobid)) {
+            $query_args['jobid'] = $jobid;
+        }
+
+        if ($starttype === 'runnowlink') {
+            $url = wp_nonce_url(network_admin_url('admin.php'), 's3testing_job_run-' . $starttype);
+            $query_args['page'] = 's3testingjobs';
+            $query_args['action'] = 'runnow';
+            unset($query_args['_nonce']);
+        }
+
+        $request = [
+            'url' => add_query_arg($query_args, $url),
+        ];
+
+        return $request;
+
+    }
 }

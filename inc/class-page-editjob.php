@@ -99,8 +99,8 @@ class S3Testing_Page_EditJob
         //saved message
         $message = S3Testing_Admin::get_messages();
         if (empty($message['error'])) {
-            $url = 'https://google.com';
-            S3Testing_Admin::message(sprintf(__('Changes for job <i>%s</i> saved.'), S3Testing_Option::get($jobid, 'name')) . ' <a href="' . network_admin_url('admin.php') . '?page=s3testingjobs">' . __('Jobs overview') . '</a> | <a href="' . $url . '">' . __('Run now') . '</a>');
+            $url = S3Testing_Job::get_jobrun_url('runnowlink', $jobid);
+            S3Testing_Admin::message(sprintf(__('Changes for job <i>%s</i> saved.'), S3Testing_Option::get($jobid, 'name')) . ' <a href="' . network_admin_url('admin.php') . '?page=s3testingjobs">' . __('Jobs overview') . '</a> | <a href="' . $url['url'] . '">' . __('Run now') . '</a>');
         }
     }
 

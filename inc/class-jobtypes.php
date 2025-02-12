@@ -12,4 +12,6 @@ abstract class S3Testing_JobTypes
     {
         return false;
     }
+
+    abstract public function job_run(S3Testing_Job $job_object);
 }
