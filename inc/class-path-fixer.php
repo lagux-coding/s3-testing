@@ -8,4 +8,9 @@ class S3Testing_Path_Fixer
         }
         return $path;
     }
+
+    public static function slashify($path)
+    {
+        return str_replace('\\', '/', (string) $path);
+    }
 }

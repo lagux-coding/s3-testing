@@ -1,4 +1,6 @@
 <?php
+use Base32\Base32;
+
 final class S3Testing_Option
 {
     public static function default_site_options()
@@ -165,5 +167,61 @@ final class S3Testing_Option
         unset($jobs_options[$id]);
 
         return self::update_jobs_options($jobs_options);
+    }
+
+    public static function get_job($id, $use_cache = true)
+    {
+        if (!is_numeric($id)) {
+            return false;
+        }
+
+        $id = intval($id);
+        $jobs_options = self::jobs_options($use_cache);
+        if (isset($jobs_options[$id]['archivename'])) {
+            $jobs_options[$id]['archivename'] = self::normalize_archive_name(
+                $jobs_options[$id]['archivename'],
+                $id,
+                true
+            );
+        }
+
+        $options = wp_parse_args($jobs_options[$id], self::defaults_job());
+
+        return $options;
+    }
+
+    public static function normalize_archive_name($archive_name, $jobid, $substitute_hash = true)
+    {
+        $hash = S3Testing::get_plugin_data('hash');
+        $generated_hash = self::get_generated_hash($jobid);
+
+        // Does the string contain %hash%?
+        if (strpos($archive_name, '%hash%') !== false) {
+            if ($substitute_hash) {
+                return str_replace('%hash%', $generated_hash, $archive_name);
+            }
+            // Nothing needs to be done since we don't have to substitute it.
+            return $archive_name;
+        }
+
+        if ($substitute_hash) {
+            return $archive_name . '_' . $generated_hash;
+        }
+
+        return $archive_name . '_%hash%';
+    }
+
+    public static function get_generated_hash($jobid)
+    {
+        return Base32::encode(pack(
+                'H*',
+                sprintf(
+                    '%02x%06s%02x',
+                    random_int(0, 255),
+                    S3Testing::get_plugin_data('hash'),
+                    random_int(0, 255)
+                )
+            )) .
+            sprintf('%02d', $jobid);
     }
 }

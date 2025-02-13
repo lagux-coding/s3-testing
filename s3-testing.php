@@ -30,6 +30,10 @@ if(!class_exists(\S3Testing::class, false)) {
 
             S3Testing_Install::activate();
 
+            if(!empty($_GET['s3testing_run']) && class_exists(\S3Testing_Job::class)) {
+                add_action('wp_loaded', [\S3Testing_Cron::class, 'cron_active'], PHP_INT_MAX);
+            }
+
             $admin = new S3Testing_Admin();
             $admin->init();
         }

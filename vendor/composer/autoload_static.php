@@ -35,6 +35,10 @@ class ComposerStaticInitcd624fb20f889334c9790014fe69762d
             'GuzzleHttp\\Promise\\' => 19,
             'GuzzleHttp\\' => 11,
         ),
+        'B' => 
+        array (
+            'Base32\\' => 7,
+        ),
         'A' => 
         array (
             'Aws\\' => 4,
@@ -71,6 +75,10 @@ class ComposerStaticInitcd624fb20f889334c9790014fe69762d
         array (
             0 => __DIR__ . '/..' . '/guzzlehttp/guzzle/src',
         ),
+        'Base32\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/christian-riesen/base32/src',
+        ),
         'Aws\\' => 
         array (
             0 => __DIR__ . '/..' . '/aws/aws-sdk-php/src',
@@ -105,6 +113,7 @@ class ComposerStaticInitcd624fb20f889334c9790014fe69762d
         'S3Testing_Admin' => __DIR__ . '/../..' . '/inc/class-admin.php',
         'S3Testing_Create_Archive' => __DIR__ . '/../..' . '/inc/class-create-archive.php',
         'S3Testing_Create_Archive_Exception' => __DIR__ . '/../..' . '/inc/class-create-archive-exception.php',
+        'S3Testing_Cron' => __DIR__ . '/../..' . '/inc/class-cron.php',
         'S3Testing_Destination_S3' => __DIR__ . '/../..' . '/inc/class-destination-s3.php',
         'S3Testing_Directory' => __DIR__ . '/../..' . '/inc/class-directory.php',
         'S3Testing_File' => __DIR__ . '/../..' . '/inc/class-file.php',

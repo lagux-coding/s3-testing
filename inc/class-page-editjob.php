@@ -85,6 +85,11 @@ class S3Testing_Page_EditJob
                 S3Testing_Option::update($jobid, 'archivename', sanitize_text_field($_POST['archivename']));
 
                 break;
+            case 'runnow':
+                $jobid = absint($_GET['jobid']);
+                if ($jobid) {
+
+                }
             default:
                 if (strstr((string)$tab, 'dest-')) {
                     $dest_class = S3Testing::get_destination(str_replace('dest-', '', (string)$tab));

@@ -195,6 +195,52 @@ class S3Testing_Page_Jobs extends WP_List_Table
                     }
                 }
                 break;
+            case 'runnow':
+                $jobid = absint($_GET['jobid']);
+                if ($jobid) {
+
+                    //check temp folder
+                    $temp_folder_message = S3Testing_File::check_folder(S3Testing::get_plugin_data('TEMP'), true);
+                    S3Testing_Admin::message($temp_folder_message, true);
+
+                    //check backup destinations
+                    $job_types = S3Testing::get_job_types();
+                    $job_conf_types = S3Testing_Option::get($jobid, 'type');
+                    $creates_file = false;
+
+                    foreach ($job_types as $id => $job_type_class) {
+                        if (in_array($id, $job_conf_types, true) && $job_type_class->creates_file()) {
+                            $creates_file = true;
+                            break;
+                        }
+                    }
+
+                    if ($creates_file) {
+                        $job_conf_dests = S3Testing_Option::get($jobid, 'destinations');
+                        $destinations = 0;
+
+                        foreach (S3Testing::get_registered_destinations() as $id => $dest) {
+                            if (!in_array($id, $job_conf_dests, true) || empty($dest['class'])) {
+                                continue;
+                            }
+
+                            $dest_class = S3Testing::get_destination($id);
+                            $job_settings = S3Testing_Option::get_job($jobid);
+                            if (!$dest_class->can_run($job_settings)) {
+                                S3Testing_Admin::message(sprintf(__('The job "%1$s" destination "%2$s" is not configured properly'), esc_attr(S3Testing_Option::get($jobid, 'name')), $id), true);
+                            }
+                            ++$destinations;
+                        }
+
+                        if ($destinations < 1) {
+                            S3Testing_Admin::message(sprintf(__('The job "%s" needs properly configured destinations to run!'), esc_attr(S3Testing_Option::get($jobid, 'name'))), true);
+                        }
+
+                        S3Testing_Job::get_jobrun_url('runnow', $jobid);
+                        S3Testing_Admin::message(sprintf(__('Job "%s" started.'), esc_attr(S3Testing_Option::get($jobid, 'name'))));
+                    }
+                }
+
         }
 
         do_action('s3testing_page_jobs_load', self::$listtable->current_action());

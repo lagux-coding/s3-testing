@@ -8,6 +8,11 @@ class S3Testing_Job
     public $backup_folder = '';
     public $backup_file_name = '';
 
+    public static function start_http($starttype, $jobid = 0)
+    {
+        echo "starttype: $starttype, jobid: $jobid";
+    }
+
     public function get_folders_to_backup()
     {
         $file = S3Testing::get_plugin_data('temp') . 's3testing-' . S3Testing::get_plugin_data('hash') . '-folder.php';
@@ -62,6 +67,7 @@ class S3Testing_Job
 
     public static function get_jobrun_url($starttype, $jobid = 0)
     {
+        $url = site_url('wp-cron.php');
         $query_args = [
             '_nonce' => substr(wp_hash(wp_nonce_tick() . 's3testing_job_run-' . $starttype, 'nonce'), -12, 10),
         ];

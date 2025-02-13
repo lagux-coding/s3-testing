@@ -14,6 +14,8 @@
         }
     ],
     "require": {
-        "aws/aws-sdk-php": "^3.339"
+        "aws/aws-sdk-php": "^3.339",
+        "paragonie/random_compat": "^9.99",
+        "christian-riesen/base32": "^1.6"
     }
 }

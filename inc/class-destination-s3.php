@@ -318,4 +318,13 @@ class S3Testing_Destination_S3
         </script>
         <?php
     }
+
+    public function can_run(array $job_settings): bool
+    {
+        if (empty($job_settings['s3accesskey'])) {
+            return false;
+        }
+
+        return !(empty($job_settings['s3secretkey']));
+    }
 }

@@ -33,6 +33,7 @@ return array(
     'S3Testing_Admin' => $baseDir . '/inc/class-admin.php',
     'S3Testing_Create_Archive' => $baseDir . '/inc/class-create-archive.php',
     'S3Testing_Create_Archive_Exception' => $baseDir . '/inc/class-create-archive-exception.php',
+    'S3Testing_Cron' => $baseDir . '/inc/class-cron.php',
     'S3Testing_Destination_S3' => $baseDir . '/inc/class-destination-s3.php',
     'S3Testing_Directory' => $baseDir . '/inc/class-directory.php',
     'S3Testing_File' => $baseDir . '/inc/class-file.php',
