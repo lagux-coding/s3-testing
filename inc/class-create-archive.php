@@ -181,6 +181,7 @@ class S3Testing_Create_Archive
             case 'Tar':
                 if (function_exists('iconv') && stripos(PHP_OS, 'win') === 0) {
                     $test = @iconv('ISO-8859-1', 'UTF-8', $name_in_archive);
+
                     if ($test) {
                         $name_in_archive = $test;
                     }
@@ -281,51 +282,59 @@ class S3Testing_Create_Archive
             if (155 < strlen($filename_prefix)) {
 
             }
-
-            $file_stat = stat($file_name);
-            if (!$file_stat) {
-                return true;
-            }
-
-            $file_stat['size'] = abs((int) $file_stat['size']);
-
-            // Generate the TAR header for this file
-            $chunk = $this->make_tar_headers(
-                $filename,
-                $file_stat['mode'],
-                $file_stat['uid'],
-                $file_stat['gid'],
-                $file_stat['size'],
-                $file_stat['mtime'],
-                0,
-                $filename_prefix
-            );
-
-            $fd = false;
-            if ($file_stat['size'] > 0) {
-                $fd = fopen($file_name, 'rb');
-            }
-
-            if ($fd) {
-                // Read/write files in 512 bit Blocks.
-                while (($content = fread($fd, 512)) != '') { // phpcs:ignore
-                    $chunk .= pack('a512', $content);
-
-                    if (strlen($chunk) >= $chunk_size) {
-                        $this->fwrite($chunk);
-
-                        $chunk = '';
-                    }
-                }
-                fclose($fd);
-            }
-
-            if (!empty($chunk)) {
-                $this->fwrite($chunk);
-            }
-
+        }
+        $file_stat = stat($file_name);
+        if (!$file_stat) {
             return true;
         }
+
+        $file_stat['size'] = abs((int) $file_stat['size']);
+
+        // Retrieve owner and group for the file.
+        [$owner, $group] = $this->posix_getpwuid($file_stat['uid'], $file_stat['gid']);
+
+        // Generate the TAR header for this file
+        $chunk = $this->make_tar_headers(
+            $filename,
+            $file_stat['mode'],
+            $file_stat['uid'],
+            $file_stat['gid'],
+            $file_stat['size'],
+            $file_stat['mtime'],
+            0,
+            $owner,
+            $group,
+            $filename_prefix
+        );
+        $log_file = WP_CONTENT_DIR . '/debug-file.log';
+        $message = 'debug run file log ' . print_r($args, true);
+        file_put_contents($log_file, $message . "\n", FILE_APPEND);
+
+
+        $fd = false;
+        if ($file_stat['size'] > 0) {
+            $fd = fopen($file_name, 'rb');
+        }
+
+        if ($fd) {
+            // Read/write files in 512 bit Blocks.
+            while (($content = fread($fd, 512)) != '') { // phpcs:ignore
+                $chunk .= pack('a512', $content);
+
+                if (strlen($chunk) >= $chunk_size) {
+                    $this->fwrite($chunk);
+
+                    $chunk = '';
+                }
+            }
+            fclose($fd);
+        }
+
+        if (!empty($chunk)) {
+            $this->fwrite($chunk);
+        }
+
+        return true;
     }
 
     public function close()
@@ -354,6 +363,65 @@ class S3Testing_Create_Archive
     public function get_method()
     {
         return $this->method;
+    }
+
+    private function posix_getpwuid($uid, $gid)
+    {
+        // Set file user/group name if linux.
+        $owner = esc_html__('Unknown');
+        $group = esc_html__('Unknown');
+
+        if ( function_exists( 'posix_getpwuid' ) ) {
+            $info = posix_getpwuid( $uid );
+            if ( $info ) {
+                $owner = $info['name'];
+            }
+            $info = posix_getgrgid( $gid );
+            if ( $info ) {
+                $group = $info['name'];
+            }
+        }
+
+        return [
+            $owner,
+            $group,
+        ];
+    }
+
+    private function make_tar_headers($name, $mode, $uid, $gid, $size, $mtime, $typeflag, $owner, $group, $prefix)
+    {
+// Generate the TAR header for this file
+        $chunk = pack(
+            'a100a8a8a8a12a12a8a1a100a6a2a32a32a8a8a155a12',
+            $name, //name of file  100
+            sprintf('%07o', $mode), //file mode  8
+            sprintf('%07o', $uid), //owner user ID  8
+            sprintf('%07o', $gid), //owner group ID  8
+            sprintf('%011o', $size), //length of file in bytes  12
+            sprintf('%011o', $mtime), //modify time of file  12
+            '        ', //checksum for header  8
+            $typeflag, //type of file  0 or null = File, 5=Dir
+            '', //name of linked file  100
+            'ustar', //USTAR indicator  6
+            '00', //USTAR version  2
+            $owner, //owner user name 32
+            $group, //owner group name 32
+            '', //device major number 8
+            '', //device minor number 8
+            $prefix, //prefix for file name 155
+            ''
+        ); //fill block 12
+
+        // Computes the unsigned Checksum of a file's header
+        $checksum = 0;
+
+        for ($i = 0; $i < 512; ++$i) {
+            $checksum += ord(substr($chunk, $i, 1));
+        }
+
+        $checksum = pack('a8', sprintf('%07o', $checksum));
+
+        return substr_replace($chunk, $checksum, 148, 8);
     }
 
     private function fopen($filename, $mode)
