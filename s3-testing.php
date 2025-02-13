@@ -86,6 +86,7 @@ if(!class_exists(\S3Testing::class, false)) {
                             $upload_dir['basedir']
                         ) . '/s3testing/' . self::$plugin_data['hash'] . '/temp/';
                 }
+                self::$plugin_data['running_file'] = self::$plugin_data['temp'] . 's3testing-working.php';
 
                 include ABSPATH . WPINC . '/version.php';
                 self::$plugin_data['wp_version'] = $wp_version;

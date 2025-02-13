@@ -10,7 +10,52 @@ class S3Testing_Job
 
     public static function start_http($starttype, $jobid = 0)
     {
-        echo "starttype: $starttype, jobid: $jobid";
+        //check folder
+        $folder_msg_temp = S3Testing_File::check_folder(S3Testing::get_plugin_data('temp'), true);
+
+        if(!empty($folder_msg_temp)) {
+            S3Testing_Admin::message($folder_msg_temp, true);
+
+            return false;
+        }
+
+        $random = random_int(10, 90) * 10000;
+        usleep($random);
+
+        $s3testing_job_object = self::get_working_data();
+        $starttype_exists = in_array(
+            $starttype,
+            [
+                'runnow',
+            ],
+            true
+        );
+
+        if(!$s3testing_job_object && $starttype_exists && $jobid) {
+            $s3testing_job_object = new self();
+            $s3testing_job_object->create($starttype, $jobid);
+        }
+
+        if($s3testing_job_object) {
+            $s3testing_job_object->run();
+        }
+    }
+
+    public static function get_working_data()
+    {
+        clearstatcache(true, S3Testing::get_plugin_data('running_file'));
+
+        if (!file_exists(S3Testing::get_plugin_data('running_file'))) {
+            return false;
+        }
+
+//        $file_data = file_get_contents(S3Testing::get_plugin_data('running_file'), false, null, 8);
+//
+//        if (empty($file_data)) {
+//            return false;
+//        }
+
+        return false;
     }
 
     public function get_folders_to_backup()
@@ -93,5 +138,68 @@ class S3Testing_Job
 
         return $request;
 
+    }
+
+    private function create($start_type, $job_id = 0)
+    {
+        if (!in_array(
+            $start_type,
+            ['runnow'],
+            true)) {
+            return;
+        }
+
+        if ($job_id) {
+            $this->job = S3Testing_Option::get_job($job_id);
+        } else {
+            return;
+        }
+
+        $job_need_dest = false;
+        if ($job_types = S3Testing::get_job_types()) {
+            foreach ($job_types as $id => $job_type_class) {
+                if (in_array($id, $this->job['type'], true) && $job_type_class->creates_file()) {
+                    $job_need_dest = true;
+                }
+            }
+        }
+        if ($job_need_dest) {
+            if ($this->job['backuptype'] == 'archive') {
+                if (!$this->backup_folder || $this->backup_folder == '/') {
+                    $this->backup_folder = S3Testing::get_plugin_data('TEMP');
+                }
+
+                //create backup filename
+                $this->backup_file = $this->generate_filename($this->job['archivename'], $this->job['archiveformat']);
+            }
+        }
+
+        $this->write_running_file();
+
+    }
+
+    public function generate_filename($name, $suffix = '', $delete_temp_file = true)
+    {
+        if ($suffix) {
+            $suffix = '.' . trim($suffix, '. ');
+        }
+
+        if ($delete_temp_file && is_writeable(S3Testing::get_plugin_data('TEMP') . $name) && !is_dir(S3Testing::get_plugin_data('TEMP') . $name) && !is_link(S3Testing::get_plugin_data('TEMP') . $name)) {
+            unlink(S3Testing::get_plugin_data('TEMP') . $name);
+        }
+
+        return $name;
+    }
+
+    private function write_running_file()
+    {
+        $clone = clone $this;
+        $data = '<?php //' . serialize($clone);
+
+        $write = file_put_contents(S3Testing::get_plugin_data('running_file'), $data);
+        if (!$write || $write < strlen($data)) {
+            unlink(S3Testing::get_plugin_data('running_file'));
+            $this->log(__('Cannot write progress to working file. Job will be aborted.'), E_USER_ERROR);
+        }
     }
 }
