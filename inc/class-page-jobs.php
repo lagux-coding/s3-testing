@@ -115,10 +115,8 @@ class S3Testing_Page_Jobs extends WP_List_Table
         $actions['copy'] = '<a href="' . wp_nonce_url(network_admin_url('admin.php') . '?page=s3testingjobs&action=copy&jobid=' . $item, 'copy-job_' . $item) . '">' . esc_html__('Copy') . '</a>';
         $actions['delete'] = '<a class="submitdelete" href="' . wp_nonce_url(network_admin_url('admin.php') . '?page=s3testingjobs&action=delete&jobs[]=' . $item, 'bulk-jobs') . '" onclick="return showNotice.warn();">' . esc_html__('Delete') . '</a>';
 
-//        if (current_user_can('s3testing_jobs_start')) {
-//            $url = s3testing_Job::get_jobrun_url('runnowlink', $item);
-//            $actions['runnow'] = '<a href="' . esc_attr($url['url']) . '">' . esc_html__('Run now', 's3testing') . '</a>';
-//        }
+            $url = S3Testing_Job::get_jobrun_url('runnowlink', $item);
+            $actions['runnow'] = '<a href="' . esc_attr($url['url']) . '">' . esc_html__('Run now') . '</a>';
 //        if (current_user_can('s3testing_logs') && S3Testing_Option::get($item, 'logfile')) {
 //            $logfile = basename((string) S3Testing_Option::get($item, 'logfile'));
 //            if (is_object($this->job_object) && $this->job_object->job['jobid'] == $item) {
