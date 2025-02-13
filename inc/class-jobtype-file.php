@@ -107,6 +107,7 @@ class S3Testing_JobType_File extends S3Testing_JobTypes
         $abs_path = realpath(S3Testing_Path_Fixer::fix_path(ABSPATH));
         $abs_path = trailingslashit(str_replace('\\', '/', $abs_path));
 
+        $job_object->temp['folders_to_backup'] = [];
         $folders_already_in = $job_object->get_folders_to_backup();
 
         //backup root
@@ -116,13 +117,13 @@ class S3Testing_JobType_File extends S3Testing_JobTypes
 
             $this->get_folder_list($job_object, $abs_path, $excludes);
         }
-
         return true;
     }
 
     private function get_exclude_dirs($folder, $excludedir = [])
     {
         $folder = trailingslashit(str_replace('\\', '/', realpath(S3Testing_Path_Fixer::fix_path($folder))));
+
         if (false !== strpos(trailingslashit(str_replace('\\', '/', realpath(WP_CONTENT_DIR))), $folder) && trailingslashit(str_replace('\\', '/', realpath(WP_CONTENT_DIR))) != $folder) {
             $excludedir[] = trailingslashit(str_replace('\\', '/', realpath(WP_CONTENT_DIR)));
         }
@@ -132,8 +133,8 @@ class S3Testing_JobType_File extends S3Testing_JobTypes
         if (false !== strpos(trailingslashit(str_replace('\\', '/', realpath(get_theme_root()))), $folder) && trailingslashit(str_replace('\\', '/', realpath(get_theme_root()))) != $folder) {
             $excludedir[] = trailingslashit(str_replace('\\', '/', realpath(get_theme_root())));
         }
-        if (false !== strpos(trailingslashit(str_replace('\\', '/', realpath(BackWPup_File::get_upload_dir()))), $folder) && trailingslashit(str_replace('\\', '/', realpath(BackWPup_File::get_upload_dir()))) != $folder) {
-            $excludedir[] = trailingslashit(str_replace('\\', '/', realpath(BackWPup_File::get_upload_dir())));
+        if (false !== strpos(trailingslashit(str_replace('\\', '/', realpath(S3Testing_File::get_upload_dir()))), $folder) && trailingslashit(str_replace('\\', '/', realpath(S3Testing_File::get_upload_dir()))) != $folder) {
+            $excludedir[] = trailingslashit(str_replace('\\', '/', realpath(S3Testing_File::get_upload_dir())));
         }
 
         return array_unique($excludedir);
@@ -142,7 +143,6 @@ class S3Testing_JobType_File extends S3Testing_JobTypes
 
     private function get_folder_list(&$job_object, $folder, $excludedirs = [])
     {
-        $folder = trailingslashit($folder);
         try {
             $dir = new S3Testing_Directory($folder);
 

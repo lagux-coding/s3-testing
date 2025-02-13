@@ -6,8 +6,12 @@
   <component name="ChangeListManager">
     <list default="true" id="14453ea8-162e-42dd-95e9-1168a72971e1" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/inc/class-create-archive.php" beforeDir="false" afterPath="$PROJECT_DIR$/inc/class-create-archive.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/inc/class-cron.php" beforeDir="false" afterPath="$PROJECT_DIR$/inc/class-cron.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/inc/class-file.php" beforeDir="false" afterPath="$PROJECT_DIR$/inc/class-file.php" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/inc/class-job.php" beforeDir="false" afterPath="$PROJECT_DIR$/inc/class-job.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/s3-testing.php" beforeDir="false" afterPath="$PROJECT_DIR$/s3-testing.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/inc/class-jobtype-file.php" beforeDir="false" afterPath="$PROJECT_DIR$/inc/class-jobtype-file.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/inc/class-page-jobs.php" beforeDir="false" afterPath="$PROJECT_DIR$/inc/class-page-jobs.php" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -39,6 +43,9 @@
       <path value="$PROJECT_DIR$/vendor/paragonie/random_compat" />
       <path value="$PROJECT_DIR$/vendor/christian-riesen/base32" />
     </include_path>
+  </component>
+  <component name="ProblemsViewState">
+    <option name="selectedTabId" value="CurrentFile" />
   </component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 1
@@ -88,12 +95,23 @@
       <workItem from="1739154330490" duration="22908000" />
       <workItem from="1739239009191" duration="23917000" />
       <workItem from="1739325574509" duration="16466000" />
-      <workItem from="1739413294406" duration="7509000" />
+      <workItem from="1739413294406" duration="13856000" />
     </task>
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
   </component>
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand />

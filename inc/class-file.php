@@ -79,4 +79,24 @@ class S3Testing_File
 
         return implode('/', $resolvedParts);
     }
+
+    public static function get_upload_dir()
+    {
+        if (is_multisite()) {
+            if (defined('UPLOADBLOGSDIR')) {
+                return trailingslashit(str_replace('\\', '/', ABSPATH . UPLOADBLOGSDIR));
+            }
+            if (is_dir(trailingslashit(WP_CONTENT_DIR) . 'uploads/sites')) {
+                return str_replace('\\', '/', trailingslashit(WP_CONTENT_DIR) . 'uploads/sites/');
+            }
+            if (is_dir(trailingslashit(WP_CONTENT_DIR) . 'uploads')) {
+                return str_replace('\\', '/', trailingslashit(WP_CONTENT_DIR) . 'uploads/');
+            }
+
+            return trailingslashit(str_replace('\\', '/', (string) WP_CONTENT_DIR));
+        }
+        $upload_dir = wp_upload_dir(null, false, true);
+
+        return trailingslashit(str_replace('\\', '/', $upload_dir['basedir']));
+    }
 }

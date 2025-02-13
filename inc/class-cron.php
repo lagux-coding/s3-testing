@@ -4,6 +4,10 @@ class S3Testing_Cron
 {
     public static function cron_active($args = [])
     {
+        $log_file = WP_CONTENT_DIR . '/debug-cron.log';
+        $message = 'cron_active called with args: ' . print_r($args, true);
+        file_put_contents($log_file, $message . "\n", FILE_APPEND);
+
         if(!is_array($args)){
             $args = [];
         }

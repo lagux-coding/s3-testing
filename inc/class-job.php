@@ -6,7 +6,7 @@ class S3Testing_Job
     public $start_time = 0;
     public $temp = [];
     public $backup_folder = '';
-    public $backup_file_name = '';
+    public $backup_file = '';
 
     public static function start_http($starttype, $jobid = 0)
     {
@@ -136,6 +136,13 @@ class S3Testing_Job
             'url' => add_query_arg($query_args, $url),
         ];
 
+        if(!in_array($starttype, [
+            'runnowlink',
+        ],
+        true)) {
+            return wp_remote_post($request['url']);
+        }
+
         return $request;
 
     }
@@ -175,6 +182,34 @@ class S3Testing_Job
         }
 
         $this->write_running_file();
+
+    }
+
+    public function run()
+    {
+        $job_types = S3Testing::get_job_types();
+        $job_types['FILE']->job_run($this);
+    }
+
+    private function create_archive()
+    {
+        $folders_to_backup = $this->get_folders_to_backup();
+
+        if(is_file($this->backup_folder . $this->backup_file)) {
+            unlink($this->backup_folder . $this->backup_file);
+        }
+
+        try {
+            $backup_archive = new S3Testing_Create_Archive($this->backup_folder . $this->backup_file);
+
+            $backup_archive->get_method();
+
+            while ($folder = array_shift($folders_to_backup)) {
+                $files_in_folder = $this->get_files_in_folder($folder);
+            }
+        } catch (Exception $e) {
+
+        }
 
     }
 

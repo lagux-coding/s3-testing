@@ -238,6 +238,7 @@ class S3Testing_Page_Jobs extends WP_List_Table
                         S3Testing_Admin::message(sprintf(__('Job "%s" started.'), esc_attr(S3Testing_Option::get($jobid, 'name'))));
                     }
                 }
+                break;
 
         }
 
