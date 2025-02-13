@@ -71,12 +71,17 @@ class S3Testing_Job
         //return array of each line in file
         $file_data = file($file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
 
-        foreach($file_data as $file) {
+        foreach($file_data as $folder) {
             $folder = trim(str_replace(['<?php', '//'], '', (string) $folder));
             if (!empty($folder) && is_dir($folder)) {
                 $folders[] = $folder;
             }
         }
+
+        $log_file = WP_CONTENT_DIR . '/debug-folder-before.log';
+        $message = 'debug run file log ' . print_r($folders, true);
+        file_put_contents($log_file, $message . "\n", FILE_APPEND);
+
         $folders = array_unique($folders);
         sort($folders);
 
@@ -189,6 +194,10 @@ class S3Testing_Job
     {
         $job_types = S3Testing::get_job_types();
         $job_types['FILE']->job_run($this);
+
+        $this->create_archive();
+
+//        S3Testing::get_destination('S3')->job_run_archive($this);
     }
 
     private function create_archive()
@@ -202,15 +211,87 @@ class S3Testing_Job
         try {
             $backup_archive = new S3Testing_Create_Archive($this->backup_folder . $this->backup_file);
 
-            $backup_archive->get_method();
-
             while ($folder = array_shift($folders_to_backup)) {
                 $files_in_folder = $this->get_files_in_folder($folder);
+
+                if (empty($files_in_folder)) {
+                    $folder_name_in_archive = trim(ltrim($this->get_destination_path_replacement($folder), '/'));
+                    if (!empty($folder_name_in_archive)) {
+                        $backup_archive->add_empty_folder($folder, $folder_name_in_archive);
+                    }
+
+                    continue;
+                }
+
+                while ($file = array_shift($files_in_folder)) {
+                    //generate filename in archive
+                    $in_archive_filename = ltrim($this->get_destination_path_replacement($file), '/');
+
+                    //add file to archive
+                    if ($backup_archive->add_file($file, $in_archive_filename)) {
+
+                    }else {
+                        $backup_archive->close();
+                        unset($backup_archive);
+
+                        return false;
+                    }
+                }
+                $backup_archive->close();
+                unset($backup_archive);
             }
         } catch (Exception $e) {
+            return false;
+        }
+        return true;
+    }
 
+    public function get_destination_path_replacement($path)
+    {
+        $abs_path = realpath(S3Testing_Path_Fixer::fix_path(ABSPATH));
+
+        $abs_path = trailingslashit(str_replace('\\', '/', $abs_path));
+
+        $path = str_replace(['\\', $abs_path], '/', (string) $path);
+
+        if (0 === stripos(PHP_OS, 'WIN') && 1 === strpos($path, ':/')) {
+            $path = '/' . substr_replace($path, '', 1, 1);
         }
 
+        return $path;
+    }
+
+    public function get_files_in_folder($folder)
+    {
+        $files = [];
+        $folder = trailingslashit($folder);
+
+        if (!is_dir($folder)) {
+
+            return $files;
+        }
+
+        if (!is_readable($folder)) {
+
+            return $files;
+        }
+
+        try {
+            $dir = new S3Testing_Directory($folder);
+
+            foreach ($dir as $file) {
+                if ($file->isDot() || $file->isDir()) {
+                    continue;
+                }
+
+                $path = S3Testing_Path_Fixer::slashify($file->getPathname());
+
+                $files[] = S3Testing_Path_Fixer::slashify(realpath($path));
+
+            }
+        } catch (Exception $e) {
+        }
+        return $files;
     }
 
     public function generate_filename($name, $suffix = '', $delete_temp_file = true)
@@ -218,6 +299,7 @@ class S3Testing_Job
         if ($suffix) {
             $suffix = '.' . trim($suffix, '. ');
         }
+        $name .= $suffix;
 
         if ($delete_temp_file && is_writeable(S3Testing::get_plugin_data('TEMP') . $name) && !is_dir(S3Testing::get_plugin_data('TEMP') . $name) && !is_link(S3Testing::get_plugin_data('TEMP') . $name)) {
             unlink(S3Testing::get_plugin_data('TEMP') . $name);

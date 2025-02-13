@@ -284,6 +284,31 @@ class S3Testing_Destination_S3
         S3Testing_Option::update($jobid, 's3dir', $_POST['s3dir']);
     }
 
+    public function job_run_archive(S3Testing_Job $job_object)
+    {
+        try {
+            if (empty($job_object->job['s3base_url'])) {
+                $aws_destination = S3Testing_S3_Destination::fromOption($job_object->job['s3region']);
+            }
+
+            $s3 = $aws_destination->client(
+                $job_object->job['s3accesskey'],
+                $job_object->job['s3secretkey']
+            );
+
+            if ($s3->doesBucketExist($job_object->job['s3bucket'])) {
+                $bucketregion = $s3->getBucketLocation(['Bucket' => $job_object->job['s3bucket']]);
+            } else {
+
+                return true;
+            }
+
+
+        } catch (Exception $e) {
+
+        }
+    }
+
     public function edit_inline_js()
     {
         ?>
