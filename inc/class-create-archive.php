@@ -178,7 +178,16 @@ class S3Testing_Create_Archive
         }
 
         switch ($this->method) {
+            case 'Tar':
+                if (function_exists('iconv') && stripos(PHP_OS, 'win') === 0) {
+                    $test = @iconv('ISO-8859-1', 'UTF-8', $name_in_archive);
+                    if ($test) {
+                        $name_in_archive = $test;
+                    }
+                }
 
+                return $this->tar_file($file_name, $name_in_archive);
+                break;
             case \ZipArchive::class:
                 // Convert chars for archives file names.
                 if (function_exists('iconv') && stripos(PHP_OS, 'win') === 0) {
@@ -242,6 +251,83 @@ class S3Testing_Create_Archive
         return true;
     }
 
+    private function tar_file($file_name, $name_in_archive)
+    {
+        if (!is_resource($this->filehandler)) {
+            return false;
+        }
+
+        $chunk_size = 1024 * 1024 * 4;
+        $filename = $name_in_archive;
+        $filename_prefix = '';
+
+
+        $filename = $name_in_archive;
+        if (100 < strlen($name_in_archive)) {
+            $filename_offset = strlen($name_in_archive) - 100;
+            $split_pos = strpos($name_in_archive, '/', $filename_offset);
+
+            if ($split_pos === false) {
+                $split_pos = strrpos($name_in_archive, '/');
+            }
+
+            $filename = substr($name_in_archive, $split_pos + 1);
+            $filename_prefix = substr($name_in_archive, 0, $split_pos);
+
+            if (strlen($filename) > 100) {
+                $filename = substr($filename, -100);
+            }
+
+            if (155 < strlen($filename_prefix)) {
+
+            }
+
+            $file_stat = stat($file_name);
+            if (!$file_stat) {
+                return true;
+            }
+
+            $file_stat['size'] = abs((int) $file_stat['size']);
+
+            // Generate the TAR header for this file
+            $chunk = $this->make_tar_headers(
+                $filename,
+                $file_stat['mode'],
+                $file_stat['uid'],
+                $file_stat['gid'],
+                $file_stat['size'],
+                $file_stat['mtime'],
+                0,
+                $filename_prefix
+            );
+
+            $fd = false;
+            if ($file_stat['size'] > 0) {
+                $fd = fopen($file_name, 'rb');
+            }
+
+            if ($fd) {
+                // Read/write files in 512 bit Blocks.
+                while (($content = fread($fd, 512)) != '') { // phpcs:ignore
+                    $chunk .= pack('a512', $content);
+
+                    if (strlen($chunk) >= $chunk_size) {
+                        $this->fwrite($chunk);
+
+                        $chunk = '';
+                    }
+                }
+                fclose($fd);
+            }
+
+            if (!empty($chunk)) {
+                $this->fwrite($chunk);
+            }
+
+            return true;
+        }
+    }
+
     public function close()
     {
         if ($this->ziparchive instanceof \ZipArchive) {
@@ -281,4 +367,21 @@ class S3Testing_Create_Archive
         return $fd;
     }
 
+    private function fwrite($content)
+    {
+        switch ($this->handlertype) {
+            case 'bz':
+                $content = bzcompress($content);
+                break;
+
+            case 'gz':
+                $content = gzencode($content);
+                break;
+
+            default:
+                break;
+        }
+
+        return (int) fwrite($this->filehandler, $content);
+    }
 }
