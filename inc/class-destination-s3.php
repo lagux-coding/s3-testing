@@ -15,7 +15,7 @@ class S3Testing_Destination_S3
             's3accesskey' => '',
             's3secretkey' => '',
             's3bucket' => '',
-            's3region' => 'us-east-1',
+            's3region' => 'ap-southeast-2',
 //            's3ssencrypt' => '',
 //            's3storageclass' => '',
             's3dir' => trailingslashit(sanitize_file_name(get_bloginfo('name'))),
@@ -132,8 +132,7 @@ class S3Testing_Destination_S3
                                 's3secretkey' => S3Testing_Option::get($jobid, 's3secretkey'),
                                 's3region' => S3Testing_Option::get($jobid, 's3region'),
                                 's3bucketselected' => S3Testing_Option::get($jobid, 's3bucket'),
-                            ],
-                            true
+                            ], true
                         );
                     } ?>
                  </td>
@@ -151,21 +150,22 @@ class S3Testing_Destination_S3
                            value=""
                     />
                     <?php
+
                     if (S3Testing_Option::get($jobid, 's3accesskey')
                         && S3Testing_Option::get($jobid, 's3secretkey')
                     ) {
-                        $this->edit_ajax(
+                        $this->edit_ajax_dir(
                             [
                                 's3base_url' => S3Testing_Option::get($jobid, 's3base_url'),
                                 's3accesskey' => S3Testing_Option::get($jobid, 's3accesskey'),
                                 's3secretkey' => S3Testing_Option::get($jobid, 's3secretkey'),
                                 's3region' => S3Testing_Option::get($jobid, 's3region'),
                                 's3bucketselected' => S3Testing_Option::get($jobid, 's3bucket'),
-                                's3dirselected' => S3Testing_Option::get($jobid, 's3dir'),
-                            ],
-                            false
+                            ]
                         );
-                    } ?>
+                    }
+                    ?>
+
                 </td>
             </tr>
         </table>
@@ -241,8 +241,6 @@ class S3Testing_Destination_S3
         $error = '';
         $buckets = [];
         $buckets_list = [];
-        $folders = [];
-        $folders_list = [];
         $ajax = false;
 
         if (!$args) {
@@ -250,10 +248,8 @@ class S3Testing_Destination_S3
             check_ajax_referer('s3testing_ajax_nonce');
             $args['s3accesskey'] = sanitize_text_field($_POST['s3accesskey']);
             $args['s3secretkey'] = sanitize_text_field($_POST['s3secretkey']);
-            $args['s3region'] = sanitize_text_field($_POST['s3region']);
             $args['s3base_url'] = s3testing_esc_url_default_secure($_POST['s3base_url'], ['http', 'https']);
             $args['s3bucketselected'] = sanitize_text_field($_POST['s3bucketselected']);
-
             $ajax = true;
         }
 
@@ -262,7 +258,6 @@ class S3Testing_Destination_S3
         }
 
         echo '<span id="s3bucketerror" class="s3testing-message-error">';
-
         if (!empty($args['s3accesskey']) && !empty($args['s3secretkey'])) {
             if (empty($args['s3base_url'])) {
                 $aws = S3Testing_S3_Destination::fromOption($args['s3region']);
@@ -274,25 +269,12 @@ class S3Testing_Destination_S3
                 $aws = S3Testing_S3_Destination::fromOptionArray($options);
             }
 
-
-
             try {
                 $s3 = $aws->client($args['s3accesskey'], $args['s3secretkey']);
 
                 $buckets = $s3->listBuckets();
                 if (!empty($buckets['Buckets'])) {
                     $buckets_list = $buckets['Buckets'];
-                }
-
-                if (!empty($args['s3bucketselected'])) {
-                    $folders = $s3->listObjectsV2([
-                        'Bucket' => $args['s3bucketselected'],
-                        'Delimiter' => '/',
-                    ]);
-
-                    if (!empty($folders['CommonPrefixes'])) {
-                        $folders_list = $folders['CommonPrefixes'];
-                    }
                 }
 
             } catch (Exception $e) {
@@ -316,7 +298,7 @@ class S3Testing_Destination_S3
         }
         echo '</span>';
 
-        if (!empty($buckets_list) && $bucket) {
+        if (!empty($buckets_list)) {
             echo '<select name="s3bucket" id="s3bucket">';
 
             foreach ($buckets_list as $bucket) {
@@ -325,9 +307,76 @@ class S3Testing_Destination_S3
                     . '</option>';
             }
             echo '</select>';
+
+            $this->edit_inline_dir_js();
         }
 
-        if (!empty($folders_list) && !$bucket) {
+        if ($ajax) {
+            exit();
+        }
+    }
+
+    public function edit_ajax_dir($args = [])
+    {
+        $error = '';
+        $folders = [];
+        $folders_list = [];
+        $ajax = false;
+
+        if (!$args) {
+            $args = [];
+            check_ajax_referer('s3testing_ajax_nonce');
+            $args['s3accesskey'] = sanitize_text_field($_POST['s3accesskey']);
+            $args['s3secretkey'] = sanitize_text_field($_POST['s3secretkey']);
+            $args['s3region'] = sanitize_text_field($_POST['s3region']);
+            $args['s3base_url'] = s3testing_esc_url_default_secure($_POST['s3base_url'], ['http', 'https']);
+            $args['s3bucketselected'] = sanitize_text_field($_POST['s3bucketselected']);
+
+            $ajax = true;
+        }
+
+        if ($args['s3base_url']) {
+            $args['s3region'] = $args['s3base_url'];
+        }
+
+        echo '<span id="s3direrror" class="s3testing-message-error">';
+        if (!empty($args['s3accesskey']) && !empty($args['s3secretkey'])) {
+            if (empty($args['s3base_url'])) {
+                $aws = S3Testing_S3_Destination::fromOption($args['s3region']);
+            } else {
+                $options = [
+                    'label' => __('Custom S3 destination'),
+                    'endpoint' => $args['s3base_url'],
+                ];
+                $aws = S3Testing_S3_Destination::fromOptionArray($options);
+            }
+
+            try {
+                $s3 = $aws->client($args['s3accesskey'], $args['s3secretkey']);
+
+                $folders = $s3->listObjectsV2([
+                    'Bucket' => $args['s3bucketselected'],
+                    'Delimiter' => '/',
+                ]);
+
+                if(!empty($folders['CommonPrefixes'])) {
+                    $folders_list = $folders['CommonPrefixes'];
+                }
+
+            } catch (Exception $e) {
+                $error = $e->getMessage();
+                if ($e instanceof AwsException) {
+                    $error = $e->getAwsErrorMessage();
+                }
+            }
+        }
+
+        if (empty($folders['CommonPrefixes'])) {
+            esc_html_e('No folders found!');
+        }
+        echo '</span>';
+
+        if (!empty($folders_list)) {
             echo '<select name="s3dir" id="s3dir">';
 
             foreach ($folders_list as $folder) {
@@ -456,28 +505,65 @@ class S3Testing_Destination_S3
                         s3bucketselected: $('input[name="s3bucketselected"]').val(),
                         s3base_url      : $( 'input[name="s3base_url"]' ).val(),
                         s3region: $('#s3region').val(),
-                        _ajax_nonce: $('#s3testingajaxnonce').val()
+                        _ajax_nonce: $('#s3testingajaxnonce').val(),
+                        isBucket: $('#isBucket').val(),
                     };
                     console.log("Sending AJAX request with data:", data);
                     $.post(ajaxurl, data, function (response) {
                         console.log("Response from server:", response);
-                        $('#s3bucketerror').remove();
-                        $('#s3bucket').remove();
-                        $('#s3bucketselected').after(response);
+                        $( '#s3bucketerror' ).remove();
+                        $( '#s3bucket' ).remove();
+                        $( '#s3bucketselected' ).after( response );
                     });
                 }
 
                 // Trigger bucket list update when region or keys change
-                $('select[name="s3region"]').change(function () {
-                    awsgetbucket();
-                });
-                $('input[name="s3accesskey"], input[name="s3secretkey"], input[name="s3base_url"], input[name="s3bucketselected"]').on('keyup', function () {
+
+                $('input[name="s3accesskey"], input[name="s3secretkey"], input[name="s3base_url"]').on('keyup', function () {
                     awsgetbucket();
                 });
             });
         </script>
         <?php
     }
+
+    public function edit_inline_dir_js()
+    {
+        ?>
+        <script type="text/javascript">
+            jQuery(document).ready(function ($) {
+                function awsgetdir() {
+                    var data = {
+                        action: 's3testing_dest_s3_dir',
+                        s3accesskey: $('input[name="s3accesskey"]').val(),
+                        s3secretkey: $('input[name="s3secretkey"]').val(),
+                        s3bucketselected: $('#s3bucket').val(),
+                        s3base_url: $('input[name="s3base_url"]').val(),
+                        s3region: $('#s3region').val(),
+                        _ajax_nonce: $('#s3testingajaxnonce').val(),
+                    };
+
+                    console.log("Selected bucket:", data);
+
+                    $.post(ajaxurl, data, function (response) {
+                        console.log("Response from server:", response);
+                        $('#s3direrror').remove();
+                        $('#s3dir').remove();
+                        $('#s3dirselected').after(response);
+                    });
+                }
+
+                $('#s3bucket').change(function () {
+                    awsgetdir();
+                });
+
+                awsgetdir();
+            });
+        </script>
+        <?php
+    }
+
+
 
     public function can_run(array $job_settings): bool
     {

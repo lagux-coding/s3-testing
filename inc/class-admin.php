@@ -87,6 +87,7 @@ final class S3Testing_Admin
     public function admin_init()
     {
         add_action('wp_ajax_s3testing_dest_s3', [new S3Testing_Destination_S3(), 'edit_ajax'], 10, 0);
+        add_action('wp_ajax_s3testing_dest_s3_dir', [new S3Testing_Destination_S3(), 'edit_ajax_dir'], 10, 0);
     }
 
     public function save_post_form()

@@ -205,7 +205,7 @@ class S3Testing_S3_Destination
                 'key' => $accessKey,
                 'secret' => $secretKey,
             ],
-            'region' => $this->region(),
+            'region' => 'ap-southeast-2',
             'http' => [
                 'verify' => false,
             ],
