@@ -78,10 +78,6 @@ class S3Testing_Job
             }
         }
 
-        $log_file = WP_CONTENT_DIR . '/debug-folder-before.log';
-        $message = 'debug run file log ' . print_r($folders, true);
-        file_put_contents($log_file, $message . "\n", FILE_APPEND);
-
         $folders = array_unique($folders);
         sort($folders);
 
@@ -212,10 +208,15 @@ class S3Testing_Job
             $backup_archive = new S3Testing_Create_Archive($this->backup_folder . $this->backup_file);
 
             while ($folder = array_shift($folders_to_backup)) {
+                if(in_array($folder, $folders_to_backup, true)) {
+                    continue;
+                }
+
                 $files_in_folder = $this->get_files_in_folder($folder);
 
                 if (empty($files_in_folder)) {
                     $folder_name_in_archive = trim(ltrim($this->get_destination_path_replacement($folder), '/'));
+
                     if (!empty($folder_name_in_archive)) {
                         $backup_archive->add_empty_folder($folder, $folder_name_in_archive);
                     }
@@ -237,9 +238,9 @@ class S3Testing_Job
                         return false;
                     }
                 }
-                $backup_archive->close();
-                unset($backup_archive);
             }
+            $backup_archive->close();
+            unset($backup_archive);
         } catch (Exception $e) {
             return false;
         }
@@ -254,6 +255,7 @@ class S3Testing_Job
 
         $path = str_replace(['\\', $abs_path], '/', (string) $path);
 
+        //replace the colon from windows drive letters with so they will not be problems with them in archives or on copying to directory
         if (0 === stripos(PHP_OS, 'WIN') && 1 === strpos($path, ':/')) {
             $path = '/' . substr_replace($path, '', 1, 1);
         }

@@ -13,6 +13,7 @@ class ComposerStaticInitcd624fb20f889334c9790014fe69762d
         '37a3dc5111fe8f707ab4c132ef1dbc62' => __DIR__ . '/..' . '/guzzlehttp/guzzle/src/functions_include.php',
         'b067bc7112e384b61c701452d53a14a8' => __DIR__ . '/..' . '/mtdowling/jmespath.php/src/JmesPath.php',
         '8a9dc1de0ca7e01f3e08231539562f61' => __DIR__ . '/..' . '/aws/aws-sdk-php/src/functions.php',
+        '7f8e9911e2b90e057fba2bcd12f84040' => __DIR__ . '/../..' . '/inc/functions.php',
     );
 
     public static $prefixLengthsPsr4 = array (

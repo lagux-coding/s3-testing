@@ -139,18 +139,9 @@ class S3Testing_Create_Archive
         $name_in_archive = remove_invalid_characters_from_directory_name($name_in_archive);
 
         switch ($this->method) {
-            case 'gz':
-
-                return false;
-                break;
-
             case 'Tar':
-
-            case \ZipArchive::class:
-                if (!$this->ziparchive->addEmptyDir($name_in_archive)) {
-
-                    return false;
-                }
+                $this->tar_empty_folder($folder_name, $name_in_archive);
+                return false;
                 break;
         }
 
@@ -306,10 +297,6 @@ class S3Testing_Create_Archive
             $group,
             $filename_prefix
         );
-        $log_file = WP_CONTENT_DIR . '/debug-file.log';
-        $message = 'debug run file log ' . print_r($args, true);
-        file_put_contents($log_file, $message . "\n", FILE_APPEND);
-
 
         $fd = false;
         if ($file_stat['size'] > 0) {
@@ -333,6 +320,61 @@ class S3Testing_Create_Archive
         if (!empty($chunk)) {
             $this->fwrite($chunk);
         }
+
+        return true;
+    }
+
+    private function tar_empty_folder($folder_name, $name_in_archive)
+    {
+        if (!is_resource($this->filehandler)) {
+            return false;
+        }
+
+        $name_in_archive = trailingslashit($name_in_archive);
+
+        $tar_filename = $name_in_archive;
+        $tar_filename_prefix = '';
+
+        // Split filename larger than 100 chars.
+        if (100 < strlen($name_in_archive)) {
+            $filename_offset = strlen($name_in_archive) - 100;
+            $split_pos = strpos($name_in_archive, '/', $filename_offset);
+
+            if ($split_pos === false) {
+                $split_pos = strrpos(untrailingslashit($name_in_archive), '/');
+            }
+
+            $tar_filename = substr($name_in_archive, $split_pos + 1);
+            $tar_filename_prefix = substr($name_in_archive, 0, $split_pos);
+
+            if (strlen($tar_filename) > 100) {
+                $tar_filename = substr($tar_filename, -100);
+            }
+
+            if (strlen($tar_filename_prefix) > 155) {
+
+            }
+        }
+
+        $file_stat = @stat($folder_name);
+        // Retrieve owner and group for the file.
+        [$owner, $group] = $this->posix_getpwuid($file_stat['uid'], $file_stat['gid']);
+
+        // Generate the TAR header for this file
+        $header = $this->make_tar_headers(
+            $tar_filename,
+            $file_stat['mode'],
+            $file_stat['uid'],
+            $file_stat['gid'],
+            $file_stat['size'],
+            $file_stat['mtime'],
+            5,
+            $owner,
+            $group,
+            $tar_filename_prefix
+        );
+
+        $this->fwrite($header);
 
         return true;
     }
@@ -435,20 +477,25 @@ class S3Testing_Create_Archive
         return $fd;
     }
 
+    private function fclose()
+    {
+        fclose($this->filehandler);
+    }
+
     private function fwrite($content)
     {
-        switch ($this->handlertype) {
-            case 'bz':
-                $content = bzcompress($content);
-                break;
-
-            case 'gz':
-                $content = gzencode($content);
-                break;
-
-            default:
-                break;
-        }
+//        switch ($this->handlertype) {
+//            case 'bz':
+//                $content = bzcompress($content);
+//                break;
+//
+//            case 'gz':
+//                $content = gzencode($content);
+//                break;
+//
+//            default:
+//                break;
+//        }
 
         return (int) fwrite($this->filehandler, $content);
     }

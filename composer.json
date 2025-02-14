@@ -5,6 +5,9 @@
     "autoload": {
         "classmap": [
             "inc/"
+        ],
+        "files": [
+            "inc/functions.php"
         ]
     },
     "authors": [
