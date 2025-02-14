@@ -7,11 +7,11 @@ class S3Testing_Destination_S3
     public function option_defaults()
     {
         return [
-//            's3base_url' => '',
-//            's3base_multipart' => true,
-//            's3base_pathstylebucket' => false,
-//            's3base_version' => 'latest',
-//            's3base_signature' => 'v4',
+            's3base_url' => '',
+            's3base_multipart' => true,
+            's3base_pathstylebucket' => false,
+            's3base_version' => 'latest',
+            's3base_signature' => 'v4',
             's3accesskey' => '',
             's3secretkey' => '',
             's3bucket' => '',
@@ -31,25 +31,44 @@ class S3Testing_Destination_S3
             <?php esc_html_e('S3 Service'); ?>
         </h3>
         <table class="form-table">
+<!--            <tr>-->
+<!--                <th scope="row">-->
+<!--                    <label for="s3region">-->
+<!--                        --><?php //esc_html_e('Select a S3 service'); ?>
+<!--                    </label>-->
+<!--                </th>-->
+<!--                <td>-->
+<!---->
+<!--                    <select name="s3region"-->
+<!--                            id="s3region"-->
+<!--                            title="--><?php //esc_attr_e('S3 Region'); ?><!--">-->
+<!--                        --><?php //foreach (S3Testing_S3_Destination::options() as $id => $option) { ?>
+<!--                            <option value="--><?php //echo esc_attr($id); ?><!--"-->
+<!--                                --><?php //selected($id, S3Testing_Option::get($jobid, 's3region')); ?>
+<!--                            >-->
+<!--                                --><?php //echo esc_html($option['label']); ?>
+<!--                            </option>-->
+<!--                        --><?php //} ?>
+<!--                    </select>-->
+<!--                </td>-->
+<!--            </tr>-->
             <tr>
                 <th scope="row">
-                    <label for="s3region">
-                        <?php esc_html_e('Select a S3 service'); ?>
+                    <label for="s3base_url">
+                        <?php esc_html_e('S3 Server URL'); ?>
                     </label>
                 </th>
                 <td>
-
-                    <select name="s3region"
-                            id="s3region"
-                            title="<?php esc_attr_e('S3 Region'); ?>">
-                        <?php foreach (S3Testing_S3_Destination::options() as $id => $option) { ?>
-                            <option value="<?php echo esc_attr($id); ?>"
-                                <?php selected($id, S3Testing_Option::get($jobid, 's3region')); ?>
-                            >
-                                <?php echo esc_html($option['label']); ?>
-                            </option>
-                        <?php } ?>
-                    </select>
+                    <input
+                            id="s3base_url"
+                            name="s3base_url"
+                            type="text"
+                            value="<?php echo esc_attr(
+                                S3Testing_Option::get($jobid, 's3base_url')
+                            ); ?>"
+                            class="regular-text"
+                            autocomplete="off"
+                    />
                 </td>
             </tr>
         </table>
@@ -108,37 +127,68 @@ class S3Testing_Destination_S3
                     ) {
                         $this->edit_ajax(
                             [
+                                's3base_url' => S3Testing_Option::get($jobid, 's3base_url'),
                                 's3accesskey' => S3Testing_Option::get($jobid, 's3accesskey'),
                                 's3secretkey' => S3Testing_Option::get($jobid, 's3secretkey'),
                                 's3region' => S3Testing_Option::get($jobid, 's3region'),
                                 's3bucketselected' => S3Testing_Option::get($jobid, 's3bucket'),
-                            ]
+                            ],
+                            true
                         );
                     } ?>
                  </td>
             </tr>
-
+            <tr>
+                <th scope="row">
+                    <label for="s3dirselected">
+                        <?php esc_html_e('Folder selection'); ?>
+                    </label>
+                </th>
+                <td>
+                    <input id="s3dirselected"
+                           name="s3dirselected"
+                           type="hidden"
+                           value=""
+                    />
+                    <?php
+                    if (S3Testing_Option::get($jobid, 's3accesskey')
+                        && S3Testing_Option::get($jobid, 's3secretkey')
+                    ) {
+                        $this->edit_ajax(
+                            [
+                                's3base_url' => S3Testing_Option::get($jobid, 's3base_url'),
+                                's3accesskey' => S3Testing_Option::get($jobid, 's3accesskey'),
+                                's3secretkey' => S3Testing_Option::get($jobid, 's3secretkey'),
+                                's3region' => S3Testing_Option::get($jobid, 's3region'),
+                                's3bucketselected' => S3Testing_Option::get($jobid, 's3bucket'),
+                                's3dirselected' => S3Testing_Option::get($jobid, 's3dir'),
+                            ],
+                            false
+                        );
+                    } ?>
+                </td>
+            </tr>
         </table>
 
         <h3 class="title">
             <?php esc_html_e('S3 Backup settings'); ?>
         </h3>
         <table class="form-table">
-            <tr>
-                <th scope="row">
-                    <label for="ids3dir">
-                        <?php esc_html_e('Folder in bucket'); ?>
-                    </label>
-                </th>
-                <td>
-                    <input id="ids3dir"
-                           name="s3dir"
-                           type="text"
-                           value="<?php echo esc_attr(S3Testing_Option::get($jobid, 's3dir')); ?>"
-                           class="regular-text"
-                    />
-                </td>
-            </tr>
+<!--            <tr>-->
+<!--                <th scope="row">-->
+<!--                    <label for="ids3dir">-->
+<!--                        --><?php //esc_html_e('Folder in bucket'); ?>
+<!--                    </label>-->
+<!--                </th>-->
+<!--                <td>-->
+<!--                    <input id="ids3dir"-->
+<!--                           name="s3dir"-->
+<!--                           type="text"-->
+<!--                           value="--><?php //echo esc_attr(S3Testing_Option::get($jobid, 's3dir')); ?><!--"-->
+<!--                           class="regular-text"-->
+<!--                    />-->
+<!--                </td>-->
+<!--            </tr>-->
         </table>
 
         <h3 class="title"><?php esc_html_e('Amazon specific settings'); ?></h3>
@@ -186,11 +236,13 @@ class S3Testing_Destination_S3
         <?php
     }
 
-    public function edit_ajax($args = [])
+    public function edit_ajax($args = [], $bucket = true)
     {
+        $error = '';
         $buckets = [];
         $buckets_list = [];
-        $error = '';
+        $folders = [];
+        $folders_list = [];
         $ajax = false;
 
         if (!$args) {
@@ -199,8 +251,14 @@ class S3Testing_Destination_S3
             $args['s3accesskey'] = sanitize_text_field($_POST['s3accesskey']);
             $args['s3secretkey'] = sanitize_text_field($_POST['s3secretkey']);
             $args['s3region'] = sanitize_text_field($_POST['s3region']);
+            $args['s3base_url'] = s3testing_esc_url_default_secure($_POST['s3base_url'], ['http', 'https']);
+            $args['s3bucketselected'] = sanitize_text_field($_POST['s3bucketselected']);
 
             $ajax = true;
+        }
+
+        if ($args['s3base_url']) {
+            $args['s3region'] = $args['s3base_url'];
         }
 
         echo '<span id="s3bucketerror" class="s3testing-message-error">';
@@ -210,23 +268,33 @@ class S3Testing_Destination_S3
                 $aws = S3Testing_S3_Destination::fromOption($args['s3region']);
             } else {
                 $options = [
-                    'label' => __('Custom S3 destination', 'backwpup'),
+                    'label' => __('Custom S3 destination'),
                     'endpoint' => $args['s3base_url'],
-                    'region' => $args['s3base_region'],
-                    'multipart' => !empty($args['s3base_multipart']) ? true : false,
-                    'only_path_style_bucket' => !empty($args['s3base_pathstylebucket']) ? true : false,
-                    'version' => $args['s3base_version'],
-                    'signature' => $args['s3base_signature'],
                 ];
                 $aws = S3Testing_S3_Destination::fromOptionArray($options);
             }
 
+
+
             try {
                 $s3 = $aws->client($args['s3accesskey'], $args['s3secretkey']);
+
                 $buckets = $s3->listBuckets();
                 if (!empty($buckets['Buckets'])) {
                     $buckets_list = $buckets['Buckets'];
                 }
+
+                if (!empty($args['s3bucketselected'])) {
+                    $folders = $s3->listObjectsV2([
+                        'Bucket' => $args['s3bucketselected'],
+                        'Delimiter' => '/',
+                    ]);
+
+                    if (!empty($folders['CommonPrefixes'])) {
+                        $folders_list = $folders['CommonPrefixes'];
+                    }
+                }
+
             } catch (Exception $e) {
                 $error = $e->getMessage();
                 if ($e instanceof AwsException) {
@@ -248,12 +316,23 @@ class S3Testing_Destination_S3
         }
         echo '</span>';
 
-        if (!empty($buckets_list)) {
+        if (!empty($buckets_list) && $bucket) {
             echo '<select name="s3bucket" id="s3bucket">';
 
             foreach ($buckets_list as $bucket) {
                 echo '<option ' . selected($args['s3bucketselected'], esc_attr($bucket['Name']), false) . '>'
                     . esc_attr($bucket['Name'])
+                    . '</option>';
+            }
+            echo '</select>';
+        }
+
+        if (!empty($folders_list) && !$bucket) {
+            echo '<select name="s3dir" id="s3dir">';
+
+            foreach ($folders_list as $folder) {
+                echo '<option ' . selected($args['s3dirselected'], esc_attr($folder['Prefix']), false) . '>'
+                    . esc_attr($folder['Prefix'])
                     . '</option>';
             }
             echo '</select>';
@@ -268,6 +347,13 @@ class S3Testing_Destination_S3
     {
         S3Testing_Option::update($jobid, 's3accesskey', sanitize_text_field($_POST['s3accesskey']));
         S3Testing_Option::update($jobid, 's3secretkey', sanitize_text_field($_POST['s3secretkey']));
+        S3Testing_Option::update(
+            $jobid,
+            's3base_url',
+            isset($_POST['s3base_url'])
+                ? s3testing_esc_url_default_secure($_POST['s3base_url'], ['http', 'https'])
+                : ''
+        );
         S3Testing_Option::update($jobid, 's3region', sanitize_text_field($_POST['s3region']));
         S3Testing_Option::update(
             $jobid,
@@ -368,6 +454,7 @@ class S3Testing_Destination_S3
                         s3accesskey: $('input[name="s3accesskey"]').val(),
                         s3secretkey: $('input[name="s3secretkey"]').val(),
                         s3bucketselected: $('input[name="s3bucketselected"]').val(),
+                        s3base_url      : $( 'input[name="s3base_url"]' ).val(),
                         s3region: $('#s3region').val(),
                         _ajax_nonce: $('#s3testingajaxnonce').val()
                     };
@@ -384,7 +471,7 @@ class S3Testing_Destination_S3
                 $('select[name="s3region"]').change(function () {
                     awsgetbucket();
                 });
-                $('input[name="s3accesskey"], input[name="s3secretkey"]').on('keyup', function () {
+                $('input[name="s3accesskey"], input[name="s3secretkey"], input[name="s3base_url"], input[name="s3bucketselected"]').on('keyup', function () {
                     awsgetbucket();
                 });
             });

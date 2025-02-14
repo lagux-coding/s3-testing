@@ -9,9 +9,9 @@ class S3Testing_S3_Destination
         $default = [
             'label' => __('Custom S3 destination'),
             'endpoint' => '',
-            'region' => '',
+            'region' => 'us-west-1',
             'multipart' => true,
-            'only_path_style_bucket' => false,
+            'only_path_style_bucket' => true,
             'version' => 'latest',
             'signature' => 'v4',
         ];
