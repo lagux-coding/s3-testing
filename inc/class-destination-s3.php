@@ -291,6 +291,7 @@ class S3Testing_Destination_S3
                 $aws_destination = S3Testing_S3_Destination::fromOption($job_object->job['s3region']);
             }
 
+            //create s3 client
             $s3 = $aws_destination->client(
                 $job_object->job['s3accesskey'],
                 $job_object->job['s3secretkey']
@@ -303,10 +304,57 @@ class S3Testing_Destination_S3
                 return true;
             }
 
+            if ($aws_destination->supportsMultipart()) {
+                $multipart_uploads = $s3->listMultipartUploads([
+                    'Bucket' => $job_object->job['s3bucket'],
+                    'Prefix' => (string) $job_object->job['s3dir'],
+                ]);
+
+                $uploads = $multipart_uploads->get('Uploads');
+
+                if (!empty($uploads)) {
+                    foreach ($uploads as $upload) {
+                        $s3->abortMultipartUpload([
+                            'Bucket' => $job_object->job['s3bucket'],
+                            'Key' => $upload['Key'],
+                            'UploadId' => $upload['UploadId'],
+                        ]);
+                    }
+                }
+            }
+
+            if (!$up_file_handle = fopen($job_object->backup_folder . $job_object->backup_file, 'rb')) {
+                return false;
+            }
+
+            $create_args = [];
+            $create_args['Bucket'] = $job_object->job['s3bucket'];
+            $create_args['ACL'] = 'private';
+
+            $create_args['Metadata'] = ['BackupTime' => date('Y-m-d H:i:s', $job_object->start_time)];
+
+            $create_args['Body'] = $up_file_handle;
+            $create_args['Key'] = $job_object->job['s3dir'] . $job_object->backup_file;
+
+            try {
+                $s3->putObject($create_args);
+            } catch (Exception $e) {
+                $errorMessage = $e->getMessage();
+                if ($e instanceof AwsException) {
+                    $errorMessage = $e->getAwsErrorMessage();
+                }
+
+                return false;
+            }
+
+            $result = $s3->headObject([
+                'Bucket' => $job_object->job['s3bucket'],
+                'Key' => $job_object->job['s3dir'] . $job_object->backup_file,
+            ]);
 
         } catch (Exception $e) {
-
         }
+        return true;
     }
 
     public function edit_inline_js()

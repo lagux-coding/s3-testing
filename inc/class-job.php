@@ -194,6 +194,7 @@ class S3Testing_Job
         $this->create_archive();
 
 //        S3Testing::get_destination('S3')->job_run_archive($this);
+        S3Testing::get_destination('S3')->job_run_archive($this);
     }
 
     private function create_archive()
