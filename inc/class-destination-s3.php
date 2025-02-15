@@ -379,6 +379,7 @@ class S3Testing_Destination_S3
 
         if (!empty($folders_list)) {
             echo '<select name="s3dir" id="s3dir">';
+            echo '<option' . selected($args['s3dirselected'], '', false) . '>/</option>'; // Option Root
 
             foreach ($folders_list as $folder) {
                 echo '<option ' . selected($args['s3dirselected'], esc_attr($folder['Prefix']), false) . '>'
