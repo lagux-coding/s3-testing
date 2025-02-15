@@ -425,6 +425,8 @@ class S3Testing_Destination_S3
         try {
             if (empty($job_object->job['s3base_url'])) {
                 $aws_destination = S3Testing_S3_Destination::fromOption($job_object->job['s3region']);
+            } else {
+                $aws_destination = S3Testing_S3_Destination::fromJobId($job_object->job['jobid']);
             }
 
             //create s3 client
@@ -440,24 +442,24 @@ class S3Testing_Destination_S3
                 return true;
             }
 
-            if ($aws_destination->supportsMultipart()) {
-                $multipart_uploads = $s3->listMultipartUploads([
-                    'Bucket' => $job_object->job['s3bucket'],
-                    'Prefix' => (string) $job_object->job['s3dir'],
-                ]);
-
-                $uploads = $multipart_uploads->get('Uploads');
-
-                if (!empty($uploads)) {
-                    foreach ($uploads as $upload) {
-                        $s3->abortMultipartUpload([
-                            'Bucket' => $job_object->job['s3bucket'],
-                            'Key' => $upload['Key'],
-                            'UploadId' => $upload['UploadId'],
-                        ]);
-                    }
-                }
-            }
+//            if ($aws_destination->supportsMultipart()) {
+//                $multipart_uploads = $s3->listMultipartUploads([
+//                    'Bucket' => $job_object->job['s3bucket'],
+//                    'Prefix' => (string) $job_object->job['s3dir'],
+//                ]);
+//
+//                $uploads = $multipart_uploads->get('Uploads');
+//
+//                if (!empty($uploads)) {
+//                    foreach ($uploads as $upload) {
+//                        $s3->abortMultipartUpload([
+//                            'Bucket' => $job_object->job['s3bucket'],
+//                            'Key' => $upload['Key'],
+//                            'UploadId' => $upload['UploadId'],
+//                        ]);
+//                    }
+//                }
+//            }
 
             if (!$up_file_handle = fopen($job_object->backup_folder . $job_object->backup_file, 'rb')) {
                 return false;

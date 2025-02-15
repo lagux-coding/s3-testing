@@ -205,7 +205,7 @@ class S3Testing_S3_Destination
                 'key' => $accessKey,
                 'secret' => $secretKey,
             ],
-            'region' => 'ap-southeast-2',
+            'region' => $this->region(),
             'http' => [
                 'verify' => false,
             ],
@@ -233,8 +233,20 @@ class S3Testing_S3_Destination
 
     public static function fromOptionArray($optionsArr)
     {
-    return new self($optionsArr);
+        return new self($optionsArr);
     }
+
+    public static function fromJobId($jobId)
+    {
+        $options = [
+            'label' => __('Custom S3 destination'),
+            'endpoint' => S3Testing_Option::get($jobId, 's3base_url'),
+            'region' => S3Testing_Option::get($jobId, 's3region'),
+        ];
+
+        return self::fromOptionArray($options);
+    }
+
     public function label()
     {
         return $this->options['label'];
