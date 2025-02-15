@@ -228,14 +228,21 @@ class S3Testing_Page_Jobs extends WP_List_Table
                                 S3Testing_Admin::message(sprintf(__('The job "%1$s" destination "%2$s" is not configured properly'), esc_attr(S3Testing_Option::get($jobid, 'name')), $id), true);
                             }
                             ++$destinations;
+
+                            if ($destinations < 1) {
+                                S3Testing_Admin::message(sprintf(__('The job "%s" needs properly configured destinations to run!'), esc_attr(S3Testing_Option::get($jobid, 'name'))), true);
+                            }
                         }
 
                         if ($destinations < 1) {
                             S3Testing_Admin::message(sprintf(__('The job "%s" needs properly configured destinations to run!'), esc_attr(S3Testing_Option::get($jobid, 'name'))), true);
                         }
 
-                        S3Testing_Job::get_jobrun_url('runnow', $jobid);
-                        S3Testing_Admin::message(sprintf(__('Job "%s" started.'), esc_attr(S3Testing_Option::get($jobid, 'name'))));
+                        $log_messages = S3Testing_Admin::get_messages();
+                        if(empty($log_messages)) {
+                            S3Testing_Job::get_jobrun_url('runnow', $jobid);
+                            S3Testing_Admin::message(sprintf(__('Job "%s" started.'), esc_attr(S3Testing_Option::get($jobid, 'name'))));
+                        }
                     }
                 }
                 break;

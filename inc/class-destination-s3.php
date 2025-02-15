@@ -31,27 +31,27 @@ class S3Testing_Destination_S3
             <?php esc_html_e('S3 Service'); ?>
         </h3>
         <table class="form-table">
-<!--            <tr>-->
-<!--                <th scope="row">-->
-<!--                    <label for="s3region">-->
-<!--                        --><?php //esc_html_e('Select a S3 service'); ?>
-<!--                    </label>-->
-<!--                </th>-->
-<!--                <td>-->
-<!---->
-<!--                    <select name="s3region"-->
-<!--                            id="s3region"-->
-<!--                            title="--><?php //esc_attr_e('S3 Region'); ?><!--">-->
-<!--                        --><?php //foreach (S3Testing_S3_Destination::options() as $id => $option) { ?>
-<!--                            <option value="--><?php //echo esc_attr($id); ?><!--"-->
-<!--                                --><?php //selected($id, S3Testing_Option::get($jobid, 's3region')); ?>
-<!--                            >-->
-<!--                                --><?php //echo esc_html($option['label']); ?>
-<!--                            </option>-->
-<!--                        --><?php //} ?>
-<!--                    </select>-->
-<!--                </td>-->
-<!--            </tr>-->
+            <tr>
+                <th scope="row">
+                    <label for="s3region">
+                        <?php esc_html_e('Select a S3 service'); ?>
+                    </label>
+                </th>
+                <td>
+
+                    <select name="s3region"
+                            id="s3region"
+                            title="<?php esc_attr_e('S3 Region'); ?>">
+                        <?php foreach (S3Testing_S3_Destination::options() as $id => $option) { ?>
+                            <option value="<?php echo esc_attr($id); ?>"
+                                <?php selected($id, S3Testing_Option::get($jobid, 's3region')); ?>
+                            >
+                                <?php echo esc_html($option['label']); ?>
+                            </option>
+                        <?php } ?>
+                    </select>
+                </td>
+            </tr>
             <tr>
                 <th scope="row">
                     <label for="s3base_url">
@@ -137,17 +137,40 @@ class S3Testing_Destination_S3
                     } ?>
                  </td>
             </tr>
+<!--            <tr>-->
+<!--                <th scope="row">-->
+<!--                    <label for="s3dirselected">-->
+<!--                        --><?php //esc_html_e('Folder selection'); ?>
+<!--                    </label>-->
+<!--                </th>-->
+<!--                <td>-->
+<!--                    <input id="s3dirselected"-->
+<!--                           name="s3dirselected"-->
+<!--                           type="hidden"-->
+<!--                           value=""-->
+<!--                    />-->
+<!--                    -->
+<!---->
+<!--                </td>-->
+<!--            </tr>-->
+        </table>
+
+        <h3 class="title">
+            <?php esc_html_e('S3 Backup settings'); ?>
+        </h3>
+        <table class="form-table">
             <tr>
                 <th scope="row">
                     <label for="s3dirselected">
-                        <?php esc_html_e('Folder selection'); ?>
+                        <?php esc_html_e('Folder in bucket'); ?>
                     </label>
                 </th>
                 <td>
                     <input id="s3dirselected"
                            name="s3dirselected"
                            type="hidden"
-                           value=""
+                           value="<?php echo esc_attr(S3Testing_Option::get($jobid, 's3dir')); ?>"
+                           class="regular-text"
                     />
                     <?php
 
@@ -165,30 +188,8 @@ class S3Testing_Destination_S3
                         );
                     }
                     ?>
-
                 </td>
             </tr>
-        </table>
-
-        <h3 class="title">
-            <?php esc_html_e('S3 Backup settings'); ?>
-        </h3>
-        <table class="form-table">
-<!--            <tr>-->
-<!--                <th scope="row">-->
-<!--                    <label for="ids3dir">-->
-<!--                        --><?php //esc_html_e('Folder in bucket'); ?>
-<!--                    </label>-->
-<!--                </th>-->
-<!--                <td>-->
-<!--                    <input id="ids3dir"-->
-<!--                           name="s3dir"-->
-<!--                           type="text"-->
-<!--                           value="--><?php //echo esc_attr(S3Testing_Option::get($jobid, 's3dir')); ?><!--"-->
-<!--                           class="regular-text"-->
-<!--                    />-->
-<!--                </td>-->
-<!--            </tr>-->
         </table>
 
         <h3 class="title"><?php esc_html_e('Amazon specific settings'); ?></h3>
