@@ -191,6 +191,49 @@ class S3Testing_Destination_S3
                 </td>
             </tr>
         </table>
+
+        <h3 class="title"><?php esc_html_e('Amazon specific settings'); ?></h3>
+        <table class="form-table">
+            <tr>
+                <th scope="row">
+                    <label for="ids3storageclass">
+                        <?php esc_html_e('Amazon: Storage Class'); ?>
+                    </label>
+                </th>
+                <td>
+                    <?php $storageClass = S3Testing_Option::get($jobid, 's3storageclass'); ?>
+                    <select name="s3storageclass"
+                            id="ids3storageclass"
+                            title="<?php esc_html_e('Amazon: Storage Class'); ?>">
+                        <option value=""
+                            <?php selected('', $storageClass, true); ?>>
+                            <?php esc_html_e('Standard'); ?>
+                        </option>
+                        <option value="STANDARD_IA"
+                            <?php selected('STANDARD_IA', $storageClass, true); ?>>
+                            <?php esc_html_e('Standard-Infrequent Access'); ?>
+                        </option>
+                        <option value="ONEZONE_IA"
+                            <?php selected('ONEZONE_IA', $storageClass, true); ?>>
+                            <?php esc_html_e('One Zone-Infrequent Access'); ?>
+                        </option>
+                        <option value="REDUCED_REDUNDANCY"
+                            <?php selected('REDUCED_REDUNDANCY', $storageClass, true); ?>>
+                            <?php esc_html_e('Reduced Redundancy'); ?>
+                        </option>
+                        <option value="INTELLIGENT_TIERING"
+                            <?php selected('INTELLIGENT_TIERING', $storageClass, true); ?>>
+                            <?php esc_html_e('Intelligent-Tiering'); ?>
+                        </option>
+                        <option value="GLACIER_IR"
+                            <?php selected('GLACIER_IR', $storageClass, true); ?>>
+                            <?php esc_html_e('Glacier Instant Retrieval'); ?>
+                        </option>
+                    </select>
+                </td>
+            </tr>
+        </table>
+
         <?php
     }
 
@@ -434,12 +477,7 @@ class S3Testing_Destination_S3
             $create_args['Metadata'] = ['BackupTime' => date('Y-m-d H:i:s', $job_object->start_time)];
 
             $create_args['Body'] = $up_file_handle;
-
-            if($job_object->job['s3dir'] != '/') {
-                $create_args['Key'] = $job_object->job['s3dir'] . $job_object->backup_file;
-            } else {
-                $create_args['Key'] = $job_object->backup_file;
-            }
+            $create_args['Key'] = $job_object->job['s3dir'] . $job_object->backup_file;
 
             try {
                 $s3->putObject($create_args);
