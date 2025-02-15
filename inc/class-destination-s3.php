@@ -347,6 +347,11 @@ class S3Testing_Destination_S3
                         }
                     }
                 }
+
+                if (empty($folders_list) || count($folders_list) === 1) {
+                    array_unshift($folders_list, ['Prefix' => './']);
+                }
+
                 usort($folders_list, fn($a, $b) => strcmp($a['Prefix'], $b['Prefix']));
             } catch (Exception $e) {
                 $error = $e->getMessage();
