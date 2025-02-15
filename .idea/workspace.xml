@@ -4,9 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="14453ea8-162e-42dd-95e9-1168a72971e1" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/inc/class-destination-s3.php" beforeDir="false" afterPath="$PROJECT_DIR$/inc/class-destination-s3.php" afterDir="false" />
-    </list>
+    <list default="true" id="14453ea8-162e-42dd-95e9-1168a72971e1" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -54,7 +52,7 @@
     "PHP Script.s3-testing.php.executor": "Run",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "temp-branch",
+    "git-widget-placeholder": "7f584cf0",
     "last_opened_file_path": "D:/Coding/backwpup-master",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
@@ -92,7 +90,7 @@
       <workItem from="1739413294406" duration="22931000" />
       <workItem from="1739498707211" duration="24760000" />
       <workItem from="1739540827717" duration="14756000" />
-      <workItem from="1739583808304" duration="8102000" />
+      <workItem from="1739583808304" duration="7945000" />
     </task>
     <servers />
   </component>

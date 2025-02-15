@@ -15,6 +15,8 @@ class S3Testing_Destination_S3
             's3accesskey' => '',
             's3secretkey' => '',
             's3bucket' => '',
+            's3dircreate' => '',
+            's3newfolder' => '',
             's3region' => 'ap-southeast-2',
 //            's3ssencrypt' => '',
 //            's3storageclass' => '',
@@ -33,27 +35,6 @@ class S3Testing_Destination_S3
         <table class="form-table">
             <tr>
                 <th scope="row">
-                    <label for="s3region">
-                        <?php esc_html_e('Select a S3 service'); ?>
-                    </label>
-                </th>
-                <td>
-
-                    <select name="s3region"
-                            id="s3region"
-                            title="<?php esc_attr_e('S3 Region'); ?>">
-                        <?php foreach (S3Testing_S3_Destination::options() as $id => $option) { ?>
-                            <option value="<?php echo esc_attr($id); ?>"
-                                <?php selected($id, S3Testing_Option::get($jobid, 's3region')); ?>
-                            >
-                                <?php echo esc_html($option['label']); ?>
-                            </option>
-                        <?php } ?>
-                    </select>
-                </td>
-            </tr>
-            <tr>
-                <th scope="row">
                     <label for="s3base_url">
                         <?php esc_html_e('S3 Server URL'); ?>
                     </label>
@@ -69,6 +50,21 @@ class S3Testing_Destination_S3
                             class="regular-text"
                             autocomplete="off"
                     />
+                </td>
+            </tr>
+            <tr>
+                <th scope="row">
+                    <label for="s3base_region"><?php esc_html_e(
+                            'Region',
+                        ); ?>
+                </th>
+                <td>
+                    <input type="text" name="s3base_region" value="<?php echo esc_attr(
+                        S3Testing_Option::get($jobid, 's3base_region')
+                    ); ?>" class="regular-text" autocomplete="off">
+                    <p class="description"><?php esc_html_e(
+                            'Specify S3 region like "us-west-1"',
+                        ); ?></p>
                 </td>
             </tr>
         </table>
@@ -130,7 +126,7 @@ class S3Testing_Destination_S3
                                 's3base_url' => S3Testing_Option::get($jobid, 's3base_url'),
                                 's3accesskey' => S3Testing_Option::get($jobid, 's3accesskey'),
                                 's3secretkey' => S3Testing_Option::get($jobid, 's3secretkey'),
-                                's3region' => S3Testing_Option::get($jobid, 's3region'),
+                                's3base_region' => S3Testing_Option::get($jobid, 's3base_region'),
                                 's3bucketselected' => S3Testing_Option::get($jobid, 's3bucket'),
                             ], true
                         );
@@ -182,7 +178,7 @@ class S3Testing_Destination_S3
                                 's3base_url' => S3Testing_Option::get($jobid, 's3base_url'),
                                 's3accesskey' => S3Testing_Option::get($jobid, 's3accesskey'),
                                 's3secretkey' => S3Testing_Option::get($jobid, 's3secretkey'),
-                                's3region' => S3Testing_Option::get($jobid, 's3region'),
+                                's3base_region' => S3Testing_Option::get($jobid, 's3base_region'),
                                 's3bucketselected' => S3Testing_Option::get($jobid, 's3bucket'),
                             ]
                         );
@@ -190,7 +186,25 @@ class S3Testing_Destination_S3
                     ?>
                 </td>
             </tr>
+            <tr>
+                <th scope="row">
+                    <label for="s3dircreate">
+                        <?php esc_html_e('Or create new folder'); ?>
+                    </label>
+                </th>
+                <td>
+                    <input id="s3dircreate"
+                           name="s3dircreate"
+                           type="text"
+                           value="<?php echo S3Testing_Option::get($jobid, 's3dircreate') == '/' ? '' : S3Testing_Option::get($jobid, 's3dircreate') ?>"
+                           size="63"
+                           class="regular-text"
+                           autocomplete="off"
+                    />
+                </td>
+            </tr>
         </table>
+
         <?php
     }
 
@@ -208,6 +222,7 @@ class S3Testing_Destination_S3
             $args['s3secretkey'] = sanitize_text_field($_POST['s3secretkey']);
             $args['s3base_url'] = s3testing_esc_url_default_secure($_POST['s3base_url'], ['http', 'https']);
             $args['s3bucketselected'] = sanitize_text_field($_POST['s3bucketselected']);
+            $args['s3base_region'] = sanitize_text_field($_POST['s3base_region']);
             $ajax = true;
         }
 
@@ -223,6 +238,7 @@ class S3Testing_Destination_S3
                 $options = [
                     'label' => __('Custom S3 destination'),
                     'endpoint' => $args['s3base_url'],
+                    'region' => $args['s3base_region'],
                 ];
                 $aws = S3Testing_S3_Destination::fromOptionArray($options);
             }
@@ -286,9 +302,10 @@ class S3Testing_Destination_S3
             check_ajax_referer('s3testing_ajax_nonce');
             $args['s3accesskey'] = sanitize_text_field($_POST['s3accesskey']);
             $args['s3secretkey'] = sanitize_text_field($_POST['s3secretkey']);
-            $args['s3region'] = sanitize_text_field($_POST['s3region']);
+            $args['s3base_region'] = sanitize_text_field($_POST['s3base_region']);
             $args['s3base_url'] = s3testing_esc_url_default_secure($_POST['s3base_url'], ['http', 'https']);
             $args['s3bucketselected'] = sanitize_text_field($_POST['s3bucketselected']);
+            $args['s3dirselected'] = sanitize_text_field($_POST['s3dirselected']);
 
             $ajax = true;
         }
@@ -305,6 +322,7 @@ class S3Testing_Destination_S3
                 $options = [
                     'label' => __('Custom S3 destination'),
                     'endpoint' => $args['s3base_url'],
+                    'region' => $args['s3base_region'],
                 ];
                 $aws = S3Testing_S3_Destination::fromOptionArray($options);
             }
@@ -314,13 +332,27 @@ class S3Testing_Destination_S3
 
                 $folders = $s3->listObjectsV2([
                     'Bucket' => $args['s3bucketselected'],
-                    'Delimiter' => '/',
                 ]);
 
-                if(!empty($folders['CommonPrefixes'])) {
-                    $folders_list = $folders['CommonPrefixes'];
+                if (!empty($folders['Contents'])) {
+                    foreach ($folders['Contents'] as $object) {
+                        $key = $object['Key'];
+                        if (str_ends_with($key, '/')) {
+                            $folders_list[] = ['Prefix' => $key];
+                        } else {
+                            $folderPath = dirname($key) . '/';
+                            if (!in_array(['Prefix' => $folderPath], $folders_list)) {
+                                $folders_list[] = ['Prefix' => $folderPath];
+                            }
+                        }
+                    }
                 }
 
+                if (empty($folders_list) || count($folders_list) === 1) {
+                    array_unshift($folders_list, ['Prefix' => './']);
+                }
+
+                usort($folders_list, fn($a, $b) => strcmp($a['Prefix'], $b['Prefix']));
             } catch (Exception $e) {
                 $error = $e->getMessage();
                 if ($e instanceof AwsException) {
@@ -339,7 +371,6 @@ class S3Testing_Destination_S3
         echo '</span>';
 
         echo '<select name="s3dir" id="s3dir">';
-        echo '<option' . selected($args['s3dirselected'], '', false) . '>/</option>'; // Option Root
         if (!empty($folders_list)) {
 
             foreach ($folders_list as $folder) {
@@ -366,7 +397,7 @@ class S3Testing_Destination_S3
                 ? s3testing_esc_url_default_secure($_POST['s3base_url'], ['http', 'https'])
                 : ''
         );
-        S3Testing_Option::update($jobid, 's3region', sanitize_text_field($_POST['s3region']));
+        S3Testing_Option::update($jobid, 's3base_region', sanitize_text_field($_POST['s3base_region']));
         S3Testing_Option::update(
             $jobid,
             's3bucket',
@@ -376,10 +407,22 @@ class S3Testing_Destination_S3
         $_POST['s3dir'] = trailingslashit(str_replace(
             '//',
             '/',
-            str_replace('\\', '/', trim(sanitize_text_field($_POST['s3dir'])))
+            str_replace('\\', '/', trim(sanitize_text_field($_POST['s3dir']))
+        )));
+
+        $_POST['s3dircreate'] = trailingslashit(str_replace(
+            '//',
+            '/',
+            str_replace('\\', '/', trim(sanitize_text_field($_POST['s3dircreate'])))
         ));
 
+        if($_POST['s3dircreate'] != '/') {
+            $_POST['s3newfolder'] = $_POST['s3dir'] . $_POST['s3dircreate'];
+        }
+
         S3Testing_Option::update($jobid, 's3dir', $_POST['s3dir']);
+        S3Testing_Option::update($jobid, 's3dircreate', $_POST['s3dircreate']);
+        S3Testing_Option::update($jobid, 's3newfolder', $_POST['s3newfolder'] == null ? '' : $_POST['s3newfolder']);
     }
 
     public function job_run_archive(S3Testing_Job $job_object)
@@ -435,10 +478,10 @@ class S3Testing_Destination_S3
 
             $create_args['Body'] = $up_file_handle;
 
-            if($job_object->job['s3dir'] != '/') {
+            if($job_object->job['s3newfolder'] == '') {
                 $create_args['Key'] = $job_object->job['s3dir'] . $job_object->backup_file;
             } else {
-                $create_args['Key'] = $job_object->backup_file;
+                $create_args['Key'] = $job_object->job['s3newfolder'] . $job_object->backup_file;
             }
 
             try {
@@ -472,6 +515,7 @@ class S3Testing_Destination_S3
                         action: 's3testing_dest_s3',
                         s3accesskey: $('input[name="s3accesskey"]').val(),
                         s3secretkey: $('input[name="s3secretkey"]').val(),
+                        s3base_region: $('input[name="s3base_region"]').val(),
                         s3bucketselected: $('input[name="s3bucketselected"]').val(),
                         s3base_url      : $( 'input[name="s3base_url"]' ).val(),
                         s3region: $('#s3region').val(),
@@ -507,9 +551,10 @@ class S3Testing_Destination_S3
                         action: 's3testing_dest_s3_dir',
                         s3accesskey: $('input[name="s3accesskey"]').val(),
                         s3secretkey: $('input[name="s3secretkey"]').val(),
+                        s3base_region: $('input[name="s3base_region"]').val(),
                         s3bucketselected: $('#s3bucket').val(),
+                        s3dirselected: $('input[name="s3dirselected"]').val(),
                         s3base_url: $('input[name="s3base_url"]').val(),
-                        s3region: $('#s3region').val(),
                         _ajax_nonce: $('#s3testingajaxnonce').val(),
                     };
 

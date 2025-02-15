@@ -241,7 +241,7 @@ class S3Testing_S3_Destination
         $options = [
             'label' => __('Custom S3 destination'),
             'endpoint' => S3Testing_Option::get($jobId, 's3base_url'),
-            'region' => S3Testing_Option::get($jobId, 's3region'),
+            'region' => S3Testing_Option::get($jobId, 's3base_region'),
         ];
 
         return self::fromOptionArray($options);
