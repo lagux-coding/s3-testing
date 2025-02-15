@@ -372,14 +372,18 @@ class S3Testing_Destination_S3
             }
         }
 
-        if (empty($folders['CommonPrefixes'])) {
-            esc_html_e('No folders found!');
+        if (empty($args['s3accesskey'])) {
+            esc_html_e('No Bucket found');
+        } elseif (empty($args['s3secretkey'])) {
+            esc_html_e('No Bucket found');
+        } elseif (!empty($error)) {
+            echo esc_html($error);
         }
         echo '</span>';
 
+        echo '<select name="s3dir" id="s3dir">';
+        echo '<option' . selected($args['s3dirselected'], '', false) . '>/</option>'; // Option Root
         if (!empty($folders_list)) {
-            echo '<select name="s3dir" id="s3dir">';
-            echo '<option' . selected($args['s3dirselected'], '', false) . '>/</option>'; // Option Root
 
             foreach ($folders_list as $folder) {
                 echo '<option ' . selected($args['s3dirselected'], esc_attr($folder['Prefix']), false) . '>'
