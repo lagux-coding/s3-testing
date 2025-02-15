@@ -304,7 +304,25 @@ class S3Testing_Page_EditJob
         echo '</p></form>';
         ?>
         </div>
+
+        <script type="text/javascript">
+            jQuery(document).ready(function($){
+                //auto post if things change
+                var changed = false;
+                $('#editjob').change(function() {
+                    changed = true;
+                });
+                $('.nav-tab').click(function() {
+                    if(changed) {
+                        $( 'input[name="nexttab"]' ).val( $(this).data( "nexttab" ) );
+                        $( '#editjob' ).submit();
+                        return false;
+                    }
+                });
+            });
+        </script>
         <?php
+        //add inline js
         if (strstr((string)$_GET['tab'], 'dest-')) {
             $dest_object = S3Testing::get_destination(str_replace('dest-', '', sanitize_text_field($_GET['tab'])));
             $dest_object->edit_inline_js();
