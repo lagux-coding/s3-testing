@@ -33,27 +33,6 @@ class S3Testing_Destination_S3
         <table class="form-table">
             <tr>
                 <th scope="row">
-                    <label for="s3region">
-                        <?php esc_html_e('Select a S3 service'); ?>
-                    </label>
-                </th>
-                <td>
-
-                    <select name="s3region"
-                            id="s3region"
-                            title="<?php esc_attr_e('S3 Region'); ?>">
-                        <?php foreach (S3Testing_S3_Destination::options() as $id => $option) { ?>
-                            <option value="<?php echo esc_attr($id); ?>"
-                                <?php selected($id, S3Testing_Option::get($jobid, 's3region')); ?>
-                            >
-                                <?php echo esc_html($option['label']); ?>
-                            </option>
-                        <?php } ?>
-                    </select>
-                </td>
-            </tr>
-            <tr>
-                <th scope="row">
                     <label for="s3base_url">
                         <?php esc_html_e('S3 Server URL'); ?>
                     </label>
@@ -69,6 +48,21 @@ class S3Testing_Destination_S3
                             class="regular-text"
                             autocomplete="off"
                     />
+                </td>
+            </tr>
+            <tr>
+                <th scope="row">
+                    <label for="s3base_region"><?php esc_html_e(
+                            'Region',
+                        ); ?><span style="color:red">*</span></label>
+                </th>
+                <td>
+                    <input type="text" name="s3base_region" value="<?php echo esc_attr(
+                        S3Testing_Option::get($jobid, 's3base_region')
+                    ); ?>" class="regular-text" autocomplete="off">
+                    <p class="description"><?php esc_html_e(
+                            'Specify S3 region like "us-west-1"',
+                        ); ?></p>
                 </td>
             </tr>
         </table>
@@ -130,7 +124,7 @@ class S3Testing_Destination_S3
                                 's3base_url' => S3Testing_Option::get($jobid, 's3base_url'),
                                 's3accesskey' => S3Testing_Option::get($jobid, 's3accesskey'),
                                 's3secretkey' => S3Testing_Option::get($jobid, 's3secretkey'),
-                                's3region' => S3Testing_Option::get($jobid, 's3region'),
+                                's3base_region' => S3Testing_Option::get($jobid, 's3base_region'),
                                 's3bucketselected' => S3Testing_Option::get($jobid, 's3bucket'),
                             ], true
                         );
@@ -182,54 +176,12 @@ class S3Testing_Destination_S3
                                 's3base_url' => S3Testing_Option::get($jobid, 's3base_url'),
                                 's3accesskey' => S3Testing_Option::get($jobid, 's3accesskey'),
                                 's3secretkey' => S3Testing_Option::get($jobid, 's3secretkey'),
-                                's3region' => S3Testing_Option::get($jobid, 's3region'),
+                                's3base_region' => S3Testing_Option::get($jobid, 's3base_region'),
                                 's3bucketselected' => S3Testing_Option::get($jobid, 's3bucket'),
                             ]
                         );
                     }
                     ?>
-                </td>
-            </tr>
-        </table>
-
-        <h3 class="title"><?php esc_html_e('Amazon specific settings'); ?></h3>
-        <table class="form-table">
-            <tr>
-                <th scope="row">
-                    <label for="ids3storageclass">
-                        <?php esc_html_e('Amazon: Storage Class'); ?>
-                    </label>
-                </th>
-                <td>
-                    <?php $storageClass = S3Testing_Option::get($jobid, 's3storageclass'); ?>
-                    <select name="s3storageclass"
-                            id="ids3storageclass"
-                            title="<?php esc_html_e('Amazon: Storage Class'); ?>">
-                        <option value=""
-                            <?php selected('', $storageClass, true); ?>>
-                            <?php esc_html_e('Standard'); ?>
-                        </option>
-                        <option value="STANDARD_IA"
-                            <?php selected('STANDARD_IA', $storageClass, true); ?>>
-                            <?php esc_html_e('Standard-Infrequent Access'); ?>
-                        </option>
-                        <option value="ONEZONE_IA"
-                            <?php selected('ONEZONE_IA', $storageClass, true); ?>>
-                            <?php esc_html_e('One Zone-Infrequent Access'); ?>
-                        </option>
-                        <option value="REDUCED_REDUNDANCY"
-                            <?php selected('REDUCED_REDUNDANCY', $storageClass, true); ?>>
-                            <?php esc_html_e('Reduced Redundancy'); ?>
-                        </option>
-                        <option value="INTELLIGENT_TIERING"
-                            <?php selected('INTELLIGENT_TIERING', $storageClass, true); ?>>
-                            <?php esc_html_e('Intelligent-Tiering'); ?>
-                        </option>
-                        <option value="GLACIER_IR"
-                            <?php selected('GLACIER_IR', $storageClass, true); ?>>
-                            <?php esc_html_e('Glacier Instant Retrieval'); ?>
-                        </option>
-                    </select>
                 </td>
             </tr>
         </table>
@@ -251,6 +203,7 @@ class S3Testing_Destination_S3
             $args['s3secretkey'] = sanitize_text_field($_POST['s3secretkey']);
             $args['s3base_url'] = s3testing_esc_url_default_secure($_POST['s3base_url'], ['http', 'https']);
             $args['s3bucketselected'] = sanitize_text_field($_POST['s3bucketselected']);
+            $args['s3base_region'] = sanitize_text_field($_POST['s3base_region']);
             $ajax = true;
         }
 
@@ -348,6 +301,7 @@ class S3Testing_Destination_S3
                 $options = [
                     'label' => __('Custom S3 destination'),
                     'endpoint' => $args['s3base_url'],
+                    'region' => $args['s3base_region'],
                 ];
                 $aws = S3Testing_S3_Destination::fromOptionArray($options);
             }
@@ -409,7 +363,7 @@ class S3Testing_Destination_S3
                 ? s3testing_esc_url_default_secure($_POST['s3base_url'], ['http', 'https'])
                 : ''
         );
-        S3Testing_Option::update($jobid, 's3region', sanitize_text_field($_POST['s3region']));
+        S3Testing_Option::update($jobid, 's3base_region', sanitize_text_field($_POST['s3base_region']));
         S3Testing_Option::update(
             $jobid,
             's3bucket',
@@ -510,6 +464,7 @@ class S3Testing_Destination_S3
                         action: 's3testing_dest_s3',
                         s3accesskey: $('input[name="s3accesskey"]').val(),
                         s3secretkey: $('input[name="s3secretkey"]').val(),
+                        s3base_region: $('input[name="s3base_region"]').val(),
                         s3bucketselected: $('input[name="s3bucketselected"]').val(),
                         s3base_url      : $( 'input[name="s3base_url"]' ).val(),
                         s3region: $('#s3region').val(),
