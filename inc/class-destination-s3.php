@@ -219,6 +219,7 @@ class S3Testing_Destination_S3
                 $options = [
                     'label' => __('Custom S3 destination'),
                     'endpoint' => $args['s3base_url'],
+                    'region' => $args['s3base_region'],
                 ];
                 $aws = S3Testing_S3_Destination::fromOptionArray($options);
             }
@@ -282,9 +283,10 @@ class S3Testing_Destination_S3
             check_ajax_referer('s3testing_ajax_nonce');
             $args['s3accesskey'] = sanitize_text_field($_POST['s3accesskey']);
             $args['s3secretkey'] = sanitize_text_field($_POST['s3secretkey']);
-            $args['s3region'] = sanitize_text_field($_POST['s3region']);
+            $args['s3base_region'] = sanitize_text_field($_POST['s3base_region']);
             $args['s3base_url'] = s3testing_esc_url_default_secure($_POST['s3base_url'], ['http', 'https']);
             $args['s3bucketselected'] = sanitize_text_field($_POST['s3bucketselected']);
+            $args['s3dirselected'] = sanitize_text_field($_POST['s3dirselected']);
 
             $ajax = true;
         }
@@ -500,9 +502,10 @@ class S3Testing_Destination_S3
                         action: 's3testing_dest_s3_dir',
                         s3accesskey: $('input[name="s3accesskey"]').val(),
                         s3secretkey: $('input[name="s3secretkey"]').val(),
+                        s3base_region: $('input[name="s3base_region"]').val(),
                         s3bucketselected: $('#s3bucket').val(),
+                        s3dirselected: $('input[name="s3dirselected"]').val(),
                         s3base_url: $('input[name="s3base_url"]').val(),
-                        s3region: $('#s3region').val(),
                         _ajax_nonce: $('#s3testingajaxnonce').val(),
                     };
 

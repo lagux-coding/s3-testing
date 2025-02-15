@@ -154,9 +154,6 @@ class S3Testing_JobType_File extends S3Testing_JobTypes
         //backup plugins
         $wp_plugin_dir = realpath(WP_PLUGIN_DIR);
         if ($wp_plugin_dir && !empty($job_object->job['backupplugins'])) {
-            $log_file = WP_CONTENT_DIR . '/debug-file.log';
-            $message = 'debug run file log ' . print_r($wp_plugin_dir, true);
-            file_put_contents($log_file, $message . "\n", FILE_APPEND);
             $wp_plugin_dir = trailingslashit(str_replace('\\', '/', $wp_plugin_dir));
             $excludes = $this->get_exclude_dirs($wp_plugin_dir, $folders_already_in);
 
