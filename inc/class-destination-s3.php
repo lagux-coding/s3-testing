@@ -15,6 +15,8 @@ class S3Testing_Destination_S3
             's3accesskey' => '',
             's3secretkey' => '',
             's3bucket' => '',
+            's3dircreate' => '',
+            's3newfolder' => '',
             's3region' => 'ap-southeast-2',
 //            's3ssencrypt' => '',
 //            's3storageclass' => '',
@@ -54,7 +56,7 @@ class S3Testing_Destination_S3
                 <th scope="row">
                     <label for="s3base_region"><?php esc_html_e(
                             'Region',
-                        ); ?><span style="color:red">*</span></label>
+                        ); ?>
                 </th>
                 <td>
                     <input type="text" name="s3base_region" value="<?php echo esc_attr(
@@ -182,6 +184,23 @@ class S3Testing_Destination_S3
                         );
                     }
                     ?>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row">
+                    <label for="s3dircreate">
+                        <?php esc_html_e('Or create new folder'); ?>
+                    </label>
+                </th>
+                <td>
+                    <input id="s3dircreate"
+                           name="s3dircreate"
+                           type="text"
+                           value="<?php echo S3Testing_Option::get($jobid, 's3dircreate') == '/' ? '' : S3Testing_Option::get($jobid, 's3dircreate') ?>"
+                           size="63"
+                           class="regular-text"
+                           autocomplete="off"
+                    />
                 </td>
             </tr>
         </table>
@@ -313,13 +332,22 @@ class S3Testing_Destination_S3
 
                 $folders = $s3->listObjectsV2([
                     'Bucket' => $args['s3bucketselected'],
-                    'Delimiter' => '/',
                 ]);
 
-                if(!empty($folders['CommonPrefixes'])) {
-                    $folders_list = $folders['CommonPrefixes'];
+                if (!empty($folders['Contents'])) {
+                    foreach ($folders['Contents'] as $object) {
+                        $key = $object['Key'];
+                        if (str_ends_with($key, '/')) {
+                            $folders_list[] = ['Prefix' => $key];
+                        } else {
+                            $folderPath = dirname($key) . '/';
+                            if (!in_array(['Prefix' => $folderPath], $folders_list)) {
+                                $folders_list[] = ['Prefix' => $folderPath];
+                            }
+                        }
+                    }
                 }
-
+                usort($folders_list, fn($a, $b) => strcmp($a['Prefix'], $b['Prefix']));
             } catch (Exception $e) {
                 $error = $e->getMessage();
                 if ($e instanceof AwsException) {
@@ -338,7 +366,6 @@ class S3Testing_Destination_S3
         echo '</span>';
 
         echo '<select name="s3dir" id="s3dir">';
-        echo '<option' . selected($args['s3dirselected'], '', false) . '>/</option>'; // Option Root
         if (!empty($folders_list)) {
 
             foreach ($folders_list as $folder) {
@@ -375,10 +402,22 @@ class S3Testing_Destination_S3
         $_POST['s3dir'] = trailingslashit(str_replace(
             '//',
             '/',
-            str_replace('\\', '/', trim(sanitize_text_field($_POST['s3dir'])))
+            str_replace('\\', '/', trim(sanitize_text_field($_POST['s3dir']))
+        )));
+
+        $_POST['s3dircreate'] = trailingslashit(str_replace(
+            '//',
+            '/',
+            str_replace('\\', '/', trim(sanitize_text_field($_POST['s3dircreate'])))
         ));
 
+        if($_POST['s3dircreate'] != '/') {
+            $_POST['s3newfolder'] = $_POST['s3dir'] . $_POST['s3dircreate'];
+        }
+
         S3Testing_Option::update($jobid, 's3dir', $_POST['s3dir']);
+        S3Testing_Option::update($jobid, 's3dircreate', $_POST['s3dircreate']);
+        S3Testing_Option::update($jobid, 's3newfolder', $_POST['s3newfolder'] == null ? '' : $_POST['s3newfolder']);
     }
 
     public function job_run_archive(S3Testing_Job $job_object)
@@ -433,7 +472,12 @@ class S3Testing_Destination_S3
             $create_args['Metadata'] = ['BackupTime' => date('Y-m-d H:i:s', $job_object->start_time)];
 
             $create_args['Body'] = $up_file_handle;
-            $create_args['Key'] = $job_object->job['s3dir'] . $job_object->backup_file;
+
+            if($job_object->job['s3newfolder'] == '') {
+                $create_args['Key'] = $job_object->job['s3dir'] . $job_object->backup_file;
+            } else {
+                $create_args['Key'] = $job_object->job['s3newfolder'] . $job_object->backup_file;
+            }
 
             try {
                 $s3->putObject($create_args);
