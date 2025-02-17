@@ -4,7 +4,15 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="14453ea8-162e-42dd-95e9-1168a72971e1" name="Changes" comment="" />
+    <list default="true" id="14453ea8-162e-42dd-95e9-1168a72971e1" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/inc/class-job.php" beforeDir="false" afterPath="$PROJECT_DIR$/inc/class-job.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/inc/class-jobtypes.php" beforeDir="false" afterPath="$PROJECT_DIR$/inc/class-jobtypes.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/inc/class-option.php" beforeDir="false" afterPath="$PROJECT_DIR$/inc/class-option.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/s3-testing.php" beforeDir="false" afterPath="$PROJECT_DIR$/s3-testing.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/composer/autoload_classmap.php" beforeDir="false" afterPath="$PROJECT_DIR$/vendor/composer/autoload_classmap.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/composer/autoload_static.php" beforeDir="false" afterPath="$PROJECT_DIR$/vendor/composer/autoload_static.php" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -52,13 +60,14 @@
     "PHP Script.s3-testing.php.executor": "Run",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "7f584cf0",
+    "git-widget-placeholder": "main",
     "last_opened_file_path": "D:/Coding/backwpup-master",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
     "node.js.selected.package.tslint": "(autodetect)",
     "nodejs_package_manager_path": "npm",
+    "php.override.implement.member.chooser.php.doc": "NONE",
     "settings.editor.selected.configurable": "preferences.pluginManager",
     "vue.rearranger.settings.migration": "true"
   }
@@ -91,6 +100,7 @@
       <workItem from="1739498707211" duration="24760000" />
       <workItem from="1739540827717" duration="14756000" />
       <workItem from="1739583808304" duration="7945000" />
+      <workItem from="1739759556891" duration="7179000" />
     </task>
     <servers />
   </component>

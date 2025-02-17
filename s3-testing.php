@@ -155,6 +155,7 @@ if(!class_exists(\S3Testing::class, false)) {
             }
 
             self::$job_types['FILE'] = new S3Testing_JobType_File();
+            self::$job_types['DBDUMP'] = new S3Testing_JobType_DBDump();
 
             self::$job_types = apply_filters('s3testing_job_types', self::$job_types);
 

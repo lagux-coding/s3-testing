@@ -97,7 +97,7 @@ final class S3Testing_Option
 
         //set defaults
         $default = [];
-        $default['type'] = ['FILE'];
+        $default['type'] = ['FILE', 'DBDUMP'];
         $default['destinations'] = ['S3'];
         $default['name'] = 'New Job';
         $default['activetype'] = '';

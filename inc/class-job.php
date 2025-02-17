@@ -322,4 +322,12 @@ class S3Testing_Job
             $this->log(__('Cannot write progress to working file. Job will be aborted.'), E_USER_ERROR);
         }
     }
+
+    public function generate_db_dump_filename($name, $suffix = '')
+    {
+        $name = (string) apply_filters( 's3testing_generate_dump_filename', $name );
+
+        return $this->generate_filename( $name, $suffix );
+
+    }
 }

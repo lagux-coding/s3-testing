@@ -39,6 +39,7 @@ return array(
     'S3Testing_File' => $baseDir . '/inc/class-file.php',
     'S3Testing_Install' => $baseDir . '/inc/class-install.php',
     'S3Testing_Job' => $baseDir . '/inc/class-job.php',
+    'S3Testing_JobType_DBDump' => $baseDir . '/inc/class-jobtype-dbdump.php',
     'S3Testing_JobType_File' => $baseDir . '/inc/class-jobtype-file.php',
     'S3Testing_JobTypes' => $baseDir . '/inc/class-jobtypes.php',
     'S3Testing_Option' => $baseDir . '/inc/class-option.php',

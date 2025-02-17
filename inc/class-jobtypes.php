@@ -13,5 +13,9 @@ abstract class S3Testing_JobTypes
         return false;
     }
 
+    abstract public function edit_tab($jobid);
+
+    abstract public function edit_form_post_save($jobid);
+
     abstract public function job_run(S3Testing_Job $job_object);
 }
