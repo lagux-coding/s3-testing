@@ -427,6 +427,8 @@ class S3Testing_Destination_S3
 
     public function job_run_archive(S3Testing_Job $job_object)
     {
+        $job_object->substeps_todo = 2 + $job_object->backup_filesize;
+
         try {
             if (empty($job_object->job['s3base_url'])) {
                 $aws_destination = S3Testing_S3_Destination::fromOption($job_object->job['s3region']);

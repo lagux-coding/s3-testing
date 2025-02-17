@@ -123,6 +123,8 @@ class ComposerStaticInitcd624fb20f889334c9790014fe69762d
         'S3Testing_JobType_DBDump' => __DIR__ . '/../..' . '/inc/class-jobtype-dbdump.php',
         'S3Testing_JobType_File' => __DIR__ . '/../..' . '/inc/class-jobtype-file.php',
         'S3Testing_JobTypes' => __DIR__ . '/../..' . '/inc/class-jobtypes.php',
+        'S3Testing_MySQLDump' => __DIR__ . '/../..' . '/inc/class-mysqldump.php',
+        'S3Testing_MySQLDump_Exception' => __DIR__ . '/../..' . '/inc/class-mysqldump.php',
         'S3Testing_Option' => __DIR__ . '/../..' . '/inc/class-option.php',
         'S3Testing_Page_EditJob' => __DIR__ . '/../..' . '/inc/class-page-editjob.php',
         'S3Testing_Page_Jobs' => __DIR__ . '/../..' . '/inc/class-page-jobs.php',

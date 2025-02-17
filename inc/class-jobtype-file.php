@@ -128,6 +128,8 @@ class S3Testing_JobType_File extends S3Testing_JobTypes
 
     public function job_run(S3Testing_Job $job_object)
     {
+        $job_object->substeps_todo = 8;
+
         $abs_path = realpath(S3Testing_Path_Fixer::fix_path(ABSPATH));
         $abs_path = trailingslashit(str_replace('\\', '/', $abs_path));
 
@@ -135,20 +137,28 @@ class S3Testing_JobType_File extends S3Testing_JobTypes
         $folders_already_in = $job_object->get_folders_to_backup();
 
         //backup root
-        if($abs_path && !empty($job_object->job['backuproot'])) {
-            $abs_path = trailingslashit(str_replace('\\', '/', $abs_path));
-            $excludes = $this->get_exclude_dirs($abs_path, $folders_already_in);
+        if($job_object->substeps_done === 0){
+            if($abs_path && !empty($job_object->job['backuproot'])) {
+                $abs_path = trailingslashit(str_replace('\\', '/', $abs_path));
+                $excludes = $this->get_exclude_dirs($abs_path, $folders_already_in);
 
-            $this->get_folder_list($job_object, $abs_path, $excludes);
+                $this->get_folder_list($job_object, $abs_path, $excludes);
+            }
+
+            $job_object->substeps_done = 1;
         }
 
         //backup content
-        $wp_content_dir = realpath(WP_CONTENT_DIR);
-        if ($wp_content_dir && !empty($job_object->job['backupcontent'])) {
-            $wp_content_dir = trailingslashit(str_replace('\\', '/', $wp_content_dir));
-            $excludes = $this->get_exclude_dirs($wp_content_dir, $folders_already_in);
+        if ($job_object->substeps_done === 1) {
+            $wp_content_dir = realpath(WP_CONTENT_DIR);
+            if ($wp_content_dir && !empty($job_object->job['backupcontent'])) {
+                $wp_content_dir = trailingslashit(str_replace('\\', '/', $wp_content_dir));
+                $excludes = $this->get_exclude_dirs($wp_content_dir, $folders_already_in);
 
-            $this->get_folder_list($job_object, $wp_content_dir, $excludes);
+                $this->get_folder_list($job_object, $wp_content_dir, $excludes);
+            }
+
+            $job_object->substeps_done = 2;
         }
 
         //backup plugins
@@ -177,6 +187,16 @@ class S3Testing_JobType_File extends S3Testing_JobTypes
 
             $this->get_folder_list($job_object, $upload_dir, $excludes);
         }
+
+        //clean up folder list
+        if($job_object->substeps_done === 2) {
+            $folders = $job_object->get_folders_to_backup();
+            $job_object->add_folders_to_backup($folders, true);
+            $job_object->substeps_done = 3;
+        }
+
+        $job_object->substeps_done = 8;
+
         return true;
     }
 

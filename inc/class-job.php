@@ -6,7 +6,18 @@ class S3Testing_Job
     public $start_time = 0;
     public $temp = [];
     public $backup_folder = '';
+    public $backup_filesize = 0;
     public $backup_file = '';
+    public $steps_todo = ['CREATE'];
+    public $steps_done = [];
+    public $steps_data = [];
+    public $step_working = 'CREATE';
+    public $substeps_todo = 0;
+    public $substeps_done = 0;
+    public $step_percent = 1;
+    public $substep_percent = 1;
+    public $count_folder = 0;
+    public $count_files_size = 0;
 
     public static function start_http($starttype, $jobid = 0)
     {
@@ -80,6 +91,7 @@ class S3Testing_Job
 
         $folders = array_unique($folders);
         sort($folders);
+        $this->count_folder = count($folders);
 
         return $folders;
     }
@@ -163,10 +175,21 @@ class S3Testing_Job
             return;
         }
 
+        $this->start_time = current_time('timestamp');
+
+        //setup job steps
+        $this->steps_data['CREATE']['CALLBACK'] = 'create';
+        $this->steps_data['CREATE']['NAME'] = __('Job Start');
+        $this->steps_data['CREATE']['STEP_TRY'] = 0;
+
         $job_need_dest = false;
         if ($job_types = S3Testing::get_job_types()) {
             foreach ($job_types as $id => $job_type_class) {
                 if (in_array($id, $this->job['type'], true) && $job_type_class->creates_file()) {
+                    $this->steps_todo[] = 'JOB_' . $id;
+                    $this->steps_data['JOB_' . $id]['NAME'] =$job_type_class->info['description'];
+                    $this->steps_data['JOB_' . $id]['STEP_TRY'] = 0;
+                    $this->steps_data['JOB_' . $id]['SAVE_STEP_TRY'] = 0;
                     $job_need_dest = true;
                 }
             }
@@ -178,30 +201,174 @@ class S3Testing_Job
                 }
 
                 //create backup filename
+                $this->steps_todo[] = 'CREATE_ARCHIVE';
+                $this->steps_data['CREATE_ARCHIVE']['NAME'] = __('Create Archive');
+                $this->steps_data['CREATE_ARCHIVE']['STEP_TRY'] = 0;
+                $this->steps_data['CREATE_ARCHIVE']['SAVE_STEP_TRY'] = 0;
                 $this->backup_file = $this->generate_filename($this->job['archivename'], $this->job['archiveformat']);
+            }
+
+            foreach(S3Testing::get_registered_destinations() as $id => $dest) {
+                if (!in_array($id, $this->job['destinations'], true) || empty($dest['class'])) {
+                    continue;
+                }
+                $dest_class = S3Testing::get_destination($id);
+                if ($dest_class->can_run($this->job)) {
+                    $this->steps_todo[] = 'DEST_' . $id;
+                    $this->steps_data['DEST_' . $id]['NAME'] = $dest['info']['description'];
+                    $this->steps_data['DEST_' . $id]['STEP_TRY'] = 0;
+                    $this->steps_data['DEST_' . $id]['SAVE_STEP_TRY'] = 0;
+                }
+            }
+        }
+        $this->steps_todo[] = 'END';
+        $this->steps_data['END']['NAME'] = __('End of Job');
+        $this->steps_data['END']['STEP_TRY'] = 1;
+        $this->write_running_file();
+
+        if(!empty($this->backup_folder)) {
+            $folder_message = S3Testing_File::check_folder($this->backup_folder, true);
+            if (!empty($folder_message)) {
+                $this->steps_todo = ['END'];
             }
         }
 
-        $this->write_running_file();
-
+        $this->steps_done[] = 'CREATE';
     }
 
     public function run()
     {
         $job_types = S3Testing::get_job_types();
-        $job_types['FILE']->job_run($this);
 
-        $this->create_archive();
+        //go step by step
+        foreach($this->steps_todo as $this->step_working) {
+            //check if step already done
+            if(in_array($this->step_working, $this->steps_done, true)) {
+                continue;
+            }
 
-//        S3Testing::get_destination('S3')->job_run_archive($this);
-        S3Testing::get_destination('S3')->job_run_archive($this);
+            //calc step percent
+            if(count($this->steps_done) > 0) {
+                $this->step_percent = min(round(count($this->steps_done)) / count($this->steps_todo) * 100, 100);
+            } else {
+                $this->step_percent = 1;
+            }
+
+            //do step tries
+            while(true) {
+                if($this->steps_data[$this->step_working]['STEP_TRY'] >= get_site_option('s3testing_cfg_jobstepretry')) {
+                    $this->temp = [];
+                    $this->steps_done[] = $this->step_working;
+                    $this->substeps_done = 0;
+                    $this->substeps_todo = 0;
+                    $this->do_restart();
+                    break;
+                }
+
+                ++$this->steps_data[$this->step_working]['STEP_TRY'];
+                $done = false;
+
+                if($this->step_working == 'CREATE_ARCHIVE') {
+                    $done = $this->create_archive();
+                } elseif ($this->step_working == 'END') {
+                    $this->end();
+                    break 2;
+                } elseif (strstr((string) $this->step_working, 'JOB_')) {
+                    $done = $job_types[str_replace('JOB_', '', (string) $this->step_working)]->job_run($this);
+                } elseif (strstr((string) $this->step_working, 'DEST_')) {
+                    $done = S3Testing::get_destination(str_replace('DEST_', '', (string) $this->step_working))
+                        ->job_run_archive($this);
+                } elseif (!empty($this->steps_data[$this->step_working]['CALLBACK'])) {
+                    $done = $this->steps_data[$this->step_working]['CALLBACK']($this);
+                }
+
+                if ($done === true) {
+                    $this->temp = [];
+                    $this->steps_done[] = $this->step_working;
+                    $this->substeps_done = 0;
+                    $this->substeps_todo = 0;
+                }
+
+                if (count($this->steps_done) < count($this->steps_todo) - 1) {
+                    $this->do_restart();
+                }
+
+                if ($done === true) {
+                    break;
+                }
+            }
+        }
+    }
+
+    public function do_restart($must = false)
+    {
+        $log_file = WP_CONTENT_DIR . '/debug-step.log';
+        $message = 'step done: ' . print_r(count($this->steps_done) + 1, true) . "\n"
+            . 'step todo: ' . print_r(count($this->steps_todo), true) . "\n" .
+            print_r(count($this->steps_todo) - 1, true) . "\n";
+        file_put_contents($log_file, $message . "\n", FILE_APPEND);
+
+        if ($this->step_working === 'END' || (count($this->steps_done) + 1) >= count($this->steps_todo)) {
+            return;
+        }
+
+        return;
+    }
+
+    private function end()
+    {
+        $this->step_working = 'END';
+        $this->substeps_todo = 1;
+
+        //set done
+        $this->substeps_done = 1;
+        $this->steps_done[] = 'END';
+
+        self::clean_temp_folder();
+        exit();
+    }
+
+    public static function clean_temp_folder()
+    {
+        $instance = new self();
+        $temp_dir = S3Testing::get_plugin_data('TEMP');
+        $do_not_delete_files = ['.htaccess', 'nginx.conf', 'index.php', '.', '..', '.donotbackup'];
+        if (is_writable($temp_dir)) {
+            try {
+                $dir = new S3Testing_Directory($temp_dir);
+
+                foreach ($dir as $file) {
+                    if (in_array(
+                            $file->getFilename(),
+                            $do_not_delete_files,
+                            true
+                        ) || $file->isDir() || $file->isLink()) {
+                        continue;
+                    }
+                    if ($file->isWritable()) {
+                        unlink($file->getPathname());
+                    }
+                }
+            } catch (UnexpectedValueException $e) {
+
+            }
+        }
     }
 
     private function create_archive()
     {
         $folders_to_backup = $this->get_folders_to_backup();
+        $this->substeps_todo = $this->count_folder + 1;
 
-        if(is_file($this->backup_folder . $this->backup_file)) {
+        //initial settings for restarts in archiving
+        if (!isset($this->steps_data[$this->step_working]['on_file'])) {
+            $this->steps_data[$this->step_working]['on_file'] = '';
+        }
+        if (!isset($this->steps_data[$this->step_working]['on_folder'])) {
+            $this->steps_data[$this->step_working]['on_folder'] = '';
+        }
+
+        if ($this->steps_data[$this->step_working]['on_folder'] == '' && $this->steps_data[$this->step_working]['on_file'] == '' && is_file($this->backup_folder . $this->backup_file)) {
             unlink($this->backup_folder . $this->backup_file);
         }
 
@@ -209,10 +376,11 @@ class S3Testing_Job
             $backup_archive = new S3Testing_Create_Archive($this->backup_folder . $this->backup_file);
 
             while ($folder = array_shift($folders_to_backup)) {
-                if(in_array($folder, $folders_to_backup, true)) {
+                if(in_array($this->steps_data[$this->step_working]['on_folder'], $folders_to_backup, true)) {
                     continue;
                 }
 
+                $this->steps_data[$this->step_working]['on_folder'] = $folder;
                 $files_in_folder = $this->get_files_in_folder($folder);
 
                 if (empty($files_in_folder)) {
@@ -225,26 +393,47 @@ class S3Testing_Job
                     continue;
                 }
 
+                //add files
                 while ($file = array_shift($files_in_folder)) {
+                    if (in_array($this->steps_data[$this->step_working]['on_file'], $files_in_folder, true)) {
+                        continue;
+                    }
+                    $this->steps_data[$this->step_working]['on_file'] = $file;
                     //generate filename in archive
                     $in_archive_filename = ltrim($this->get_destination_path_replacement($file), '/');
 
                     //add file to archive
                     if ($backup_archive->add_file($file, $in_archive_filename)) {
-
+                        ++$this->count_files;
+                        $this->count_files_size = $this->count_files_size + filesize($file);
                     }else {
                         $backup_archive->close();
                         unset($backup_archive);
+                        $this->steps_data[$this->step_working]['on_file'] = '';
+                        $this->steps_data[$this->step_working]['on_folder'] = '';
+                        $this->substeps_done = 0;
+                        $this->backup_filesize = filesize($this->backup_folder . $this->backup_file);
+                        if ($this->backup_filesize === false) {
+                            $this->backup_filesize = PHP_INT_MAX;
+                        }
 
                         return false;
                     }
                 }
+                $this->steps_data[$this->step_working]['on_file'] = '';
+                ++$this->substeps_done;
             }
             $backup_archive->close();
             unset($backup_archive);
+
         } catch (Exception $e) {
             return false;
         }
+        $this->backup_filesize = filesize($this->backup_folder . $this->backup_file);
+        if ($this->backup_filesize === false) {
+            $this->backup_filesize = PHP_INT_MAX;
+        }
+
         return true;
     }
 

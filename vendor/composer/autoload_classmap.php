@@ -42,6 +42,8 @@ return array(
     'S3Testing_JobType_DBDump' => $baseDir . '/inc/class-jobtype-dbdump.php',
     'S3Testing_JobType_File' => $baseDir . '/inc/class-jobtype-file.php',
     'S3Testing_JobTypes' => $baseDir . '/inc/class-jobtypes.php',
+    'S3Testing_MySQLDump' => $baseDir . '/inc/class-mysqldump.php',
+    'S3Testing_MySQLDump_Exception' => $baseDir . '/inc/class-mysqldump.php',
     'S3Testing_Option' => $baseDir . '/inc/class-option.php',
     'S3Testing_Page_EditJob' => $baseDir . '/inc/class-page-editjob.php',
     'S3Testing_Page_Jobs' => $baseDir . '/inc/class-page-jobs.php',

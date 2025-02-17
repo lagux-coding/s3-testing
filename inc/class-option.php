@@ -7,6 +7,9 @@ final class S3Testing_Option
     {
         add_site_option('s3testing_version', '1.0.0');
         add_site_option( 's3testing_jobs', [] );
+        //jobs
+        add_site_option('s3testing_cfg_jobstepretry', 3);
+
     }
 
     public static function get($jobid, $option, $default = null, $use_cache = true)
