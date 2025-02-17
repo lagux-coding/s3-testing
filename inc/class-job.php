@@ -49,6 +49,7 @@ class S3Testing_Job
 
         if($s3testing_job_object) {
             $s3testing_job_object->run();
+
         }
     }
 
@@ -253,6 +254,9 @@ class S3Testing_Job
             } else {
                 $this->step_percent = 1;
             }
+            $log_file = WP_CONTENT_DIR . '/debug-percent.log';
+            $message = 'Process ' . print_r($this->step_percent, true);
+            file_put_contents($log_file, $message . "\n", FILE_APPEND);
 
             //do step tries
             while(true) {
@@ -297,17 +301,14 @@ class S3Testing_Job
                     break;
                 }
             }
+            $log_file = WP_CONTENT_DIR . '/debug-step.log';
+            $message = 'step done: ' . print_r($this->steps_data, true);
+            file_put_contents($log_file, $message . "\n", FILE_APPEND);
         }
     }
 
     public function do_restart($must = false)
     {
-        $log_file = WP_CONTENT_DIR . '/debug-step.log';
-        $message = 'step done: ' . print_r(count($this->steps_done) + 1, true) . "\n"
-            . 'step todo: ' . print_r(count($this->steps_todo), true) . "\n" .
-            print_r(count($this->steps_todo) - 1, true) . "\n";
-        file_put_contents($log_file, $message . "\n", FILE_APPEND);
-
         if ($this->step_working === 'END' || (count($this->steps_done) + 1) >= count($this->steps_todo)) {
             return;
         }
