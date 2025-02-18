@@ -253,4 +253,9 @@ class S3Testing_JobType_File extends S3Testing_JobTypes
 
         return true;
     }
+
+    public function admin_print_scripts()
+    {
+
+    }
 }

@@ -520,4 +520,45 @@ class S3Testing_Job
         return $this->generate_filename( $name, $suffix );
 
     }
+
+    public static function sanitize_file_name($filename)
+    {
+        $filename = trim((string) $filename);
+
+        $special_chars = [
+            '?',
+            '[',
+            ']',
+            '/',
+            '\\',
+            '=',
+            '<',
+            '>',
+            ':',
+            ';',
+            ',',
+            "'",
+            '"',
+            '&',
+            '$',
+            '#',
+            '*',
+            '(',
+            ')',
+            '|',
+            '~',
+            '`',
+            '!',
+            '{',
+            '}',
+            chr(0),
+        ];
+
+        $filename = str_replace($special_chars, '', $filename);
+
+        $filename = str_replace([' ', '%20', '+'], '_', $filename);
+        $filename = str_replace(["\n", "\t", "\r"], '-', $filename);
+
+        return trim($filename, '.-_');
+    }
 }

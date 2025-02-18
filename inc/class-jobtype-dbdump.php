@@ -87,7 +87,8 @@ class S3Testing_JobType_DBDump extends S3Testing_JobTypes
             S3Testing_Option::update($id, 'dbdumpfilecompression', $_POST['dbdumpfilecompression']);
         }
 
-        S3Testing_Option::update($id, 'dbdumpfile', $_POST['dbdumpfile']);
+//        S3Testing_Option::update($id, 'dbdumpfile', S3Testing_Job::sanitize_file_name($_POST['dbdumpfile']));
+        S3Testing_Option::update($id, 'dbdumpfile', S3Testing_Job::sanitize_file_name($this->option_defaults()['dbdumpfile']));
 
         $dbdumpexclude = [];
         $checked_db_tables = [];
@@ -111,6 +112,60 @@ class S3Testing_JobType_DBDump extends S3Testing_JobTypes
 
     public function job_run(S3Testing_Job $job_object)
     {
+        //build filename
+        if ( empty( $job_object->steps_data[ $job_object->step_working ]['dbdumpfile'] ) ) {
+            $job_object->steps_data[ $job_object->step_working ]['dbdumpfile'] = $job_object->generate_db_dump_filename( $job_object->job['dbdumpfile'], 'sql' ) . $job_object->job['dbdumpfilecompression'];
+        }
+
+        try {
+            //Connect to database
+            $sql_dump = new S3Testing_MySQLDump([
+                'dumpfile' => S3Testing::get_plugin_data('TEMP'),
+                $job_object->steps_data[$job_object->step_working]['dbdumpfile'],
+            ]);
+
+            //Exclude tables
+            foreach ($sql_dump->tables_to_dump as $key => $table) {
+                if (in_array($table, $job_object->job['dbdumpexclude'], true)) {
+                    unset($sql_dump->tables_to_dump[$key]);
+                }
+            }
+
+            if(count($sql_dump->tables_to_dump) == 0) {
+                throw new S3Testing_MySQLDump_Exception(__('No tables to backup'));
+                unset($sql_dump);
+                return true;
+            }
+
+            //dump head
+            if (!isset($job_object->steps_data[$job_object->step_working]['is_head'])) {
+                $sql_dump->dump_head(true);
+                $job_object->steps_data[$job_object->step_working]['is_head'] = true;
+            }
+            //dump tables
+            $i = 0;
+            foreach ($sql_dump->tables_to_dump as $table) {
+                if ($i < count($sql_dump->tables_to_dump)) {
+                    ++$i;
+
+                    continue;
+                }
+
+                if (empty($job_object->steps_data[$job_object->step_working]['tables'][$table])) {
+                    $num_records = $sql_dump->dump_table_head($table);
+                    $job_object->steps_data[$job_object->step_working]['tables'][$table] = ['start' => 0,
+                        'length' => 1000, ];
+                    if ($job_object->is_debug()) {
+                        $job_object->log(sprintf(__('Backup database table "%s" with "%s" records', 'backwpup'), $table, $num_records));
+                    }
+                }
+            }
+
+        } catch (Exception $e) {
+            return false;
+        }
+
+        return true;
     }
 
     public function admin_print_scripts()

@@ -199,6 +199,109 @@ class S3Testing_MySQLDump
 
         return false;
     }
+
+    public function dump_head($wp_info = false)
+    {
+// get sql timezone
+        $res = $this->mysqli->query('SELECT @@time_zone');
+        ++$GLOBALS[\wpdb::class]->num_queries;
+        $mysqltimezone = $res->fetch_row();
+        $mysqltimezone = $mysqltimezone[0];
+        $res->close();
+
+        //For SQL always use \n as MySQL wants this on all platforms.
+        $dbdumpheader = "-- ---------------------------------------------------------\n";
+        $dbdumpheader .= '-- Backup with S3Testing ver.: ' . S3Testing::get_plugin_data('Version') . "\n";
+        $dbdumpheader .= "-- https://github.com/lagux-coding\n";
+        if ($wp_info) {
+            $dbdumpheader .= '-- Blog Name: ' . get_bloginfo('name') . "\n";
+            $dbdumpheader .= '-- Blog URL: ' . trailingslashit(get_bloginfo('url')) . "\n";
+            $dbdumpheader .= '-- Blog ABSPATH: ' . trailingslashit(str_replace('\\', '/', (string) ABSPATH)) . "\n";
+            $dbdumpheader .= '-- Blog Charset: ' . get_bloginfo('charset') . "\n";
+            $dbdumpheader .= '-- Table Prefix: ' . $GLOBALS[\wpdb::class]->prefix . "\n";
+        }
+        $dbdumpheader .= '-- Database Name: ' . $this->dbname . "\n";
+        $dbdumpheader .= '-- Backup on: ' . date('Y-m-d H:i.s', current_time('timestamp')) . "\n";
+        $dbdumpheader .= "-- ---------------------------------------------------------\n\n";
+        //for better import with mysql client
+        $dbdumpheader .= "/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;\n";
+        $dbdumpheader .= "/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;\n";
+        $dbdumpheader .= "/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;\n";
+        $dbdumpheader .= '/*!40101 SET NAMES ' . $this->mysqli->character_set_name() . " */;\n";
+        $dbdumpheader .= "/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;\n";
+        $dbdumpheader .= "/*!40103 SET TIME_ZONE='" . $mysqltimezone . "' */;\n";
+        $dbdumpheader .= "/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;\n";
+        $dbdumpheader .= "/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;\n";
+        $dbdumpheader .= "/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;\n";
+        $dbdumpheader .= "/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;\n\n";
+        $this->write($dbdumpheader);
+    }
+
+    public function dump_table_head($table)
+    {
+        //dump View
+        if ($this->table_types[$table] === 'VIEW') {
+            //Dump the view table structure
+            $fields = [];
+            $res = $this->mysqli->query('SELECT * FROM `' . $table . '` LIMIT 1');
+            ++$GLOBALS[\wpdb::class]->num_queries;
+            if ($this->mysqli->error) {
+//                trigger_error(sprintf(__('Database error %1$s for query %2$s', 'backwpup'), $this->mysqli->error, 'SELECT * FROM `' . $table . '` LIMIT 1'), E_USER_WARNING);
+            } else {
+                $fields = $res->fetch_fields();
+                $res->close();
+            }
+            if ($res) {
+                $tablecreate = "\n--\n-- Temporary table structure for view `" . $table . "`\n--\n\n";
+                $tablecreate .= 'DROP TABLE IF EXISTS `' . $table . "`;\n";
+                $tablecreate .= '/*!50001 DROP VIEW IF EXISTS `' . $table . "`*/;\n";
+                $tablecreate .= "/*!40101 SET @saved_cs_client     = @@character_set_client */;\n";
+                $tablecreate .= "/*!40101 SET character_set_client = '" . $this->mysqli->character_set_name() . "' */;\n";
+                $tablecreate .= 'CREATE TABLE `' . $table . "` (\n";
+
+                foreach ($fields as $field) {
+                    $tablecreate .= '  `' . $field->orgname . "` tinyint NOT NULL,\n";
+                }
+                $tablecreate = substr($tablecreate, 0, -2) . "\n";
+                $tablecreate .= ");\n";
+                $tablecreate .= "/*!40101 SET character_set_client = @saved_cs_client */;\n";
+                $this->write($tablecreate);
+            }
+
+            return 0;
+        }
+
+        //dump normal Table
+        $tablecreate = "\n--\n-- Table structure for `" . $table . "`\n--\n\n";
+        $tablecreate .= 'DROP TABLE IF EXISTS `' . $table . "`;\n";
+        $tablecreate .= "/*!40101 SET @saved_cs_client     = @@character_set_client */;\n";
+        $tablecreate .= "/*!40101 SET character_set_client = '" . $this->mysqli->character_set_name() . "' */;\n";
+        //Dump the table structure
+        $res = $this->mysqli->query('SHOW CREATE TABLE `' . $table . '`');
+        ++$GLOBALS[\wpdb::class]->num_queries;
+        if ($this->mysqli->error) {
+            trigger_error(sprintf(__('Database error %1$s for query %2$s', 'backwpup'), $this->mysqli->error, 'SHOW CREATE TABLE `' . $table . '`'), E_USER_WARNING);
+        } else {
+            $createtable = str_replace( '"', '`', $res->fetch_assoc() );
+            $res->close();
+            $tablecreate .= $createtable['Create Table'] . ";\n";
+            $tablecreate .= "/*!40101 SET character_set_client = @saved_cs_client */;\n";
+            $this->write($tablecreate);
+
+            if ($this->table_status[$table]['Engine'] !== 'MyISAM') {
+                $this->table_status[$table]['Rows'] = '~' . $this->table_status[$table]['Rows'];
+            }
+
+            if ($this->table_status[$table]['Rows'] !== 0) {
+                //Dump Table data
+                $this->write("\n--\n-- Backup data for table `" . $table . "`\n--\n\nLOCK TABLES `" . $table . "` WRITE;\n/*!40000 ALTER TABLE `" . $table . "` DISABLE KEYS */;\n");
+            }
+
+            return $this->table_status[$table]['Rows'];
+        }
+
+        return 0;
+    }
 }
 
 class S3Testing_MySQLDump_Exception extends Exception
