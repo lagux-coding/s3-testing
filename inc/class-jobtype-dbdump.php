@@ -113,5 +113,13 @@ class S3Testing_JobType_DBDump extends S3Testing_JobTypes
     {
     }
 
+    public function admin_print_scripts()
+    {
+        if (defined('SCRIPT_DEBUG') && SCRIPT_DEBUG) {
+            wp_enqueue_script('s3testingjobtypedbdump', S3Testing::get_plugin_data('URL') . '/assets/js/page_edit_jobtype_dbdump.js', ['jquery'], time(), true);
+        } else {
+            wp_enqueue_script('s3testingjobtypedbdump', S3Testing::get_plugin_data('URL') . '/assets/js/page_edit_jobtype_dbdump.min.js', ['jquery'], S3Testing::get_plugin_data('Version'), true);
+        }
+    }
 
 }

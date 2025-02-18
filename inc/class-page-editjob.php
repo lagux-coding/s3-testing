@@ -120,6 +120,14 @@ class S3Testing_Page_EditJob
                 wp_enqueue_script('s3testingtabjob', S3Testing::get_plugin_data('URL') . '/assets/js/page_edit_tab_job.min.js', ['jquery'], S3Testing::get_plugin_data('Version'), true);
             }
         }
+        elseif (strstr((string) $_GET['tab'], 'dest-')) {
+            $dest_object = S3Testing::get_destination(str_replace('dest-', '', (string) $_GET['tab']));
+            $dest_object->admin_print_scripts();
+        } elseif (strstr((string) $_GET['tab'], 'jobtype-')) {
+            $job_type = S3Testing::get_job_types();
+            $id = strtoupper(str_replace('jobtype-', '', (string) $_GET['tab']));
+            $job_type[$id]->admin_print_scripts();
+        }
     }
 
     public static function page()
