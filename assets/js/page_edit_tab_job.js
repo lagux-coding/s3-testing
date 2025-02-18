@@ -19,7 +19,7 @@ jQuery(document).ready(function ($) {
     });
 
     $('input[name="name"]').keyup(function () {
-        $('#h2jobtitle').replaceWith('<span id="h2jobtitle">' + backwpup_htmlspecialchars( $(this).val() ) + '</span>');
+        $('#h2jobtitle').replaceWith('<span id="h2jobtitle">' + s3testing_htmlspecialchars( $(this).val() ) + '</span>');
     });
 
     $('input[name="name"]').focus( function () {

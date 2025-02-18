@@ -45,6 +45,7 @@ return array(
     'S3Testing_MySQLDump' => $baseDir . '/inc/class-mysqldump.php',
     'S3Testing_MySQLDump_Exception' => $baseDir . '/inc/class-mysqldump.php',
     'S3Testing_Option' => $baseDir . '/inc/class-option.php',
+    'S3Testing_Page_Backups' => $baseDir . '/inc/class-page-backups.php',
     'S3Testing_Page_EditJob' => $baseDir . '/inc/class-page-editjob.php',
     'S3Testing_Page_Jobs' => $baseDir . '/inc/class-page-jobs.php',
     'S3Testing_Page_S3Testing' => $baseDir . '/inc/class-page-s3testing.php',

@@ -4,6 +4,11 @@ use Aws\Exception\AwsException;
 
 class S3Testing_Destination_S3
 {
+    private const EXTENSIONS = [
+        '.tar.gz',
+        '.tar',
+        '.zip',
+    ];
     public function option_defaults()
     {
         return [
@@ -504,7 +509,79 @@ class S3Testing_Destination_S3
 
         } catch (Exception $e) {
         }
+
+        try {
+            $this->file_update_list($job_object, true);
+        } catch (Exception $e) {
+            $errorMessage = $e->getMessage();
+            if ($e instanceof AwsException) {
+                $errorMessage = $e->getAwsErrorMessage();
+            }
+
+            return false;
+        }
         return true;
+    }
+
+    public function file_update_list($job, bool $delete = false)
+    {
+        if($job instanceof S3Testing_Job) {
+            $job_object = $job;
+            $jobid = $job->job['jobid'];
+        } else {
+            $job_object = null;
+            $jobid = $job;
+        }
+
+        if (empty($job_object->job['s3base_url'])) {
+            $aws_destination = S3Testing_S3_Destination::fromOption($job_object->job['s3region']);
+        } else {
+            $aws_destination = S3Testing_S3_Destination::fromJobId($job_object->job['jobid']);
+        }
+
+        $s3 = $aws_destination->client(
+            S3Testing_Option::get($jobid, 's3accesskey'),
+            S3Testing_Option::get($jobid, 's3secretkey')
+        );
+
+        $backupfilelist = [];
+        $filecounter = 0;
+        $files = [];
+
+        $args = [
+            'Bucket' => S3Testing_Option::get($jobid, 's3bucket'),
+            'Prefix' => S3Testing_Option::get($jobid, 's3dir'),
+        ];
+
+        $objects = $s3->getIterator('ListObjects', $args);
+        if (is_object($objects)) {
+            foreach ($objects as $object) {
+                $file = basename((string) $object['Key']);
+                $changetime = strtotime((string) $object['LastModified']) + (get_option('gmt_offset') * 3600);
+
+                if ($this->is_backup_archive($file)) {
+                    $backupfilelist[$changetime] = $file;
+                }
+
+                $files[$filecounter]['folder'] = $s3->getObjectUrl(S3Testing_Option::get($jobid, 's3bucket'), dirname((string) $object['Key']));
+                $files[$filecounter]['file'] = $object['Key'];
+                $files[$filecounter]['filename'] = basename((string) $object['Key']);
+
+//                $files[$filecounter]['downloadurl'] = network_admin_url('admin.php') . '?page=backwpupbackups&action=downloads3&file=' . $object['Key'] . '&local_file=' . basename((string) $object['Key']) . '&jobid=' . $jobid;
+                $files[$filecounter]['filesize'] = (int) $object['Size'];
+                $files[$filecounter]['time'] = $changetime;
+
+                ++$filecounter;
+            }
+        }
+        set_site_transient('s3testing_' . $jobid . '_s3', $files, YEAR_IN_SECONDS);
+    }
+
+    public function file_get_list(string $jobdest): array
+    {
+        $list = (array) get_site_transient('s3testing_' . strtolower($jobdest));
+
+        return array_filter($list);
     }
 
     public function edit_inline_js()
@@ -580,7 +657,10 @@ class S3Testing_Destination_S3
         <?php
     }
 
+    public function admin_print_scripts()
+    {
 
+    }
 
     public function can_run(array $job_settings): bool
     {
@@ -589,5 +669,18 @@ class S3Testing_Destination_S3
         }
 
         return !(empty($job_settings['s3secretkey']));
+    }
+
+    public function is_backup_archive($file)
+    {
+        $file = trim(basename($file));
+        $filename = '';
+
+        foreach (self::EXTENSIONS as $extension) {
+            if (substr($file, (strlen($extension) * -1)) === $extension) {
+                $filename = substr($file, 0, (strlen($extension) * -1));
+            }
+        }
+        return !(!$filename);
     }
 }

@@ -93,10 +93,37 @@ final class S3Testing_Admin
         return $page_hooks;
     }
 
+    public function admin_page_backups($page_hooks)
+    {
+        $this->page_hooks['s3testingbackups'] = add_submenu_page(
+            's3testing',
+            'Backups',
+            'Backups',
+            'manage_options',
+            's3testingbackups',
+            [
+                \S3Testing_Page_Backups::class,
+                'page',
+            ]
+        );
+        add_action('load-' . $this->page_hooks['s3testingbackups'], [\S3Testing_Admin::class, 'init_general']);
+        add_action('load-' . $this->page_hooks['s3testingbackups'], [\S3Testing_Page_Backups::class, 'load']);
+        add_action(
+            'admin_print_styles-' . $this->page_hooks['s3testingbackups'],
+            [
+                \S3Testing_Page_Backups::class,
+                'admin_print_styles',
+            ]
+        );
+        return $page_hooks;
+    }
+
     public function init()
     {
-        add_filter('s3testing_admin_pages', [$this, 'admin_page_jobs']);
-        add_filter('s3testing_admin_pages', [$this, 'admin_page_editjob']);
+        //add menu pages
+        add_filter('s3testing_admin_pages', [$this, 'admin_page_jobs'], 2);
+        add_filter('s3testing_admin_pages', [$this, 'admin_page_editjob'], 3);
+        add_filter('s3testing_admin_pages', [$this, 'admin_page_backups'], 4);
 
         if(is_multisite()) {
             add_action('network_admin_menu', [$this, 'admin_menu']);
