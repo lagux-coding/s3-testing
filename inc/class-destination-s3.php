@@ -339,6 +339,8 @@ class S3Testing_Destination_S3
                     'Bucket' => $args['s3bucketselected'],
                 ]);
 
+                $folders_list = [['Prefix' => './']];
+
                 if (!empty($folders['Contents'])) {
                     foreach ($folders['Contents'] as $object) {
                         $key = $object['Key'];
@@ -351,10 +353,6 @@ class S3Testing_Destination_S3
                             }
                         }
                     }
-                }
-
-                if (empty($folders_list) || count($folders_list) === 1) {
-                    array_unshift($folders_list, ['Prefix' => './']);
                 }
 
                 usort($folders_list, fn($a, $b) => strcmp($a['Prefix'], $b['Prefix']));
@@ -376,7 +374,7 @@ class S3Testing_Destination_S3
         echo '</span>';
 
         echo '<select name="s3dir" id="s3dir">';
-        if (!empty($folders_list)) {
+        if (count($folders_list) > 1) {
 
             foreach ($folders_list as $folder) {
                 echo '<option ' . selected($args['s3dirselected'], esc_attr($folder['Prefix']), false) . '>'
