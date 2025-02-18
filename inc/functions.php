@@ -1,5 +1,10 @@
 <?php
+function s3testing_wpdb()
+{
+    global $wpdb;
 
+    return $wpdb;
+}
 function remove_invalid_characters_from_directory_name($directory)
 {
     return str_replace(

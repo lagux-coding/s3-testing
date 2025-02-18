@@ -155,12 +155,41 @@ class S3Testing_JobType_DBDump extends S3Testing_JobTypes
                     $num_records = $sql_dump->dump_table_head($table);
                     $job_object->steps_data[$job_object->step_working]['tables'][$table] = ['start' => 0,
                         'length' => 1000, ];
-                    if ($job_object->is_debug()) {
-                        $job_object->log(sprintf(__('Backup database table "%s" with "%s" records', 'backwpup'), $table, $num_records));
-                    }
                 }
-            }
 
+                $while = true;
+
+                $while = true;
+
+                while ($while) {
+                    $dump_start_time = microtime(true);
+                    $done_records = $sql_dump->dump_table($table, $job_object->steps_data[$job_object->step_working]['tables'][$table]['start'], $job_object->steps_data[$job_object->step_working]['tables'][$table]['length']);
+                    $dump_time = microtime(true) - $dump_start_time;
+                    if (empty($dump_time)) {
+                        $dump_time = 0.01;
+                    }
+                    if ($done_records < $job_object->steps_data[$job_object->step_working]['tables'][$table]['length']) { //that is the last chunk
+                        $while = false;
+                    }
+                    $job_object->steps_data[$job_object->step_working]['tables'][$table]['start'] = $job_object->steps_data[$job_object->step_working]['tables'][$table]['start'] + $done_records;
+                    // dump time per record and set next length
+                    $length = ceil(($done_records / $dump_time) * $job_object->get_restart_time());
+                    if ($length > 25000 || 0 >= $job_object->get_restart_time()) {
+                        $length = 25000;
+                    }
+                    if ($length < 1000) {
+                        $length = 1000;
+                    }
+                    $job_object->steps_data[$job_object->step_working]['tables'][$table]['length'] = $length;
+//                    $job_object->do_restart_time();
+                }
+                $sql_dump->dump_table_footer($table);
+                ++$job_object->substeps_done;
+                ++$i;
+            }
+            //dump footer
+            $sql_dump->dump_footer();
+            unset($sql_dump);
         } catch (Exception $e) {
             return false;
         }

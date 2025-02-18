@@ -18,6 +18,7 @@ class S3Testing_Job
     public $substep_percent = 1;
     public $count_folder = 0;
     public $count_files_size = 0;
+    private $timestamp_script_start = 0;
 
     public static function start_http($starttype, $jobid = 0)
     {
@@ -560,5 +561,19 @@ class S3Testing_Job
         $filename = str_replace(["\n", "\t", "\r"], '-', $filename);
 
         return trim($filename, '.-_');
+    }
+
+    public function get_restart_time()
+    {
+
+        $job_max_execution_time = get_site_option('s3testing_cfg_jobmaxexecutiontime');
+
+        if (empty($job_max_execution_time)) {
+            return 300;
+        }
+
+        $execution_time = microtime(true) - $this->timestamp_script_start;
+
+        return $job_max_execution_time - $execution_time - 3;
     }
 }
