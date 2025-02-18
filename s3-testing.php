@@ -24,6 +24,7 @@ if(!class_exists(\S3Testing::class, false)) {
                 return;
             }
 
+            require_once __DIR__ . '/inc/functions.php';
             if(file_exists(__DIR__ . '/vendor/autoload.php')) {
                 require_once __DIR__ . '/vendor/autoload.php';
             }
@@ -87,6 +88,7 @@ if(!class_exists(\S3Testing::class, false)) {
                         ) . '/s3testing/' . self::$plugin_data['hash'] . '/temp/';
                 }
                 self::$plugin_data['running_file'] = self::$plugin_data['temp'] . 's3testing-working.php';
+                self::$plugin_data['url'] = plugins_url('', __FILE__);
 
                 include ABSPATH . WPINC . '/version.php';
                 self::$plugin_data['wp_version'] = $wp_version;

@@ -14,7 +14,7 @@ class S3Testing_JobType_DBDump extends S3Testing_JobTypes
 
     public function creates_file()
     {
-        return parent::creates_file();
+        return true;
     }
 
     public function option_defaults()

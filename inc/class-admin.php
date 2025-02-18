@@ -3,6 +3,21 @@ final class S3Testing_Admin
 {
     public $page_hooks = [];
 
+    public static function init_general()
+    {
+        add_thickbox();
+
+        $suffix = (defined('SCRIPT_DEBUG') && SCRIPT_DEBUG) ? '' : '.min';
+
+        wp_register_script(
+            's3testinggeneral',
+            S3Testing::get_plugin_data('URL') . "/assets/js/general{$suffix}.js",
+            ['jquery'],
+            ($suffix ? S3Testing::get_plugin_data('Version') : time()),
+            false
+        );
+    }
+
     public function admin_menu()
     {
         add_menu_page(
@@ -64,7 +79,16 @@ final class S3Testing_Admin
             ]
         );
 
+        add_action('load-' . $this->page_hooks['s3testingeditjob'], [\S3Testing_Admin::class, 'init_general']);
         add_action('load-' . $this->page_hooks['s3testingeditjob'], [\S3Testing_Page_EditJob::class, 'auth']);
+
+        add_action(
+            'admin_print_scripts-' .$this->page_hooks['s3testingeditjob'],
+            [
+                \S3Testing_Page_EditJob::class,
+                'admin_print_scripts',
+            ]
+        );
 
         return $page_hooks;
     }

@@ -109,6 +109,19 @@ class S3Testing_Page_EditJob
         }
     }
 
+    public static function admin_print_scripts()
+    {
+        wp_enqueue_script('s3testinggeneral');
+
+        if ($_GET['tab'] == 'job') {
+            if (defined('SCRIPT_DEBUG') && SCRIPT_DEBUG) {
+                wp_enqueue_script('s3testingtabjob', S3Testing::get_plugin_data('URL') . '/assets/js/page_edit_tab_job.js', ['jquery'], time(), true);
+            } else {
+                wp_enqueue_script('s3testingtabjob', S3Testing::get_plugin_data('URL') . '/assets/js/page_edit_tab_job.min.js', ['jquery'], S3Testing::get_plugin_data('Version'), true);
+            }
+        }
+    }
+
     public static function page()
     {
         if (!empty($_GET['jobid'])) {
@@ -288,7 +301,7 @@ class S3Testing_Page_EditJob
         break;
         default:
             echo '<div class="table" id="info-tab-' . $_GET['tab'] . '">';
-            if (strstr((string)$_GET['tab'], 'dest-s3')) {
+            if (strstr((string)$_GET['tab'], 'dest-')) {
                 $dest_object = S3Testing::get_destination(str_replace('dest-', '', (string)$_GET['tab']));
                 $dest_object->edit_tab($jobid);
             }
