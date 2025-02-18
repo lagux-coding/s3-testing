@@ -1,4 +1,4 @@
-jQuery(document).read(function ($) {
+jQuery(document).ready(function ($) {
     $('input[name="type[]"]').change(function () {
         if($('input[name="type[]"]:checked').hasClass('filetype')) {
             $('.hasdests').show();
