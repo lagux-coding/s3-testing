@@ -49,6 +49,7 @@ class S3Testing_MySQLDump
         //get table info
         $res = $this->mysqli->query('SHOW TABLE STATUS FROM `' . $this->dbname . '`');
         ++$GLOBALS[\wpdb::class]->num_queries;
+
         if ($this->mysqli->error) {
             throw new S3Testing_MySQLDump_Exception(sprintf(__('Database error %1$s for query %2$s'), $this->mysqli->error, 'SHOW TABLE STATUS FROM `' . $this->dbname . '`'));
         }
@@ -335,7 +336,6 @@ class S3Testing_MySQLDump
             ++$i;
         }
         $dump = '';
-
         while ($data = $res->fetch_assoc()) {
             $values = [];
 
@@ -684,6 +684,11 @@ class S3Testing_MySQLDump
         }
 
         return $res;
+    }
+
+    protected function escapeString($value)
+    {
+        return $this->mysqli->real_escape_string($value);
     }
 }
 

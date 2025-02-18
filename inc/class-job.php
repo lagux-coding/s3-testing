@@ -257,10 +257,6 @@ class S3Testing_Job
             } else {
                 $this->step_percent = 1;
             }
-            $log_file = WP_CONTENT_DIR . '/debug-percent.log';
-            $message = 'Process ' . print_r($this->step_percent, true);
-            file_put_contents($log_file, $message . "\n", FILE_APPEND);
-
             //do step tries
             while(true) {
                 if($this->steps_data[$this->step_working]['STEP_TRY'] >= get_site_option('s3testing_cfg_jobstepretry')) {
@@ -304,9 +300,6 @@ class S3Testing_Job
                     break;
                 }
             }
-            $log_file = WP_CONTENT_DIR . '/debug-step.log';
-            $message = 'step done: ' . print_r($this->steps_data, true);
-            file_put_contents($log_file, $message . "\n", FILE_APPEND);
         }
     }
 
@@ -334,40 +327,35 @@ class S3Testing_Job
 
     public static function clean_temp_folder()
     {
-//        $instance = new self();
-//        $temp_dir = S3Testing::get_plugin_data('TEMP');
-//        $do_not_delete_files = ['.htaccess', 'nginx.conf', 'index.php', '.', '..', '.donotbackup'];
-//        if (is_writable($temp_dir)) {
-//            try {
-//                $dir = new S3Testing_Directory($temp_dir);
-//
-//                foreach ($dir as $file) {
-//                    if (in_array(
-//                            $file->getFilename(),
-//                            $do_not_delete_files,
-//                            true
-//                        ) || $file->isDir() || $file->isLink()) {
-//                        continue;
-//                    }
-//                    if ($file->isWritable()) {
-//                        unlink($file->getPathname());
-//                    }
-//                }
-//            } catch (UnexpectedValueException $e) {
-//
-//            }
-//        }
+        $instance = new self();
+        $temp_dir = S3Testing::get_plugin_data('TEMP');
+        $do_not_delete_files = ['.htaccess', 'nginx.conf', 'index.php', '.', '..', '.donotbackup'];
+        if (is_writable($temp_dir)) {
+            try {
+                $dir = new S3Testing_Directory($temp_dir);
+
+                foreach ($dir as $file) {
+                    if (in_array(
+                            $file->getFilename(),
+                            $do_not_delete_files,
+                            true
+                        ) || $file->isDir() || $file->isLink()) {
+                        continue;
+                    }
+                    if ($file->isWritable()) {
+                        unlink($file->getPathname());
+                    }
+                }
+            } catch (UnexpectedValueException $e) {
+
+            }
+        }
     }
 
     private function create_archive()
     {
         $folders_to_backup = $this->get_folders_to_backup();
         $this->substeps_todo = $this->count_folder + 1;
-
-        $log_file = WP_CONTENT_DIR . '/debug--.log';
-        $message = 'debug run file log ' . print_r($folders_to_backup, true);
-        file_put_contents($log_file, $message . "\n", FILE_APPEND);
-
         //initial settings for restarts in archiving
         if (!isset($this->steps_data[$this->step_working]['on_file'])) {
             $this->steps_data[$this->step_working]['on_file'] = '';

@@ -149,6 +149,7 @@ class S3Testing_JobType_DBDump extends S3Testing_JobTypes
             $i = 0;
 
             foreach ($sql_dump->tables_to_dump as $table) {
+
                 if ($i < $job_object->substeps_done) {
                     ++$i;
 
@@ -159,8 +160,6 @@ class S3Testing_JobType_DBDump extends S3Testing_JobTypes
                     $job_object->steps_data[$job_object->step_working]['tables'][$table] = ['start' => 0,
                         'length' => 1000, ];
                 }
-
-                $while = true;
 
                 $while = true;
 
