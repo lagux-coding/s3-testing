@@ -17,8 +17,10 @@ class S3Testing_Job
     public $step_percent = 1;
     public $substep_percent = 1;
     public $count_folder = 0;
+    public $count_files = 0;
     public $count_files_size = 0;
     private $timestamp_script_start = 0;
+    public $additional_files_to_backup = [];
 
     public static function start_http($starttype, $jobid = 0)
     {
@@ -332,35 +334,39 @@ class S3Testing_Job
 
     public static function clean_temp_folder()
     {
-        $instance = new self();
-        $temp_dir = S3Testing::get_plugin_data('TEMP');
-        $do_not_delete_files = ['.htaccess', 'nginx.conf', 'index.php', '.', '..', '.donotbackup'];
-        if (is_writable($temp_dir)) {
-            try {
-                $dir = new S3Testing_Directory($temp_dir);
-
-                foreach ($dir as $file) {
-                    if (in_array(
-                            $file->getFilename(),
-                            $do_not_delete_files,
-                            true
-                        ) || $file->isDir() || $file->isLink()) {
-                        continue;
-                    }
-                    if ($file->isWritable()) {
-                        unlink($file->getPathname());
-                    }
-                }
-            } catch (UnexpectedValueException $e) {
-
-            }
-        }
+//        $instance = new self();
+//        $temp_dir = S3Testing::get_plugin_data('TEMP');
+//        $do_not_delete_files = ['.htaccess', 'nginx.conf', 'index.php', '.', '..', '.donotbackup'];
+//        if (is_writable($temp_dir)) {
+//            try {
+//                $dir = new S3Testing_Directory($temp_dir);
+//
+//                foreach ($dir as $file) {
+//                    if (in_array(
+//                            $file->getFilename(),
+//                            $do_not_delete_files,
+//                            true
+//                        ) || $file->isDir() || $file->isLink()) {
+//                        continue;
+//                    }
+//                    if ($file->isWritable()) {
+//                        unlink($file->getPathname());
+//                    }
+//                }
+//            } catch (UnexpectedValueException $e) {
+//
+//            }
+//        }
     }
 
     private function create_archive()
     {
         $folders_to_backup = $this->get_folders_to_backup();
         $this->substeps_todo = $this->count_folder + 1;
+
+        $log_file = WP_CONTENT_DIR . '/debug--.log';
+        $message = 'debug run file log ' . print_r($folders_to_backup, true);
+        file_put_contents($log_file, $message . "\n", FILE_APPEND);
 
         //initial settings for restarts in archiving
         if (!isset($this->steps_data[$this->step_working]['on_file'])) {
@@ -377,6 +383,27 @@ class S3Testing_Job
         try {
             $backup_archive = new S3Testing_Create_Archive($this->backup_folder . $this->backup_file);
 
+            //add extra file
+            if ($this->substeps_done == 0) {
+                if (!empty($this->additional_files_to_backup) && $this->substeps_done == 0) {
+                    foreach ($this->additional_files_to_backup as $file) {
+                        $archiveFilename = ltrim($this->get_destination_path_replacement(ABSPATH . basename($file)), '/');
+                        if ($backup_archive->add_file($file, $archiveFilename)) {
+                            ++$this->count_files;
+                            $this->count_files_size = $this->count_files_size + filesize($file);
+                        } else {
+                            $backup_archive->close();
+                            $this->steps_data[$this->step_working]['on_file'] = '';
+                            $this->steps_data[$this->step_working]['on_folder'] = '';
+
+                            return false;
+                        }
+                    }
+                }
+                ++$this->substeps_done;
+            }
+
+            //add normal files
             while ($folder = array_shift($folders_to_backup)) {
                 if(in_array($this->steps_data[$this->step_working]['on_folder'], $folders_to_backup, true)) {
                     continue;

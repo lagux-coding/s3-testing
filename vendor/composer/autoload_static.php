@@ -19,6 +19,7 @@ class ComposerStaticInitcd624fb20f889334c9790014fe69762d
         'S' => 
         array (
             'Symfony\\Polyfill\\Mbstring\\' => 26,
+            'Symfony\\Component\\OptionsResolver\\' => 34,
         ),
         'P' => 
         array (
@@ -49,6 +50,10 @@ class ComposerStaticInitcd624fb20f889334c9790014fe69762d
         'Symfony\\Polyfill\\Mbstring\\' => 
         array (
             0 => __DIR__ . '/..' . '/symfony/polyfill-mbstring',
+        ),
+        'Symfony\\Component\\OptionsResolver\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/symfony/options-resolver',
         ),
         'Psr\\Http\\Message\\' => 
         array (

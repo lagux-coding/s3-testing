@@ -1,4 +1,6 @@
 <?php
+use Symfony\Component\OptionsResolver\Options;
+use Symfony\Component\OptionsResolver\OptionsResolver;
 class S3Testing_MySQLDump
 {
     public $tables_to_dump = [];
@@ -8,6 +10,7 @@ class S3Testing_MySQLDump
     private $table_types = [];
     private $table_status = [];
     private $dbname = '';
+    public $views_to_dump = [];
     public function __construct($args = [])
     {
         if (!class_exists(\mysqli::class)) {
@@ -86,13 +89,6 @@ class S3Testing_MySQLDump
             'dumpfilehandle' => fopen('php://output', 'wb'),
             'dumpfile' => null,
             'dbclientflags' => defined('MYSQL_CLIENT_FLAGS') ? MYSQL_CLIENT_FLAGS : 0,
-            'compression' => function (Options $options) {
-                if ($options['dumpfile'] !== null
-                    && substr(strtolower((string) $options['dumpfile']), -3) === '.gz') {
-
-                }
-
-            },
         ]);
 
         $port = $socket = null;
@@ -109,6 +105,7 @@ class S3Testing_MySQLDump
 
             return $value ?: 'localhost';
         });
+
 
         $resolver->setDefault('dbport', function (Options $options) use (&$port) {
             return $port;
@@ -389,6 +386,7 @@ class S3Testing_MySQLDump
 
     public function dump_footer()
     {
+
         //dump Views
         foreach ($this->views_to_dump as $view) {
             $this->dump_view_table_head($view);
