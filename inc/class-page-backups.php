@@ -242,6 +242,7 @@ class S3Testing_Page_Backups extends WP_List_Table
 
     public static function load()
     {
+        global $current_user;
 
         //Create Table
         self::$listtable = new S3Testing_Page_Backups();
@@ -265,6 +266,34 @@ class S3Testing_Page_Backups extends WP_List_Table
                 }
 
         }
+
+        //Save page
+        if (isset($_POST['screen-options-apply'], $_POST['wp_screen_options']['option'], $_POST['wp_screen_options']['value']) && $_POST['wp_screen_options']['option'] == 's3testingbackups_per_page') {
+
+            check_admin_referer('screen-options-nonce', 'screenoptionnonce');
+
+            if ($_POST['wp_screen_options']['value'] > 0 && $_POST['wp_screen_options']['value'] < 1000) {
+                update_user_option(
+                    $current_user->ID,
+                    's3testingbackups_per_page',
+                    (int) $_POST['wp_screen_options']['value']
+                );
+
+                wp_redirect(remove_query_arg(['pagenum', 'apage', 'paged'], wp_get_referer()));
+
+                exit;
+            }
+        }
+
+        add_screen_option(
+                'per_page',
+                [
+                    'label' => __('Backups'),
+                    'default' => 10,
+                    'option' => 's3testingbackups_per_page',
+                ],
+        );
+
         self::$listtable->prepare_items();
     }
 
