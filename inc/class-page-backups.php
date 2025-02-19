@@ -63,6 +63,56 @@ class S3Testing_Page_Backups extends WP_List_Table
         $orderby = filter_input(INPUT_GET, 'orderby') ?: 'time';
         $tmp = [];
 
+        if($orderby === 'time') {
+            if($order === 'asc') {
+                foreach($this->items as &$item) {
+                    $tmp[] = $item['time'];
+                }
+                array_multisort($tmp, SORT_ASC, $this->items);
+            } else {
+                foreach($this->items as &$item) {
+                    $tmp[] = $item['time'];
+                }
+                array_multisort($tmp, SORT_DESC, $this->items);
+            }
+        } elseif ($orderby === 'file') {
+            if ($order === 'asc') {
+                foreach ($this->items as &$item) {
+                    $tmp[] = &$item['filename'];
+                }
+                array_multisort($tmp, SORT_ASC, $this->items);
+            } else {
+                foreach ($this->items as &$item) {
+                    $tmp[] = &$item['filename'];
+                }
+                array_multisort($tmp, SORT_DESC, $this->items);
+            }
+        } elseif ($orderby === 'folder') {
+            if ($order === 'asc') {
+                foreach ($this->items as &$item) {
+                    $tmp[] = &$item['folder'];
+                }
+                array_multisort($tmp, SORT_ASC, $this->items);
+            } else {
+                foreach ($this->items as &$item) {
+                    $tmp[] = &$item['folder'];
+                }
+                array_multisort($tmp, SORT_DESC, $this->items);
+            }
+        } elseif ($orderby === 'size') {
+            if ($order === 'asc') {
+                foreach ($this->items as &$item) {
+                    $tmp[] = &$item['filesize'];
+                }
+                array_multisort($tmp, SORT_ASC, $this->items);
+            } else {
+                foreach ($this->items as &$item) {
+                    $tmp[] = &$item['filesize'];
+                }
+                array_multisort($tmp, SORT_DESC, $this->items);
+            }
+        }
+
         $this->set_pagination_args([
             'total_items' => count($this->items),
             'per_page' => $per_page,
