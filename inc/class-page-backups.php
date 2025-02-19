@@ -25,7 +25,7 @@ class S3Testing_Page_Backups extends WP_List_Table
     {
         $per_page = $this->get_items_per_page('s3testingbackups_per_page');
         if (empty($per_page) || $per_page < 1) {
-            $per_page = 20;
+            $per_page = 10;
         }
 
         $jobdest = '';
@@ -129,7 +129,7 @@ class S3Testing_Page_Backups extends WP_List_Table
 
     public function get_destinations_list()
     {
-        $jobdest = [];
+        $jobdests = [];
         $jobids = S3Testing_Option::get_job_ids();
 
         foreach ($jobids as $jobid) {
@@ -145,12 +145,12 @@ class S3Testing_Page_Backups extends WP_List_Table
                 $dest_class = S3Testing::get_destination($dest);
                 $can_do_dest = $dest_class->file_get_list($jobid . '_' . $dest);
                 if (!empty($can_do_dest)) {
-                    $jobdest[] = $jobid . '_' . $dest;
+                    $jobdests[] = $jobid . '_' . $dest;
                 }
             }
         }
 
-        return $jobdest;
+        return $jobdests;
     }
 
     public function column_file($item)

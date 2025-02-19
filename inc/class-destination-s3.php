@@ -548,7 +548,6 @@ class S3Testing_Destination_S3
 
         $args = [
             'Bucket' => S3Testing_Option::get($jobid, 's3bucket'),
-            'Prefix' => S3Testing_Option::get($jobid, 's3dir'),
         ];
 
         $objects = $s3->getIterator('ListObjects', $args);
