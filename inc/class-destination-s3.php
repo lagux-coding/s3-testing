@@ -170,7 +170,7 @@ class S3Testing_Destination_S3
                     <input id="s3dirselected"
                            name="s3dirselected"
                            type="hidden"
-                           value="<?php echo esc_attr(S3Testing_Option::get($jobid, 's3dir')); ?>"
+                           value="<? echo S3Testing_Option::get($jobid, 's3newfolder') == '' ? S3Testing_Option::get($jobid, 's3dir') : S3Testing_Option::get($jobid, 's3newfolder'); ?>"
                            class="regular-text"
                     />
                     <?php
@@ -194,14 +194,14 @@ class S3Testing_Destination_S3
             <tr>
                 <th scope="row">
                     <label for="s3dircreate">
-                        <?php esc_html_e('Or create new folder'); ?>
+                        <?php esc_html_e('Or create a new folder inside the selected folder'); ?>
                     </label>
                 </th>
                 <td>
                     <input id="s3dircreate"
                            name="s3dircreate"
                            type="text"
-                           value="<?php echo S3Testing_Option::get($jobid, 's3dircreate') == '/' ? '' : S3Testing_Option::get($jobid, 's3dircreate') ?>"
+                           value="<?php echo S3Testing_Option::get($jobid, 's3dircreate') == '/' ? '' : S3Testing_Option::get($jobid, 's3dircreate'); ?>"
                            size="63"
                            class="regular-text"
                            autocomplete="off"
@@ -374,7 +374,7 @@ class S3Testing_Destination_S3
         echo '</span>';
 
         echo '<select name="s3dir" id="s3dir">';
-        if (count($folders_list) > 1) {
+        if (count($folders_list) > 0) {
 
             foreach ($folders_list as $folder) {
                 echo '<option ' . selected($args['s3dirselected'], esc_attr($folder['Prefix']), false) . '>'
@@ -500,9 +500,11 @@ class S3Testing_Destination_S3
                 return false;
             }
 
+            S3Testing_Option::update($job_object->job['jobid'], 's3dircreate', '/');
+
             $result = $s3->headObject([
                 'Bucket' => $job_object->job['s3bucket'],
-                'Key' => $job_object->job['s3dir'] . $job_object->backup_file,
+                'Key' => $job_object->job['s3newfolder'] . $job_object->backup_file,
             ]);
 
         } catch (Exception $e) {
