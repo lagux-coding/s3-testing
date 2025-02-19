@@ -79,6 +79,18 @@ class S3Testing_Page_Jobs extends WP_List_Table
         _e('No Jobs.');
     }
 
+    public function get_bulk_actions()
+    {
+        if (!$this->has_items()) {
+            return [];
+        }
+
+        $actions = [];
+        $actions['delete'] = __('Delete');
+
+        return apply_filters('s3testing_page_jobs_get_bulk_actions', $actions);
+    }
+
     public function get_columns()
     {
         $jobs_columns = [];
@@ -86,7 +98,8 @@ class S3Testing_Page_Jobs extends WP_List_Table
         $jobs_columns['jobname'] = __('Job Name');
         $jobs_columns['type'] = __('Type');
         $jobs_columns['dest'] = __('Destinations');
-
+        $jobs_columns['next'] = __('Next Run');
+        $jobs_columns['last'] = __('Last Run');
         return $jobs_columns;
     }
 
@@ -96,6 +109,8 @@ class S3Testing_Page_Jobs extends WP_List_Table
             'jobname' => 'jobname',
             'type' => 'type',
             'dest' => 'dest',
+            'next' => 'next',
+            'last' => 'last',
         ];
     }
 
@@ -117,14 +132,8 @@ class S3Testing_Page_Jobs extends WP_List_Table
 
             $url = S3Testing_Job::get_jobrun_url('runnowlink', $item);
             $actions['runnow'] = '<a href="' . esc_attr($url['url']) . '">' . esc_html__('Run now') . '</a>';
-//        if (current_user_can('s3testing_logs') && S3Testing_Option::get($item, 'logfile')) {
-//            $logfile = basename((string) S3Testing_Option::get($item, 'logfile'));
-//            if (is_object($this->job_object) && $this->job_object->job['jobid'] == $item) {
-//                $logfile = basename((string) $this->job_object->logfile);
-//            }
-//            $log_name = str_replace(['.html', '.gz'], '', basename($logfile));
-//            $actions['lastlog'] = '<a href="' . admin_url('admin-ajax.php') . '?&action=s3testing_view_log&log=' . $log_name . '&_ajax_nonce=' . wp_create_nonce('view-log_' . $log_name) . '&amp;TB_iframe=true&amp;width=640&amp;height=440\" title="' . esc_attr($logfile) . '" class="thickbox">' . __('Last log', 's3testing') . '</a>';
-//        }
+
+
         $actions = apply_filters('s3testing_page_jobs_actions', $actions, $item, false);
         $r .= '<div class="job-normal"' . $job_normal_hide . '>' . $this->row_actions($actions) . '</div>';
         if (is_object($this->job_object)) {
@@ -177,6 +186,15 @@ class S3Testing_Page_Jobs extends WP_List_Table
 
         return $r;
     }
+    public function column_next($item)
+    {
+
+    }
+
+    public function column_last($item)
+    {
+
+    }
 
     public static function load()
     {
@@ -188,7 +206,7 @@ class S3Testing_Page_Jobs extends WP_List_Table
                     check_admin_referer('bulk-jobs');
 
                     foreach ($_GET['jobs'] as $jobid) {
-                        wp_clear_scheduled_hook('backwpup_cron', ['arg' => absint($jobid)]);
+
                         S3Testing_Option::delete_job(absint($jobid));
                     }
                 }
@@ -259,13 +277,16 @@ class S3Testing_Page_Jobs extends WP_List_Table
     {
         echo '<div class="wrap">';
         echo '<h1>' . esc_html(sprintf(__('%s &rsaquo; Jobs'), S3Testing::get_plugin_data('name'))). '&nbsp;<a href="' . wp_nonce_url(network_admin_url('admin.php') . '?page=s3testingeditjob', 'edit-job') . '" class="add-new-h2">' . esc_html__('Add new') . '</a></h1>';
-        S3Testing_Admin::display_message();?>
+        S3Testing_Admin::display_message();
+        $job_object = S3Testing_Job::get_working_data();
 
+        if(is_object($job_object)){?>
             <div id="runningjob">
-                <div id="runninginfos">
-
-                </div>
+                <div class="progressbar"><div id="progressstep" class="bwpu-progress" style="width:<?php echo $job_object->step_percent; ?>%;"><?php echo esc_html($job_object->step_percent);?>
+                <div id="onstep"><?php echo esc_html($job_object->steps_data[$job_object->step_working]['NAME']); ?></div>
             </div>
+        <?php
+        }
 
         //display jobs table?>
         <form id="posts-filter" action="" method="get">
@@ -275,7 +296,62 @@ class S3Testing_Page_Jobs extends WP_List_Table
         self::$listtable->display();
 ?>
             <div id="ajax-response"></div>
-        </form><?php
+        </form>
 
+        <script type="text/javascript">
+            jQuery(document).ready(function ($) {
+                s3testing_show_working = function () {
+                    $.ajax({
+                        type: 'GET',
+                        url: ajaxurl,
+                        cache: false,
+                        data:{
+                            action: 's3testing_working',
+                            _ajax_nonce: '<?php echo wp_create_nonce('s3testingworking_ajax_nonce'); ?>'
+                        },
+                        dataType: 'json',
+                        success:function (rundata) {
+                            if ( rundata == 0 ) {
+                                $(".job-run").hide();
+                                $("#message").hide();
+                                $(".job-normal").show();
+                            }
+                            if (0 < rundata.step_percent) {
+                                $('#progressstep').replaceWith('<div id="progressstep" class="s3tt-progress">' + rundata.step_percent + '%</div>');
+                                $('#progressstep').css('width', parseFloat(rundata.step_percent) + '%');
+                            }
+                            if ( '' != rundata.onstep ) {
+                                $('#onstep').replaceWith('<div id="onstep">' + rundata.on_step + '</div>');
+                            }
+                        }
+                        error:function( ) {
+                            setTimeout('s3testing_show_working()', 750);
+                        }
+                    });
+                };
+                s3testing_show_working();
+            });
+        </script>
+        <?php
+    }
+
+    public static function ajax_working()
+    {
+        check_ajax_referer('s3testingworking_ajax_nonce');
+
+        $job_object = S3Testing_Job::get_working_data();
+        $done = 0;
+        if (is_object($job_object)) {
+            $step_percent = $job_object->step_percent;
+            $substep_percent = $job_object->substep_percent;
+            $onstep = $job_object->steps_data[$job_object->step_working]['NAME'];
+        }
+
+        wp_send_json([
+            'step_percent' => $step_percent,
+            'on_step' => $onstep,
+            'sub_step_percent' => $substep_percent,
+            'job_done' => $done,
+        ]);
     }
 }

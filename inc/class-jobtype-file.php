@@ -128,7 +128,7 @@ class S3Testing_JobType_File extends S3Testing_JobTypes
 
     public function job_run(S3Testing_Job $job_object)
     {
-        $job_object->substeps_todo = 8;
+        $job_object->substeps_todo = 7;
 
         $abs_path = realpath(S3Testing_Path_Fixer::fix_path(ABSPATH));
         $abs_path = trailingslashit(str_replace('\\', '/', $abs_path));
@@ -162,40 +162,49 @@ class S3Testing_JobType_File extends S3Testing_JobTypes
         }
 
         //backup plugins
-        $wp_plugin_dir = realpath(WP_PLUGIN_DIR);
-        if ($wp_plugin_dir && !empty($job_object->job['backupplugins'])) {
-            $wp_plugin_dir = trailingslashit(str_replace('\\', '/', $wp_plugin_dir));
-            $excludes = $this->get_exclude_dirs($wp_plugin_dir, $folders_already_in);
+        if ($job_object->substeps_done === 2) {
+            $wp_plugin_dir = realpath(WP_PLUGIN_DIR);
+            if ($wp_plugin_dir && !empty($job_object->job['backupplugins'])) {
+                $wp_plugin_dir = trailingslashit(str_replace('\\', '/', $wp_plugin_dir));
+                $excludes = $this->get_exclude_dirs($wp_plugin_dir, $folders_already_in);
 
-            $this->get_folder_list($job_object, $wp_plugin_dir, $excludes);
-        }
-
-        //backup themes
-        $theme_root = realpath(get_theme_root());
-        if ($theme_root && !empty($job_object->job['backupthemes'])) {
-            $theme_root = trailingslashit(str_replace('\\', '/', $theme_root));
-            $excludes = $this->get_exclude_dirs($theme_root, $folders_already_in);
-
-            $this->get_folder_list($job_object, $theme_root, $excludes);
-        }
-
-        //backup uploads
-        $upload_dir = realpath(S3Testing_File::get_upload_dir());
-        if ($upload_dir && !empty($job_object->job['backupuploads'])) {
-            $upload_dir = trailingslashit(str_replace('\\', '/', $upload_dir));
-            $excludes = $this->get_exclude_dirs($upload_dir, $folders_already_in);
-
-            $this->get_folder_list($job_object, $upload_dir, $excludes);
-        }
-
-        //clean up folder list
-        if($job_object->substeps_done === 2) {
-            $folders = $job_object->get_folders_to_backup();
-            $job_object->add_folders_to_backup($folders, true);
+                $this->get_folder_list($job_object, $wp_plugin_dir, $excludes);
+            }
             $job_object->substeps_done = 3;
         }
 
-        $job_object->substeps_done = 8;
+        //backup themes
+        if ($job_object->substeps_done === 3) {
+            $theme_root = realpath(get_theme_root());
+            if ($theme_root && !empty($job_object->job['backupthemes'])) {
+                $theme_root = trailingslashit(str_replace('\\', '/', $theme_root));
+                $excludes = $this->get_exclude_dirs($theme_root, $folders_already_in);
+
+                $this->get_folder_list($job_object, $theme_root, $excludes);
+            }
+            $job_object->substeps_done = 4;
+        }
+
+        //backup uploads
+        if ($job_object->substeps_done === 4) {
+            $upload_dir = realpath(S3Testing_File::get_upload_dir());
+            if ($upload_dir && !empty($job_object->job['backupuploads'])) {
+                $upload_dir = trailingslashit(str_replace('\\', '/', $upload_dir));
+                $excludes = $this->get_exclude_dirs($upload_dir, $folders_already_in);
+
+                $this->get_folder_list($job_object, $upload_dir, $excludes);
+            }
+            $job_object->substeps_done = 5;
+        }
+
+        //clean up folder list
+        if($job_object->substeps_done === 5) {
+            $folders = $job_object->get_folders_to_backup();
+            $job_object->add_folders_to_backup($folders, true);
+            $job_object->substeps_done = 6;
+        }
+
+        $job_object->substeps_done = 7;
 
         return true;
     }

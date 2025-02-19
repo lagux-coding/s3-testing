@@ -170,7 +170,7 @@ class S3Testing_Destination_S3
                     <input id="s3dirselected"
                            name="s3dirselected"
                            type="hidden"
-                           value="<? echo S3Testing_Option::get($jobid, 's3newfolder') == '' ? S3Testing_Option::get($jobid, 's3dir') : S3Testing_Option::get($jobid, 's3newfolder'); ?>"
+                           value="<? echo S3Testing_Option::get($jobid, 's3dir') ;?>"
                            class="regular-text"
                     />
                     <?php
@@ -206,6 +206,9 @@ class S3Testing_Destination_S3
                            class="regular-text"
                            autocomplete="off"
                     />
+                    <p class="description"><?php esc_html_e(
+                            'Leave it blank to backup to the root of the selected folder',
+                        ); ?></p>
                 </td>
             </tr>
         </table>
@@ -500,8 +503,6 @@ class S3Testing_Destination_S3
                 return false;
             }
 
-            S3Testing_Option::update($job_object->job['jobid'], 's3dircreate', '/');
-
             $result = $s3->headObject([
                 'Bucket' => $job_object->job['s3bucket'],
                 'Key' => $job_object->job['s3newfolder'] . $job_object->backup_file,
@@ -520,6 +521,9 @@ class S3Testing_Destination_S3
 
             return false;
         }
+
+        $job_object->substeps_done = 2 + $job_object->backup_filesize;
+
         return true;
     }
 

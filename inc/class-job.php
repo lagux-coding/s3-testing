@@ -22,6 +22,8 @@ class S3Testing_Job
     private $timestamp_script_start = 0;
     public $additional_files_to_backup = [];
 
+    public $timestamp_last_update = 0;
+
     public static function start_http($starttype, $jobid = 0)
     {
         //check folder
@@ -59,16 +61,24 @@ class S3Testing_Job
     public static function get_working_data()
     {
         clearstatcache(true, S3Testing::get_plugin_data('running_file'));
+        $log_file = WP_CONTENT_DIR . '/main.log';
+        $message = 'debug run file log ' . print_r(S3Testing::get_plugin_data('running_file'), true);
+        file_put_contents($log_file, $message . "\n", FILE_APPEND);
 
         if (!file_exists(S3Testing::get_plugin_data('running_file'))) {
             return false;
         }
 
-//        $file_data = file_get_contents(S3Testing::get_plugin_data('running_file'), false, null, 8);
-//
-//        if (empty($file_data)) {
-//            return false;
-//        }
+        $file_data = file_get_contents(S3Testing::get_plugin_data('running_file'), false, null, 8);
+        if (empty($file_data)) {
+            return false;
+        }
+
+        if ($job_object = unserialize($file_data)) {
+            if ($job_object instanceof S3Testing_Job) {
+                return $job_object;
+            }
+        }
 
         return false;
     }
@@ -180,9 +190,13 @@ class S3Testing_Job
         }
 
         $this->start_time = current_time('timestamp');
+        //write settings to job
+        S3Testing_Option::update( $this->job['jobid'], 'lastrun', $this->start_time );
+
+        $this->timestamp_last_update = microtime( true );
 
         //setup job steps
-        $this->steps_data['CREATE']['CALLBACK'] = 'create';
+        $this->steps_data['CREATE']['CALLBACK'] = '';
         $this->steps_data['CREATE']['NAME'] = __('Job Start');
         $this->steps_data['CREATE']['STEP_TRY'] = 0;
 
@@ -242,6 +256,23 @@ class S3Testing_Job
 
     public function run()
     {
+        // Job can't run it is not created
+        if (empty($this->steps_todo)) {
+            $running_file = S3Testing::get_plugin_data('running_file');
+            if (file_exists($running_file)) {
+                unlink($running_file);
+            }
+
+            return;
+        }
+
+        $this->timestamp_script_start = microtime(true);
+
+        $log_file = WP_CONTENT_DIR . '/bug.log';
+        $message = 'debug run file log ' . print_r('debug', true);
+        file_put_contents($log_file, $message . "\n", FILE_APPEND);
+        $this->write_running_file();
+
         $job_types = S3Testing::get_job_types();
 
         //go step by step
@@ -253,7 +284,10 @@ class S3Testing_Job
 
             //calc step percent
             if(count($this->steps_done) > 0) {
-                $this->step_percent = min(round(count($this->steps_done)) / count($this->steps_todo) * 100, 100);
+                $this->step_percent = min(
+                    round(count($this->steps_done) / count($this->steps_todo) * 100),
+                    100
+                );
             } else {
                 $this->step_percent = 1;
             }
@@ -290,6 +324,7 @@ class S3Testing_Job
                     $this->steps_done[] = $this->step_working;
                     $this->substeps_done = 0;
                     $this->substeps_todo = 0;
+                    $this->update_working_data(true);
                 }
 
                 if (count($this->steps_done) < count($this->steps_todo) - 1) {
@@ -354,8 +389,11 @@ class S3Testing_Job
 
     private function create_archive()
     {
+        //load folders to backup
         $folders_to_backup = $this->get_folders_to_backup();
+
         $this->substeps_todo = $this->count_folder + 1;
+
         //initial settings for restarts in archiving
         if (!isset($this->steps_data[$this->step_working]['on_file'])) {
             $this->steps_data[$this->step_working]['on_file'] = '';
@@ -379,6 +417,7 @@ class S3Testing_Job
                         if ($backup_archive->add_file($file, $archiveFilename)) {
                             ++$this->count_files;
                             $this->count_files_size = $this->count_files_size + filesize($file);
+                            $this->update_working_data();
                         } else {
                             $backup_archive->close();
                             $this->steps_data[$this->step_working]['on_file'] = '';
@@ -415,6 +454,7 @@ class S3Testing_Job
                     if (in_array($this->steps_data[$this->step_working]['on_file'], $files_in_folder, true)) {
                         continue;
                     }
+
                     $this->steps_data[$this->step_working]['on_file'] = $file;
                     //generate filename in archive
                     $in_archive_filename = ltrim($this->get_destination_path_replacement($file), '/');
@@ -423,6 +463,7 @@ class S3Testing_Job
                     if ($backup_archive->add_file($file, $in_archive_filename)) {
                         ++$this->count_files;
                         $this->count_files_size = $this->count_files_size + filesize($file);
+                        $this->update_working_data();
                     }else {
                         $backup_archive->close();
                         unset($backup_archive);
@@ -525,7 +566,25 @@ class S3Testing_Job
         $write = file_put_contents(S3Testing::get_plugin_data('running_file'), $data);
         if (!$write || $write < strlen($data)) {
             unlink(S3Testing::get_plugin_data('running_file'));
-            $this->log(__('Cannot write progress to working file. Job will be aborted.'), E_USER_ERROR);
+        }
+    }
+
+    public function update_working_data($must = false)
+    {
+        global $wpdb;
+
+        $time_to_update = microtime(true) - $this->timestamp_last_update;
+        if ($time_to_update < 1 && !$must) {
+            return;
+        }
+
+        if (!file_exists(S3Testing::get_plugin_data('running_file'))) {
+            if ($this->step_working !== 'END') {
+                $this->end();
+            }
+        } else {
+            $this->timestamp_last_update = microtime(true); //last update of working file
+            $this->write_running_file();
         }
     }
 
