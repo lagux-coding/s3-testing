@@ -521,6 +521,48 @@ class S3Testing_Destination_S3
         return true;
     }
 
+    public function file_delete($jobdest, $backupfile) {
+        $files = get_site_transient('s3testing_' . strtolower($jobdest));
+        [$jobid, $dest] = explode('_', $jobdest);
+
+        if(S3Testing_Option::get($jobid, 's3accesskey') && S3Testing_Option::get($jobid, 's3secretkey') && S3Testing_Option::get($jobid, 's3bucket')) {
+            try {
+                $region = S3Testing_Option::get($jobid, 's3base_url');
+                if(empty($region)) {
+                    $region = S3Testing_Option::get($jobid, 's3region');
+                    $aws = S3Testing_S3_Destination::fromOption($region);
+                } else {
+                    $aws = S3Testing_S3_Destination::fromJobId($jobid);
+                }
+
+                $s3 = $aws->client(
+                    S3Testing_Option::get($jobid, 's3accesskey'),
+                    S3Testing_Option::get($jobid, 's3secretkey')
+                );
+
+                $s3->deleteObject([
+                    'Bucket' => S3Testing_Option::get($jobid, 's3bucket'),
+                    'Key' => $backupfile,
+                ]);
+
+                //update file list
+                foreach ((array) $files as $key => $file) {
+                    if (is_array($file) && $file['file'] === $backupfile) {
+                        unset($files[$key]);
+                    }
+                }
+                unset($s3);
+            } catch (Exception $e) {
+                $errorMessage = $e->getMessage();
+                if ($e instanceof AwsException) {
+                    $errorMessage = $e->getAwsErrorMessage();
+                }
+                S3Testing_Admin::message(sprintf(__('S3 Service API: %s'), $errorMessage), true);
+            }
+        }
+        set_site_transient('s3testing_' . strtolower($jobdest), $files, YEAR_IN_SECONDS);
+    }
+
     public function file_update_list($job, bool $delete = false)
     {
         if($job instanceof S3Testing_Job) {

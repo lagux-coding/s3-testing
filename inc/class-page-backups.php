@@ -295,7 +295,7 @@ class S3Testing_Page_Backups extends WP_List_Table
 
         switch (self::$listtable->current_action()) {
             case 'delete':
-
+                check_admin_referer('bulk-backups');
                 $jobdest = '';
                 if (isset($_GET['jobdest'])) {
                     $jobdest = sanitize_text_field($_GET['jobdest']);
@@ -311,6 +311,22 @@ class S3Testing_Page_Backups extends WP_List_Table
                     return;
                 }
 
+                [$jobid, $dest] = explode('_', (string) $jobdest);
+                $dest_class = S3Testing::get_destination($dest);
+                $files = $dest_class->file_get_list($jobdest);
+
+                foreach($_GET['backupfiles'] as $backupfile) {
+                    foreach($files as $file) {
+                        if (is_array($file) && $file['file'] == $backupfile) {
+                            $dest_class->file_delete($jobdest, $backupfile);
+                        }
+                    }
+                }
+                $files = $dest_class->file_get_list($jobdest);
+                if (empty($files)) {
+                    $_GET['jobdest-top'] = '';
+                }
+                break;
         }
 
         //Save page
@@ -380,5 +396,21 @@ class S3Testing_Page_Backups extends WP_List_Table
             }
         </style>
         <?php
+    }
+
+    private function delete_item_action($item) {
+        $query = sprintf(
+            '?page=s3testingbackups&action=delete&jobdest-top=%1$s&paged=%2$s&backupfiles[]=%3$s',
+            $this->jobid . '_' . $this->dest,
+            $this->get_pagenum(),
+            esc_attr($item['file'])
+        );
+        $url = wp_nonce_url(network_admin_url('admin.php') . $query, 'bulk-backups');
+
+        return sprintf(
+            '<a class="submitdelete" href="%1$s">%2$s</a>',
+            $url,
+            __('Delete')
+        );
     }
 }
