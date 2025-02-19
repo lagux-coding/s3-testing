@@ -150,6 +150,52 @@ class S3Testing_Page_Backups extends WP_List_Table
         _e('No files could be found. (List will be generated during next backup.)');
     }
 
+    public function get_bulk_actions()
+    {
+        if (!$this->has_items()) {
+            return [];
+        }
+        $actions = [];
+        $actions['delete'] = __('Delete');
+
+        return $actions;
+    }
+
+    public function extra_tablenav($which)
+    {
+        $destinations_list = $this->get_destinations_list();
+
+        if (count($destinations_list) < 1) {
+            return;
+        }
+
+        if (count($destinations_list) === 1) {
+            echo '<input type="hidden" name="jobdest-' . $which . '" value="' . $destinations_list[0] . '">';
+
+            return;
+        } ?>
+        <div class="alignleft actions">
+            <label for="jobdest-<?php echo esc_attr($which); ?>">
+                <select name="jobdest-<?php echo esc_html($which); ?>" class="postform"
+                        id="jobdest-<?php echo esc_attr($which); ?>">
+                    <?php
+                    foreach ($destinations_list as $jobdest) {
+                        [$jobid, $dest] = explode('_', (string) $jobdest);
+                        echo "\t<option value=\"" . $jobdest . '" ' . selected(
+                                $this->jobid . '_' . $this->dest,
+                                $jobdest,
+                                false
+                            ) . '>' . $dest . ': ' . esc_html(S3Testing_Option::get(
+                                $jobid,
+                                'name'
+                            )) . '</option>' . PHP_EOL;
+                    } ?>
+                </select>
+            </label>
+        </div>
+        <?php
+    }
+
     public function get_columns()
     {
         $posts_columns = [];
@@ -298,19 +344,19 @@ class S3Testing_Page_Backups extends WP_List_Table
     }
 
     public static function page()
-    {?>
+    {
+        ?>
         <div class="wrap" id="s3testing-page">
             <h1>
                 <?php
                     echo esc_html(sprintf(__('%s &rsaquo; Manage Backup Archives'), S3Testing::get_plugin_data('name')));
-                ?>
+                ?></h1>
                 <?php S3Testing_Admin::display_message() ?>
                 <form id="posts-filter" action="" method="get">
                     <input type="hidden" name="page" value="s3testingbackups"/>
                     <?php self::$listtable->display(); ?>
                     <div id="ajax-response"></div>
                 </form>
-            </h1>
         </div><?php
     }
 
@@ -318,6 +364,7 @@ class S3Testing_Page_Backups extends WP_List_Table
     {
         ?>
         <style type="text/css" media="screen">
+
             .column-size, .column-time {
                 width: 10%;
             }
