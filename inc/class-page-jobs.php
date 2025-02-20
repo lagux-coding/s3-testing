@@ -193,7 +193,19 @@ class S3Testing_Page_Jobs extends WP_List_Table
 
     public function column_last($item)
     {
+        $r = '';
 
+        if(S3Testing_Option::get($item, 'lastrun')) {
+            $lastrun = S3Testing_Option::get($item, 'lastrun');
+            $r .= sprintf(__('%1$s at %2$s'), date_i18n(get_option('date_format'), $lastrun, true), date_i18n(get_option('time_format'), $lastrun, true));
+            if (S3Testing_Option::get($item, 'lastruntime')) {
+                $r .= '<br />' . sprintf(__('Runtime: %d seconds'), S3Testing_Option::get($item, 'lastruntime'));
+            }
+        } else {
+            $r .= __('not yet');
+        }
+        $r .= '<br />';
+        return $r;
     }
 
     public static function load()

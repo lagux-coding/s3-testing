@@ -346,6 +346,10 @@ class S3Testing_Job
         $this->step_working = 'END';
         $this->substeps_todo = 1;
 
+        //update job options
+        $this->job['lastruntime'] = current_time('timestamp') - $this->start_time;
+        S3Testing_Option::update($this->job['jobid'], 'lastruntime', $this->job['lastruntime']);
+
         //set done
         $this->substeps_done = 1;
         $this->steps_done[] = 'END';
