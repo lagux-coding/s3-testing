@@ -23,6 +23,7 @@ class S3Testing_Job
     public $additional_files_to_backup = [];
 
     public $timestamp_last_update = 0;
+    public $user_abort = false;
 
     public static function start_http($starttype, $jobid = 0)
     {
@@ -54,7 +55,6 @@ class S3Testing_Job
 
         if($s3testing_job_object) {
             $s3testing_job_object->run();
-
         }
     }
 
@@ -574,6 +574,13 @@ class S3Testing_Job
 
         @set_time_limit(300);
 
+        //Calc substep percent
+        if ($this->substeps_todo > 0 && $this->substeps_done > 0) {
+            $this->substep_percent = min(round($this->substeps_done / $this->substeps_todo * 100), 100);
+        } else {
+            $this->substep_percent = 1;
+        }
+
         if (!file_exists(S3Testing::get_plugin_data('running_file'))) {
             if ($this->step_working !== 'END') {
                 $this->end();
@@ -581,6 +588,28 @@ class S3Testing_Job
         } else {
             $this->timestamp_last_update = microtime(true); //last update of working file
             $this->write_running_file();
+        }
+    }
+
+    public static function user_abort() {
+        $job_object = S3Testing_Job::get_working_data();
+
+        unlink(S3Testing::get_plugin_data('running_file'));
+
+        //if job not working currently abort it this way for message
+        $not_worked_time = microtime(true) - $job_object->timestamp_last_update;
+        $restart_time = get_site_option('s3testing_cfg_jobmaxexecutiontime');
+        if (empty($restart_time)) {
+            $restart_time = 60;
+        }
+
+        try {
+            if ($not_worked_time > $restart_time) {
+                $job_object->user_abort = true;
+                $job_object->update_working_data();
+            }
+        } catch (Exception $e) {
+
         }
     }
 

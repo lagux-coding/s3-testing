@@ -17,6 +17,12 @@
     border-left: 4px solid #38b0eb;
 }
 
+#backwpup-page .button-s3 {
+    border-radius: 0;
+    -webkit-box-shadow: none;
+    box-shadow: none;
+}
+
 .progressbar {
     margin-top: 10px;
     height: auto;

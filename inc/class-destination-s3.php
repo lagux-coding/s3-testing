@@ -481,15 +481,12 @@ class S3Testing_Destination_S3
                 'Key' => $job_object->job['s3newfolder'] . $job_object->backup_file,
             ]);
 
-            if ($result->get('ContentLength') == filesize($job_object->backup_folder . $job_object->backup_file)) {
-                $job_object->substeps_done = 1 + $job_object->backup_filesize;
-            }
-
         } catch (Exception $e) {
             $errorMessage = $e->getMessage();
             if ($e instanceof AwsException) {
                 $errorMessage = $e->getAwsErrorMessage();
             }
+
             return false;
         }
 

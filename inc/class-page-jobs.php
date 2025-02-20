@@ -264,7 +264,13 @@ class S3Testing_Page_Jobs extends WP_List_Table
                     }
                 }
                 break;
-
+            case 'abort':
+                check_admin_referer('abort-job');
+                if (!file_exists(S3Testing::get_plugin_data('running_file'))) {
+                    break;
+                }
+                S3Testing_Job::user_abort();
+                break;
         }
 
         do_action('s3testing_page_jobs_load', self::$listtable->current_action());
@@ -296,10 +302,9 @@ class S3Testing_Page_Jobs extends WP_List_Table
 
             .progressbar {
                 margin-top: 20px;
-                height: auto;
                 background: #f6f6f6 url('<?php echo S3Testing::get_plugin_data('URL'); ?>/assets/images/progressbarhg.jpg');
             }
-
+            
             .s3tt-progress {
                 background-color: #1d94cf;
                 color: #fff;
@@ -323,7 +328,9 @@ class S3Testing_Page_Jobs extends WP_List_Table
         $job_object = S3Testing_Job::get_working_data();
         if(is_object($job_object)){?>
             <div id="runningjob">
-                <div class="progressbar"><div id="progressstep" class="bwpu-progress" style="width:<?php echo $job_object->step_percent; ?>%;"><?php echo esc_html($job_object->step_percent);?>%</div></div>
+                <a href="<?php echo wp_nonce_url(network_admin_url('admin.php') . '?page=s3testingjobs&action=abort', 'abort-job'); ?>" id="abortbutton" class="s3testing-fancybox button button-s3"><?php esc_html_e('Abort'); ?></a>
+
+                <div class="progressbar"><div id="progressstep" class="s3tt-progress" style="width:<?php echo ($job_object->step_percent); ?>%;"><?php echo esc_html($job_object->step_percent);?>%</div></div>
                 <div id="onstep"><?php echo esc_html($job_object->steps_data[$job_object->step_working]['NAME']); ?></div>
             </div>
         <?php
@@ -353,7 +360,9 @@ class S3Testing_Page_Jobs extends WP_List_Table
                         dataType: 'json',
                         success:function (rundata) {
                             console.log(rundata);
+                            console.log(rundata.step_percent);
                             if ( rundata == 0 ) {
+                                $("#abortbutton").remove();
                                 $(".job-run").hide();
                                 $("#message").hide();
                                 $(".job-normal").show();
@@ -362,10 +371,15 @@ class S3Testing_Page_Jobs extends WP_List_Table
                                 $('#progressstep').replaceWith('<div id="progressstep" class="s3tt-progress">' + rundata.step_percent + '%</div>');
                                 $('#progressstep').css('width', parseFloat(rundata.step_percent) + '%');
                             }
+                            if (0 < rundata.sub_step_percent) {
+                                $('#progresssteps').replaceWith('<div id="progresssteps" class="s3tt-progress">' + rundata.sub_step_percent + '%</div>');
+                                $('#progresssteps').css('width', parseFloat(rundata.sub_step_percent) + '%');
+                            }
                             if ( '' != rundata.onstep ) {
                                 $('#onstep').replaceWith('<div id="onstep">' + rundata.on_step + '</div>');
                             }
                             if ( rundata.job_done == 1 ) {
+                                $("#abortbutton").remove();
                                 $(".job-run").hide();
                                 $("#message").hide();
                                 $(".job-normal").show();
@@ -374,6 +388,7 @@ class S3Testing_Page_Jobs extends WP_List_Table
                             }
                         },
                         error:function( ) {
+                            console.log(rundata);
                             setTimeout('s3testing_show_working()', 750);
                         }
                     });
