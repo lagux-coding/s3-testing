@@ -25,7 +25,7 @@ class S3Testing_Page_Backups extends WP_List_Table
     {
         $per_page = $this->get_items_per_page('s3testingbackups_per_page');
         if (empty($per_page) || $per_page < 1) {
-            $per_page = 10;
+            $per_page = 20;
         }
 
         $jobdest = '';
@@ -63,51 +63,51 @@ class S3Testing_Page_Backups extends WP_List_Table
         $orderby = filter_input(INPUT_GET, 'orderby') ?: 'time';
         $tmp = [];
 
-        if($orderby === 'time') {
-            if($order === 'asc') {
-                foreach($this->items as &$item) {
-                    $tmp[] = $item['time'];
+        if ($orderby === 'time') {
+            if ($order === 'asc') {
+                foreach ($this->items as &$ma) {
+                    $tmp[] = &$ma['time'];
                 }
                 array_multisort($tmp, SORT_ASC, $this->items);
             } else {
-                foreach($this->items as &$item) {
-                    $tmp[] = $item['time'];
+                foreach ($this->items as &$ma) {
+                    $tmp[] = &$ma['time'];
                 }
                 array_multisort($tmp, SORT_DESC, $this->items);
             }
         } elseif ($orderby === 'file') {
             if ($order === 'asc') {
-                foreach ($this->items as &$item) {
-                    $tmp[] = &$item['filename'];
+                foreach ($this->items as &$ma) {
+                    $tmp[] = &$ma['filename'];
                 }
                 array_multisort($tmp, SORT_ASC, $this->items);
             } else {
-                foreach ($this->items as &$item) {
-                    $tmp[] = &$item['filename'];
+                foreach ($this->items as &$ma) {
+                    $tmp[] = &$ma['filename'];
                 }
                 array_multisort($tmp, SORT_DESC, $this->items);
             }
         } elseif ($orderby === 'folder') {
             if ($order === 'asc') {
-                foreach ($this->items as &$item) {
-                    $tmp[] = &$item['folder'];
+                foreach ($this->items as &$ma) {
+                    $tmp[] = &$ma['folder'];
                 }
                 array_multisort($tmp, SORT_ASC, $this->items);
             } else {
-                foreach ($this->items as &$item) {
-                    $tmp[] = &$item['folder'];
+                foreach ($this->items as &$ma) {
+                    $tmp[] = &$ma['folder'];
                 }
                 array_multisort($tmp, SORT_DESC, $this->items);
             }
         } elseif ($orderby === 'size') {
             if ($order === 'asc') {
-                foreach ($this->items as &$item) {
-                    $tmp[] = &$item['filesize'];
+                foreach ($this->items as &$ma) {
+                    $tmp[] = &$ma['filesize'];
                 }
                 array_multisort($tmp, SORT_ASC, $this->items);
             } else {
-                foreach ($this->items as &$item) {
-                    $tmp[] = &$item['filesize'];
+                foreach ($this->items as &$ma) {
+                    $tmp[] = &$ma['filesize'];
                 }
                 array_multisort($tmp, SORT_DESC, $this->items);
             }
@@ -122,7 +122,7 @@ class S3Testing_Page_Backups extends WP_List_Table
         ]);
 
         // Only display items on page.
-    $start = intval(($this->get_pagenum() - 1) * $per_page);
+        $start = intval(($this->get_pagenum() - 1) * $per_page);
         $end = $start + $per_page;
         if ($end > count($this->items)) {
             $end = count($this->items);
@@ -192,6 +192,13 @@ class S3Testing_Page_Backups extends WP_List_Table
                     } ?>
                 </select>
             </label>
+            <?php submit_button(
+                __('Change destination'),
+                'secondary',
+                'jobdets-button-' . $which,
+                false,
+                ['id' => 'query-submit-' . $which]
+            ); ?>
         </div>
         <?php
     }
@@ -229,9 +236,6 @@ class S3Testing_Page_Backups extends WP_List_Table
         $jobids = S3Testing_Option::get_job_ids();
 
         foreach ($jobids as $jobid) {
-            if (S3Testing_Option::get($jobid, 'backuptype') === 'sync') {
-                continue;
-            }
             $dests = S3Testing_Option::get($jobid, 'destinations');
 
             foreach ($dests as $dest) {
@@ -280,7 +284,7 @@ class S3Testing_Page_Backups extends WP_List_Table
     public function column_time($item)
     {
         return sprintf(
-            __('%1$s at %2$s', 'backwpup'),
+            __('%1$s at %2$s'),
             date_i18n(get_option('date_format'), $item['time'], true),
             date_i18n(get_option('time_format'), $item['time'], true)
         );
@@ -315,7 +319,13 @@ class S3Testing_Page_Backups extends WP_List_Table
                 $dest_class = S3Testing::get_destination($dest);
                 $files = $dest_class->file_get_list($jobdest);
 
-                foreach($_GET['backupfiles'] as $backupfile) {
+                $backupFiles = $_GET['backupfiles'];
+
+                $log_file = WP_CONTENT_DIR . '/debug' . '/backupfile.log';
+                $message = print_r($backupFiles, true);
+                file_put_contents($log_file, $message . "\n", FILE_APPEND);
+
+                foreach($backupFiles as $backupfile) {
                     foreach($files as $file) {
                         if (is_array($file) && $file['file'] == $backupfile) {
                             $dest_class->file_delete($jobdest, $backupfile);
@@ -326,6 +336,9 @@ class S3Testing_Page_Backups extends WP_List_Table
                 if (empty($files)) {
                     $_GET['jobdest-top'] = '';
                 }
+                break;
+            default:
+
                 break;
         }
 
@@ -351,7 +364,7 @@ class S3Testing_Page_Backups extends WP_List_Table
                 'per_page',
                 [
                     'label' => __('Backups'),
-                    'default' => 10,
+                    'default' => 20,
                     'option' => 's3testingbackups_per_page',
                 ],
         );
@@ -406,10 +419,19 @@ class S3Testing_Page_Backups extends WP_List_Table
             esc_attr($item['file'])
         );
         $url = wp_nonce_url(network_admin_url('admin.php') . $query, 'bulk-backups');
+        $js = sprintf(
+            'if ( confirm(\'%s\') ) { return true; } return false;',
+            esc_js(
+                __(
+                    'You are about to delete this backup archive. \'Cancel\' to stop, \'OK\' to delete.'
+                )
+            )
+        );
 
         return sprintf(
-            '<a class="submitdelete" href="%1$s">%2$s</a>',
+            '<a class="submitdelete" href="%1$s" onclick="%2$s">%3$s</a>',
             $url,
+            $js,
             __('Delete')
         );
     }

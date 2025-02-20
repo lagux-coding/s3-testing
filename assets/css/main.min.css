@@ -1,3 +1,22 @@
+#s3testing-page .s3testing-message {
+    background-color: #fff;
+    border: none;
+    border-left: 4px solid #ccc;
+    box-shadow: 0px 1px 1px 0px rgba(0, 0, 0, 0.1);
+    margin: 5px 0 15px;
+    padding: 1px 12px;
+    -webkit-box-shadow: 0px 1px 1px 0px rgba(0, 0, 0, 0.1);
+}
+
+#s3testing-page .s3testing-message p {
+    margin: 0.5em 0;
+    padding: 2px;
+}
+
+#s3testing-page .s3testing-info {
+    border-left: 4px solid #38b0eb;
+}
+
 .progressbar {
     margin-top: 10px;
     height: auto;

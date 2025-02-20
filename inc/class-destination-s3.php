@@ -514,10 +514,6 @@ class S3Testing_Destination_S3
                 $errorMessage = $e->getAwsErrorMessage();
             }
 
-            $log_file = WP_CONTENT_DIR . "/debug" . '/debug-file.log';
-            $message = 'debug run file log ' . print_r($errorMessage, true);
-            file_put_contents($log_file, $message . "\n", FILE_APPEND);
-
             return false;
         }
 
@@ -530,7 +526,14 @@ class S3Testing_Destination_S3
     }
 
     public function file_delete($jobdest, $backupfile) {
+        $log_file = WP_CONTENT_DIR . '/debug' .'/checkcheck.log';
+        $message = '';
+
         $files = get_site_transient('s3testing_' . strtolower($jobdest));
+
+        $message = 'before delete file ' . print_r($files, true) . "\n" . '=========================';
+        file_put_contents($log_file, $message . "\n", FILE_APPEND);
+
         [$jobid, $dest] = explode('_', $jobdest);
 
         if(S3Testing_Option::get($jobid, 's3accesskey') && S3Testing_Option::get($jobid, 's3secretkey') && S3Testing_Option::get($jobid, 's3bucket')) {
@@ -559,16 +562,22 @@ class S3Testing_Destination_S3
                         unset($files[$key]);
                     }
                 }
+                $files = array_values($files);
                 unset($s3);
             } catch (Exception $e) {
                 $errorMessage = $e->getMessage();
                 if ($e instanceof AwsException) {
                     $errorMessage = $e->getAwsErrorMessage();
                 }
+
+                $message = 'Deleting file: ' . $errorMessage;
+                file_put_contents($log_file, $message . "\n", FILE_APPEND);
                 S3Testing_Admin::message(sprintf(__('S3 Service API: %s'), $errorMessage), true);
             }
         }
         set_site_transient('s3testing_' . strtolower($jobdest), $files, YEAR_IN_SECONDS);
+        $message = 'after delete file ' . print_r($files, true) . "\n" . '=========================';
+        file_put_contents($log_file, $message . "\n", FILE_APPEND);
     }
 
     public function file_update_list($job, bool $delete = false)
@@ -621,13 +630,17 @@ class S3Testing_Destination_S3
                 ++$filecounter;
             }
         }
+
+        $log_file = WP_CONTENT_DIR . "/debug" . '/debug-check.log';
+        $message = 'debug run file log ' . print_r($files, true);
+        file_put_contents($log_file, $message . "\n", FILE_APPEND);
+
         set_site_transient('s3testing_' . $jobid . '_s3', $files, YEAR_IN_SECONDS);
     }
 
     public function file_get_list(string $jobdest): array
     {
         $list = (array) get_site_transient('s3testing_' . strtolower($jobdest));
-
         return array_filter($list);
     }
 
