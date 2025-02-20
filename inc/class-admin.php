@@ -3,6 +3,20 @@ final class S3Testing_Admin
 {
     public $page_hooks = [];
 
+    public function admin_css()
+    {
+        $pluginDir = untrailingslashit(S3Testing::get_plugin_data('plugindir'));
+        $filepath = "{$pluginDir}/assets/css/main.min.css";
+
+        wp_enqueue_style(
+            's3testing',
+            S3Testing::get_plugin_data('URL') . "/assets/css/main.min.css",
+            [],
+            filemtime($filepath),
+            'screen'
+        );
+    }
+
     public static function init_general()
     {
         add_thickbox();
@@ -48,7 +62,7 @@ final class S3Testing_Admin
 
     public function admin_page_jobs($page_hooks)
     {
-        $this->page_hooks['s3testingjob'] = add_submenu_page(
+        $this->page_hooks['s3testingjobs'] = add_submenu_page(
             's3testing',
             'Jobs',
             'Jobs',
@@ -60,7 +74,14 @@ final class S3Testing_Admin
             ]
         );
 
-        add_action('load-' . $this->page_hooks['s3testingjob'], [\S3Testing_Page_Jobs::class, 'load']);
+        add_action('load-' . $this->page_hooks['s3testingjobs'], [\S3Testing_Page_Jobs::class, 'load']);
+        add_action(
+            'admin_print_styles-' . $this->page_hooks['s3testingjobs'],
+            [
+                \S3Testing_Page_Jobs::class,
+                'admin_print_styles',
+            ]
+        );
 
         return $page_hooks;
     }
@@ -133,6 +154,9 @@ final class S3Testing_Admin
 
         add_action('admin_init', [$this, 'admin_init']);
         add_action('admin_post_s3testing', [$this, 'save_post_form']);
+
+        //add more actions
+        add_action('admin_enqueue_scripts', [$this, 'admin_css']);
     }
 
     public function admin_init()

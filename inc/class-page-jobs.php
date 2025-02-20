@@ -273,16 +273,53 @@ class S3Testing_Page_Jobs extends WP_List_Table
         self::$listtable->prepare_items();
     }
 
+    public static function admin_print_styles()
+    {
+        ?>
+        <style type="text/css" media="screen">
+
+            .column-last, .column-next, .column-type, .column-dest {
+                width: 15%;
+            }
+
+            #TB_ajaxContent {
+                background-color: black;
+                color: #c0c0c0;
+            }
+
+            #runningjob {
+                padding:10px;
+                position:relative;
+                margin: 15px 0 25px 0;
+                padding-bottom:25px;
+            }
+
+            .progressbar {
+                margin-top: 20px;
+                height: auto;
+                background: #f6f6f6 url('<?php echo S3Testing::get_plugin_data('URL'); ?>/assets/images/progressbarhg.jpg');
+            }
+
+            .s3tt-progress {
+                background-color: #1d94cf;
+                color: #fff;
+                padding: 5px 0;
+                text-align: center;
+            }
+        </style>
+        <?php
+    }
+
     public static function page()
     {
-        echo '<div class="wrap">';
+        echo '<div class="wrap" id="backwpup-page">';
         echo '<h1>' . esc_html(sprintf(__('%s &rsaquo; Jobs'), S3Testing::get_plugin_data('name'))). '&nbsp;<a href="' . wp_nonce_url(network_admin_url('admin.php') . '?page=s3testingeditjob', 'edit-job') . '" class="add-new-h2">' . esc_html__('Add new') . '</a></h1>';
         S3Testing_Admin::display_message();
         $job_object = S3Testing_Job::get_working_data();
 
         if(is_object($job_object)){?>
             <div id="runningjob">
-                <div class="progressbar"><div id="progressstep" class="bwpu-progress" style="width:<?php echo $job_object->step_percent; ?>%;"><?php echo esc_html($job_object->step_percent);?>
+                <div class="progressbar"><div id="progressstep" class="bwpu-progress" style="width:<?php echo $job_object->step_percent; ?>%;"><?php echo esc_html($job_object->step_percent);?>%</div></div>
                 <div id="onstep"><?php echo esc_html($job_object->steps_data[$job_object->step_working]['NAME']); ?></div>
             </div>
         <?php
@@ -311,6 +348,7 @@ class S3Testing_Page_Jobs extends WP_List_Table
                         },
                         dataType: 'json',
                         success:function (rundata) {
+                            console.log(rundata);
                             if ( rundata == 0 ) {
                                 $(".job-run").hide();
                                 $("#message").hide();
@@ -323,7 +361,14 @@ class S3Testing_Page_Jobs extends WP_List_Table
                             if ( '' != rundata.onstep ) {
                                 $('#onstep').replaceWith('<div id="onstep">' + rundata.on_step + '</div>');
                             }
-                        }
+                            if ( rundata.job_done == 1 ) {
+                                $(".job-run").hide();
+                                $("#message").hide();
+                                $(".job-normal").show();
+                            } else {
+                                setTimeout('s3testing_show_working()', 750);
+                            }
+                        },
                         error:function( ) {
                             setTimeout('s3testing_show_working()', 750);
                         }
@@ -345,6 +390,11 @@ class S3Testing_Page_Jobs extends WP_List_Table
             $step_percent = $job_object->step_percent;
             $substep_percent = $job_object->substep_percent;
             $onstep = $job_object->steps_data[$job_object->step_working]['NAME'];
+        } else {
+            $step_percent = 100;
+            $substep_percent = 100;
+            $onstep = '<div class="s3testing-message s3testing-info"><p>' . esc_html__('Job completed') . '</p></div>';
+            $done = 1;
         }
 
         wp_send_json([

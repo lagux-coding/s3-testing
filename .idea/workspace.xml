@@ -6,10 +6,11 @@
   <component name="ChangeListManager">
     <list default="true" id="14453ea8-162e-42dd-95e9-1168a72971e1" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/inc/class-admin.php" beforeDir="false" afterPath="$PROJECT_DIR$/inc/class-admin.php" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/inc/class-destination-s3.php" beforeDir="false" afterPath="$PROJECT_DIR$/inc/class-destination-s3.php" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/inc/class-job.php" beforeDir="false" afterPath="$PROJECT_DIR$/inc/class-job.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/inc/class-jobtype-file.php" beforeDir="false" afterPath="$PROJECT_DIR$/inc/class-jobtype-file.php" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/inc/class-page-jobs.php" beforeDir="false" afterPath="$PROJECT_DIR$/inc/class-page-jobs.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/s3-testing.php" beforeDir="false" afterPath="$PROJECT_DIR$/s3-testing.php" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -54,23 +55,28 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;PHP Script.s3-testing.php.executor&quot;: &quot;Run&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/lagux/Local Sites/wps3testing/app/public/wp-content/plugins/s3-testing/inc&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;php.override.implement.member.chooser.php.doc&quot;: &quot;NONE&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "PHP Script.s3-testing.php.executor": "Run",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "git-widget-placeholder": "main",
+    "last_opened_file_path": "C:/Users/lagux/Local Sites/wps3testing/app/public/wp-content/plugins/s3-testing/assets/images",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "php.override.implement.member.chooser.php.doc": "NONE",
+    "settings.editor.selected.configurable": "preferences.pluginManager",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\lagux\Local Sites\wps3testing\app\public\wp-content\plugins\s3-testing\assets\images" />
+    </key>
+  </component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
@@ -102,7 +108,8 @@
       <workItem from="1739759556891" duration="22503000" />
       <workItem from="1739800976952" duration="2834000" />
       <workItem from="1739842945054" duration="26213000" />
-      <workItem from="1739930811088" duration="24668000" />
+      <workItem from="1739930811088" duration="25395000" />
+      <workItem from="1740015651246" duration="10654000" />
     </task>
     <servers />
   </component>

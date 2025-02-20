@@ -1,6 +1,7 @@
 <?php
 
 use Aws\Exception\AwsException;
+use Aws\Iam\IamClient;
 
 class S3Testing_Destination_S3
 {
@@ -435,6 +436,10 @@ class S3Testing_Destination_S3
     {
         $job_object->substeps_todo = 2 + $job_object->backup_filesize;
 
+        $log_job = WP_CONTENT_DIR . '/debug' . '/check_job.log';
+        $log_s3 = WP_CONTENT_DIR . '/debug' . '/check_s3.log';
+        $log_thing = WP_CONTENT_DIR . '/debug' . '/check_thing.log';
+
         try {
             if (empty($job_object->job['s3base_url'])) {
                 $aws_destination = S3Testing_S3_Destination::fromOption($job_object->job['s3region']);
@@ -448,32 +453,6 @@ class S3Testing_Destination_S3
                 $job_object->job['s3secretkey']
             );
 
-            if ($s3->doesBucketExist($job_object->job['s3bucket'])) {
-                $bucketregion = $s3->getBucketLocation(['Bucket' => $job_object->job['s3bucket']]);
-            } else {
-
-                return true;
-            }
-
-//            if ($aws_destination->supportsMultipart()) {
-//                $multipart_uploads = $s3->listMultipartUploads([
-//                    'Bucket' => $job_object->job['s3bucket'],
-//                    'Prefix' => (string) $job_object->job['s3dir'],
-//                ]);
-//
-//                $uploads = $multipart_uploads->get('Uploads');
-//
-//                if (!empty($uploads)) {
-//                    foreach ($uploads as $upload) {
-//                        $s3->abortMultipartUpload([
-//                            'Bucket' => $job_object->job['s3bucket'],
-//                            'Key' => $upload['Key'],
-//                            'UploadId' => $upload['UploadId'],
-//                        ]);
-//                    }
-//                }
-//            }
-
             if (!$up_file_handle = fopen($job_object->backup_folder . $job_object->backup_file, 'rb')) {
                 return false;
             }
@@ -485,7 +464,6 @@ class S3Testing_Destination_S3
             $create_args['Metadata'] = ['BackupTime' => date('Y-m-d H:i:s', $job_object->start_time)];
 
             $create_args['Body'] = $up_file_handle;
-
             if($job_object->job['s3newfolder'] == '') {
                 $create_args['Key'] = $job_object->job['s3dir'] . $job_object->backup_file;
             } else {
@@ -499,6 +477,9 @@ class S3Testing_Destination_S3
                 if ($e instanceof AwsException) {
                     $errorMessage = $e->getAwsErrorMessage();
                 }
+                $log_file = WP_CONTENT_DIR . "/debug" . '/debug-file.log';
+                $message = 'debug run file log ' . print_r($errorMessage, true);
+                file_put_contents($log_file, $message . "\n", FILE_APPEND);
 
                 return false;
             }
@@ -508,7 +489,21 @@ class S3Testing_Destination_S3
                 'Key' => $job_object->job['s3newfolder'] . $job_object->backup_file,
             ]);
 
+            if ($result->get('ContentLength') == filesize($job_object->backup_folder . $job_object->backup_file)) {
+                $job_object->substeps_done = 1 + $job_object->backup_filesize;
+            }
+
         } catch (Exception $e) {
+            $errorMessage = $e->getMessage();
+            if ($e instanceof AwsException) {
+                $errorMessage = $e->getAwsErrorMessage();
+            }
+
+            $log_file = WP_CONTENT_DIR . "/debug" . '/debug-file.log';
+            $message = 'debug run file log ' . print_r($errorMessage, true);
+            file_put_contents($log_file, $message . "\n", FILE_APPEND);
+
+            return false;
         }
 
         try {
@@ -519,10 +514,17 @@ class S3Testing_Destination_S3
                 $errorMessage = $e->getAwsErrorMessage();
             }
 
+            $log_file = WP_CONTENT_DIR . "/debug" . '/debug-file.log';
+            $message = 'debug run file log ' . print_r($errorMessage, true);
+            file_put_contents($log_file, $message . "\n", FILE_APPEND);
+
             return false;
         }
 
         $job_object->substeps_done = 2 + $job_object->backup_filesize;
+
+        $job_msg = print_r(json_encode($job_object), true);
+        file_put_contents($log_job, $job_msg . "\n", FILE_APPEND);
 
         return true;
     }

@@ -66,6 +66,7 @@ if(!class_exists(\S3Testing::class, false)) {
 
                 self::$plugin_data['name']              = trim(self::$plugin_data['name']);
                 self::$plugin_data['hash']              = get_site_option( 's3testing_cfg_hash' );
+                self::$plugin_data['plugindir']         = untrailingslashit( __DIR__ );
                 if ( empty( self::$plugin_data['hash'] ) || strlen( self::$plugin_data['hash'] ) < 6
                     || strlen(
                         self::$plugin_data['hash']

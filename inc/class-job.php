@@ -61,9 +61,6 @@ class S3Testing_Job
     public static function get_working_data()
     {
         clearstatcache(true, S3Testing::get_plugin_data('running_file'));
-        $log_file = WP_CONTENT_DIR . '/main.log';
-        $message = 'debug run file log ' . print_r(S3Testing::get_plugin_data('running_file'), true);
-        file_put_contents($log_file, $message . "\n", FILE_APPEND);
 
         if (!file_exists(S3Testing::get_plugin_data('running_file'))) {
             return false;
@@ -268,9 +265,6 @@ class S3Testing_Job
 
         $this->timestamp_script_start = microtime(true);
 
-        $log_file = WP_CONTENT_DIR . '/bug.log';
-        $message = 'debug run file log ' . print_r('debug', true);
-        file_put_contents($log_file, $message . "\n", FILE_APPEND);
         $this->write_running_file();
 
         $job_types = S3Testing::get_job_types();
@@ -577,6 +571,8 @@ class S3Testing_Job
         if ($time_to_update < 1 && !$must) {
             return;
         }
+
+        @set_time_limit(300);
 
         if (!file_exists(S3Testing::get_plugin_data('running_file'))) {
             if ($this->step_working !== 'END') {
