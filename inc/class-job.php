@@ -202,7 +202,7 @@ class S3Testing_Job
             foreach ($job_types as $id => $job_type_class) {
                 if (in_array($id, $this->job['type'], true) && $job_type_class->creates_file()) {
                     $this->steps_todo[] = 'JOB_' . $id;
-                    $this->steps_data['JOB_' . $id]['NAME'] =$job_type_class->info['description'];
+                    $this->steps_data['JOB_' . $id]['NAME'] = $job_type_class->info['description'];
                     $this->steps_data['JOB_' . $id]['STEP_TRY'] = 0;
                     $this->steps_data['JOB_' . $id]['SAVE_STEP_TRY'] = 0;
                     $job_need_dest = true;
@@ -217,7 +217,7 @@ class S3Testing_Job
 
                 //create backup filename
                 $this->steps_todo[] = 'CREATE_ARCHIVE';
-                $this->steps_data['CREATE_ARCHIVE']['NAME'] = __('Create Archive');
+                $this->steps_data['CREATE_ARCHIVE']['NAME'] = __('Creates Archive');
                 $this->steps_data['CREATE_ARCHIVE']['STEP_TRY'] = 0;
                 $this->steps_data['CREATE_ARCHIVE']['SAVE_STEP_TRY'] = 0;
                 $this->backup_file = $this->generate_filename($this->job['archivename'], $this->job['archiveformat']);

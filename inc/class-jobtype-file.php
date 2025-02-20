@@ -146,6 +146,7 @@ class S3Testing_JobType_File extends S3Testing_JobTypes
             }
 
             $job_object->substeps_done = 1;
+            $job_object->update_working_data();
         }
 
         //backup content
@@ -159,6 +160,7 @@ class S3Testing_JobType_File extends S3Testing_JobTypes
             }
 
             $job_object->substeps_done = 2;
+            $job_object->update_working_data();
         }
 
         //backup plugins
@@ -171,6 +173,7 @@ class S3Testing_JobType_File extends S3Testing_JobTypes
                 $this->get_folder_list($job_object, $wp_plugin_dir, $excludes);
             }
             $job_object->substeps_done = 3;
+            $job_object->update_working_data();
         }
 
         //backup themes
@@ -183,6 +186,7 @@ class S3Testing_JobType_File extends S3Testing_JobTypes
                 $this->get_folder_list($job_object, $theme_root, $excludes);
             }
             $job_object->substeps_done = 4;
+            $job_object->update_working_data();
         }
 
         //backup uploads
@@ -195,6 +199,7 @@ class S3Testing_JobType_File extends S3Testing_JobTypes
                 $this->get_folder_list($job_object, $upload_dir, $excludes);
             }
             $job_object->substeps_done = 5;
+            $job_object->update_working_data();
         }
 
         //clean up folder list
@@ -202,6 +207,7 @@ class S3Testing_JobType_File extends S3Testing_JobTypes
             $folders = $job_object->get_folders_to_backup();
             $job_object->add_folders_to_backup($folders, true);
             $job_object->substeps_done = 6;
+            $job_object->update_working_data();
         }
 
         $job_object->substeps_done = 7;

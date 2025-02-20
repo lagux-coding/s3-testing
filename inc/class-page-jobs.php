@@ -321,7 +321,6 @@ class S3Testing_Page_Jobs extends WP_List_Table
         echo '<h1>' . esc_html(sprintf(__('%s &rsaquo; Jobs'), S3Testing::get_plugin_data('name'))). '&nbsp;<a href="' . wp_nonce_url(network_admin_url('admin.php') . '?page=s3testingeditjob', 'edit-job') . '" class="add-new-h2">' . esc_html__('Add new') . '</a></h1>';
         S3Testing_Admin::display_message();
         $job_object = S3Testing_Job::get_working_data();
-
         if(is_object($job_object)){?>
             <div id="runningjob">
                 <div class="progressbar"><div id="progressstep" class="bwpu-progress" style="width:<?php echo $job_object->step_percent; ?>%;"><?php echo esc_html($job_object->step_percent);?>%</div></div>

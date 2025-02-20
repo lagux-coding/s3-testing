@@ -321,10 +321,6 @@ class S3Testing_Page_Backups extends WP_List_Table
 
                 $backupFiles = $_GET['backupfiles'];
 
-                $log_file = WP_CONTENT_DIR . '/debug' . '/backupfile.log';
-                $message = print_r($backupFiles, true);
-                file_put_contents($log_file, $message . "\n", FILE_APPEND);
-
                 foreach($backupFiles as $backupfile) {
                     foreach($files as $file) {
                         if (is_array($file) && $file['file'] == $backupfile) {

@@ -188,6 +188,7 @@ class S3Testing_JobType_DBDump extends S3Testing_JobTypes
                 $sql_dump->dump_table_footer($table);
                 ++$job_object->substeps_done;
                 ++$i;
+                $job_object->update_working_data();
             }
             //dump footer
             $sql_dump->dump_footer();

@@ -436,10 +436,6 @@ class S3Testing_Destination_S3
     {
         $job_object->substeps_todo = 2 + $job_object->backup_filesize;
 
-        $log_job = WP_CONTENT_DIR . '/debug' . '/check_job.log';
-        $log_s3 = WP_CONTENT_DIR . '/debug' . '/check_s3.log';
-        $log_thing = WP_CONTENT_DIR . '/debug' . '/check_thing.log';
-
         try {
             if (empty($job_object->job['s3base_url'])) {
                 $aws_destination = S3Testing_S3_Destination::fromOption($job_object->job['s3region']);
@@ -477,10 +473,6 @@ class S3Testing_Destination_S3
                 if ($e instanceof AwsException) {
                     $errorMessage = $e->getAwsErrorMessage();
                 }
-                $log_file = WP_CONTENT_DIR . "/debug" . '/debug-file.log';
-                $message = 'debug run file log ' . print_r($errorMessage, true);
-                file_put_contents($log_file, $message . "\n", FILE_APPEND);
-
                 return false;
             }
 
@@ -498,11 +490,6 @@ class S3Testing_Destination_S3
             if ($e instanceof AwsException) {
                 $errorMessage = $e->getAwsErrorMessage();
             }
-
-            $log_file = WP_CONTENT_DIR . "/debug" . '/debug-file.log';
-            $message = 'debug run file log ' . print_r($errorMessage, true);
-            file_put_contents($log_file, $message . "\n", FILE_APPEND);
-
             return false;
         }
 
@@ -519,20 +506,12 @@ class S3Testing_Destination_S3
 
         $job_object->substeps_done = 2 + $job_object->backup_filesize;
 
-        $job_msg = print_r(json_encode($job_object), true);
-        file_put_contents($log_job, $job_msg . "\n", FILE_APPEND);
-
         return true;
     }
 
-    public function file_delete($jobdest, $backupfile) {
-        $log_file = WP_CONTENT_DIR . '/debug' .'/checkcheck.log';
-        $message = '';
-
+    public function file_delete($jobdest, $backupfile)
+    {
         $files = get_site_transient('s3testing_' . strtolower($jobdest));
-
-        $message = 'before delete file ' . print_r($files, true) . "\n" . '=========================';
-        file_put_contents($log_file, $message . "\n", FILE_APPEND);
 
         [$jobid, $dest] = explode('_', $jobdest);
 
@@ -570,14 +549,12 @@ class S3Testing_Destination_S3
                     $errorMessage = $e->getAwsErrorMessage();
                 }
 
-                $message = 'Deleting file: ' . $errorMessage;
-                file_put_contents($log_file, $message . "\n", FILE_APPEND);
+
                 S3Testing_Admin::message(sprintf(__('S3 Service API: %s'), $errorMessage), true);
             }
         }
         set_site_transient('s3testing_' . strtolower($jobdest), $files, YEAR_IN_SECONDS);
-        $message = 'after delete file ' . print_r($files, true) . "\n" . '=========================';
-        file_put_contents($log_file, $message . "\n", FILE_APPEND);
+
     }
 
     public function file_update_list($job, bool $delete = false)
@@ -630,10 +607,6 @@ class S3Testing_Destination_S3
                 ++$filecounter;
             }
         }
-
-        $log_file = WP_CONTENT_DIR . "/debug" . '/debug-check.log';
-        $message = 'debug run file log ' . print_r($files, true);
-        file_put_contents($log_file, $message . "\n", FILE_APPEND);
 
         set_site_transient('s3testing_' . $jobid . '_s3', $files, YEAR_IN_SECONDS);
     }
