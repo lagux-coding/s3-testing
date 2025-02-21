@@ -74,23 +74,23 @@ final class S3Testing_Option
 
     private static function jobs_options($use_cache = true)
     {
-//        global $current_site;
+        global $current_site;
 
-//        //remove from cache
-//        if (!$use_cache) {
-//            if (is_multisite()) {
-//                $network_id = $current_site->id;
-//                $cache_key = "{$network_id}:s3testing_jobs";
-//                wp_cache_delete($cache_key, 'site-options');
-//            } else {
-//                wp_cache_delete('s3testing_jobs', 'options');
-//                $alloptions = wp_cache_get('alloptions', 'options');
-//                if (isset($alloptions['s3testing_jobs'])) {
-//                    unset($alloptions['s3testing_jobs']);
-//                    wp_cache_set('alloptions', $alloptions, 'options');
-//                }
-//            }
-//        }
+        //remove from cache
+        if (!$use_cache) {
+            if (is_multisite()) {
+                $network_id = $current_site->id;
+                $cache_key = "{$network_id}:s3testing_jobs";
+                wp_cache_delete($cache_key, 'site-options');
+            } else {
+                wp_cache_delete('s3testing_jobs', 'options');
+                $alloptions = wp_cache_get('alloptions', 'options');
+                if (isset($alloptions['s3testing_jobs'])) {
+                    unset($alloptions['s3testing_jobs']);
+                    wp_cache_set('alloptions', $alloptions, 'options');
+                }
+            }
+        }
 
         return get_site_option('s3testing_jobs', []);
     }

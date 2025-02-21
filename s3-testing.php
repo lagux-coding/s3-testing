@@ -29,7 +29,9 @@ if(!class_exists(\S3Testing::class, false)) {
                 require_once __DIR__ . '/vendor/autoload.php';
             }
 
-            S3Testing_Install::activate();
+            if(!wp_next_scheduled('s3testing_check_cleanup')){
+                S3Testing_Install::activate();
+            }
 
             if(!empty($_GET['s3testing_run']) && class_exists(\S3Testing_Job::class)) {
                 add_action('wp_loaded', [\S3Testing_Cron::class, 'cron_active'], PHP_INT_MAX);

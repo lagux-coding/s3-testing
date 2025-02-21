@@ -119,7 +119,14 @@ class S3Testing_Page_EditJob
             } else {
                 wp_enqueue_script('s3testingtabjob', S3Testing::get_plugin_data('URL') . '/assets/js/page_edit_tab_job.min.js', ['jquery'], S3Testing::get_plugin_data('Version'), true);
             }
+        } elseif($_GET['tab'] == 'cron') {
+            if(defined('SCRIPT_DEBUG') && SCRIPT_DEBUG) {
+                wp_enqueue_script('s3testingtabcron', S3Testing::get_plugin_data('URL') . '/assets/js/page_edit_tab_cron.js', ['jquery'], time(), true);
+            } else {
+                wp_enqueue_script('s3testingtabcron', S3Testing::get_plugin_data('URL') . '/assets/js/page_edit_tab_cron.min.js', ['jquery'], S3Testing::get_plugin_data('Version'), true);
+            }
         }
+        //add js for other tabs
         elseif (strstr((string) $_GET['tab'], 'dest-')) {
             $dest_object = S3Testing::get_destination(str_replace('dest-', '', (string) $_GET['tab']));
             $dest_object->admin_print_scripts();
@@ -150,7 +157,11 @@ class S3Testing_Page_EditJob
             'job' => [
                 'name' => esc_html__('General'),
                 'display' => true,
-            ]
+            ],
+            'cron' => [
+                'name' => esc_html__('Schedule'),
+                'display' => true,
+            ],
         ];
 
         $job_job_types = S3Testing_Option::get($jobid, 'type');
@@ -202,111 +213,146 @@ class S3Testing_Page_EditJob
         wp_nonce_field('s3testing_ajax_nonce', 's3testingajaxnonce', false);
 
     switch ($_GET['tab']) {
-    case 'job':
-        ?>
-        <div class="table" id="info-tab-job">
-        <h3>Job Name</h3>
-        <table class="form-table">
-            <tr>
-                <th scope="row"><label for="name"><?php esc_html_e('Please name this job.'); ?></label></th>
-                <td>
-                    <input name="name" type="text" id="name" placeholder="<?php esc_attr_e('Job Name'); ?>"
-                           data-empty="<?php esc_attr_e('New Job'); ?>"
-                           value="<?php echo esc_attr(S3Testing_Option::get($jobid, 'name')); ?>" class="regular-text"/>
-                </td>
-            </tr>
-        </table>
+        case 'job':
+            ?>
+            <div class="table" id="info-tab-job">
+            <h3>Job Name</h3>
+            <table class="form-table">
+                <tr>
+                    <th scope="row"><label for="name"><?php esc_html_e('Please name this job.'); ?></label></th>
+                    <td>
+                        <input name="name" type="text" id="name" placeholder="<?php esc_attr_e('Job Name'); ?>"
+                               data-empty="<?php esc_attr_e('New Job'); ?>"
+                               value="<?php echo esc_attr(S3Testing_Option::get($jobid, 'name')); ?>" class="regular-text"/>
+                    </td>
+                </tr>
+            </table>
 
-        <h3>Job Tasks</h3>
-        <table class="form-table">
-            <tr>
-                <th scope="row">This job is a&#160;&hellip;</th>
-                <td>
-                    <fieldset>
-                        <legend class="screen-reader-text"><span><?php esc_html_e('Job tasks'); ?></span>
-                        </legend><?php
-                        foreach ($job_types as $id => $typeclass) {
-                            $addclass = '';
-                            if ($typeclass->creates_file()) {
-                                $addclass .= ' filetype';
+            <h3>Job Tasks</h3>
+            <table class="form-table">
+                <tr>
+                    <th scope="row">This job is a&#160;&hellip;</th>
+                    <td>
+                        <fieldset>
+                            <legend class="screen-reader-text"><span><?php esc_html_e('Job tasks'); ?></span>
+                            </legend><?php
+                            foreach ($job_types as $id => $typeclass) {
+                                $addclass = '';
+                                if ($typeclass->creates_file()) {
+                                    $addclass .= ' filetype';
+                                }
+                                echo '<p><label for="jobtype-select-' . strtolower($id) . '"><input class="jobtype-select checkbox' . $addclass . '" id="jobtype-select-' . strtolower($id) . '" type="checkbox" ' . checked(true, in_array($id, S3Testing_Option::get($jobid, 'type'), true), false) . ' name="type[]" value="' . esc_attr($id) . '" /> ' . esc_attr($typeclass->info['description']) . '</label>';
+                                if (!empty($typeclass->info['help'])) {
+                                    echo '<br><span class="description">' . esc_attr($typeclass->info['help']) . '</span>';
+                                }
+                                echo '</p>';
                             }
-                            echo '<p><label for="jobtype-select-' . strtolower($id) . '"><input class="jobtype-select checkbox' . $addclass . '" id="jobtype-select-' . strtolower($id) . '" type="checkbox" ' . checked(true, in_array($id, S3Testing_Option::get($jobid, 'type'), true), false) . ' name="type[]" value="' . esc_attr($id) . '" /> ' . esc_attr($typeclass->info['description']) . '</label>';
-                            if (!empty($typeclass->info['help'])) {
-                                echo '<br><span class="description">' . esc_attr($typeclass->info['help']) . '</span>';
-                            }
-                            echo '</p>';
-                        }
-                        ?></fieldset>
-                </td>
-            </tr>
-        </table>
+                            ?></fieldset>
+                    </td>
+                </tr>
+            </table>
 
-        <h3 class="title hasdests"><?php esc_html_e('Backup File Creation'); ?></h3>
-        <p class="hasdests"></p>
-        <table class="form-table hasdests">
-            <tr class="nosync">
-                <th scope="row"><label for="archivename"><?php esc_html_e('Archive name'); ?></label></th>
-                <td>
-                    <input name="archivename" type="text" id="archivename" placeholder="my-backup"
-                           value="<?php echo esc_attr(S3Testing_Option::get($jobid, 'archivename')); ?>"
-                           class="regular-text code"/>
-                </td>
-            </tr>
-            <tr>
-                <th scope="row"><?php esc_html_e('Archive Format'); ?></th>
-                <td>
-                    <fieldset>
-                        <legend class="screen-reader-text"><span><?php esc_html_e('Archive Format'); ?></span></legend>
-                        <?php
-                        if (class_exists(\ZipArchive::class)) {
-                            echo '<p><label for="idarchiveformat-zip">
-                                   <input class="radio" type="radio"' . checked('.zip', $archive_format_option, false) . ' name="archiveformat" id="archiveformat-zip" value=".zip"/> ' . esc_html__('Zip') . '
-                                    </label></p>';
-                        } else {
-                            echo '<p><label for="idarchiveformat-zip"><input class="radio" type="radio"' . checked('.zip', $archive_format_option, false) . ' name="archiveformat" id="idarchiveformat-zip" value=".zip" disabled="disabled" /> ' . esc_html__('Zip') . '</label>';
-                            echo '<br /><span class="description">' . esc_html(__('ZipArchive PHP class is missing, so s3testing will use PclZip instead.')) . '</span></p>';
-                        }
-                        echo '<p><label for="idarchiveformat-tar"><input class="radio" type="radio"' . checked('.tar', $archive_format_option, false) . ' name="archiveformat" id="idarchiveformat-tar" value=".tar" /> ' . esc_html__('Tar') . '</label></p>';
-
-                        if (function_exists('gzopen')) {
-                            echo '<p><label for="idarchiveformat-targz"><input class="radio" type="radio"' . checked('.tar.gz', $archive_format_option, false) . ' name="archiveformat" id="idarchiveformat-targz" value=".tar.gz" /> ' . esc_html__('Tar GZip') . '</label></p>';
-                        } else {
-                            echo '<p><label for="idarchiveformat-targz"><input class="radio" type="radio"' . checked('.tar.gz', $archive_format_option, false) . ' name="archiveformat" id="idarchiveformat-targz" value=".tar.gz" disabled="disabled" /> ' . esc_html__('Tar GZip') . '</label>';
-                            echo '<br /><span class="description">' . esc_html(sprintf(__('Disabled due to missing %s PHP function.'), 'gzopen()')) . '</span></p>';
-                        }
-                        ?>
-                    </fieldset>
-                </td>
-            </tr>
-        </table>
-
-        <h3 class="title hasdests"><?php esc_html_e('Job Destination'); ?></h3>
-        <p class="hasdests"></p>
-        <table class="form-table hasdests">
-            <tr>
-                <th scope="row"><?php esc_html_e('Where should your backup file be stored?'); ?></th>
-                <td>
-                    <fieldset>
-                        <legend class="screen-reader-text">
-                            <span><?php esc_html_e('Where should your backup file be stored?'); ?></span>
-                        </legend><?php
-                        foreach ($destinations as $id => $dest) {
-                            $syncclass = '';
-                            if (!$dest['can_sync']) {
-                                $syncclass = 'nosync';
+            <h3 class="title hasdests"><?php esc_html_e('Backup File Creation'); ?></h3>
+            <p class="hasdests"></p>
+            <table class="form-table hasdests">
+                <tr class="nosync">
+                    <th scope="row"><label for="archivename"><?php esc_html_e('Archive name'); ?></label></th>
+                    <td>
+                        <input name="archivename" type="text" id="archivename" placeholder="my-backup"
+                               value="<?php echo esc_attr(S3Testing_Option::get($jobid, 'archivename')); ?>"
+                               class="regular-text code"/>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row"><?php esc_html_e('Archive Format'); ?></th>
+                    <td>
+                        <fieldset>
+                            <legend class="screen-reader-text"><span><?php esc_html_e('Archive Format'); ?></span></legend>
+                            <?php
+                            if (class_exists(\ZipArchive::class)) {
+                                echo '<p><label for="idarchiveformat-zip">
+                                       <input class="radio" type="radio"' . checked('.zip', $archive_format_option, false) . ' name="archiveformat" id="archiveformat-zip" value=".zip"/> ' . esc_html__('Zip') . '
+                                        </label></p>';
+                            } else {
+                                echo '<p><label for="idarchiveformat-zip"><input class="radio" type="radio"' . checked('.zip', $archive_format_option, false) . ' name="archiveformat" id="idarchiveformat-zip" value=".zip" disabled="disabled" /> ' . esc_html__('Zip') . '</label>';
+                                echo '<br /><span class="description">' . esc_html(__('ZipArchive PHP class is missing, so s3testing will use PclZip instead.')) . '</span></p>';
                             }
-                            echo '<p class="' . esc_attr($syncclass) . '"><label for="dest-select-' . strtolower($id) . '"><input class="checkbox" id="dest-select-' . strtolower(esc_attr($id)) . '" type="checkbox" ' . checked(true, in_array($id, S3Testing_Option::get($jobid, 'destinations'), true), false) . ' name="destinations[]" value="' . esc_attr($id) . '" ' . disabled(!empty($dest['error']), true, false) . ' /> ' . esc_attr($dest['info']['description']);
-                            if (!empty($dest['error'])) {
-                                echo '<br><span class="description">' . esc_attr($dest['error']) . '</span>';
+                            echo '<p><label for="idarchiveformat-tar"><input class="radio" type="radio"' . checked('.tar', $archive_format_option, false) . ' name="archiveformat" id="idarchiveformat-tar" value=".tar" /> ' . esc_html__('Tar') . '</label></p>';
+
+                            if (function_exists('gzopen')) {
+                                echo '<p><label for="idarchiveformat-targz"><input class="radio" type="radio"' . checked('.tar.gz', $archive_format_option, false) . ' name="archiveformat" id="idarchiveformat-targz" value=".tar.gz" /> ' . esc_html__('Tar GZip') . '</label></p>';
+                            } else {
+                                echo '<p><label for="idarchiveformat-targz"><input class="radio" type="radio"' . checked('.tar.gz', $archive_format_option, false) . ' name="archiveformat" id="idarchiveformat-targz" value=".tar.gz" disabled="disabled" /> ' . esc_html__('Tar GZip') . '</label>';
+                                echo '<br /><span class="description">' . esc_html(sprintf(__('Disabled due to missing %s PHP function.'), 'gzopen()')) . '</span></p>';
                             }
-                            echo '</label></p>';
-                        }
-                        ?></fieldset>
-                </td>
-            </tr>
-        </table>
-        <?php
-        break;
+                            ?>
+                        </fieldset>
+                    </td>
+                </tr>
+            </table>
+
+            <h3 class="title hasdests"><?php esc_html_e('Job Destination'); ?></h3>
+            <p class="hasdests"></p>
+            <table class="form-table hasdests">
+                <tr>
+                    <th scope="row"><?php esc_html_e('Where should your backup file be stored?'); ?></th>
+                    <td>
+                        <fieldset>
+                            <legend class="screen-reader-text">
+                                <span><?php esc_html_e('Where should your backup file be stored?'); ?></span>
+                            </legend><?php
+                            foreach ($destinations as $id => $dest) {
+                                $syncclass = '';
+                                if (!$dest['can_sync']) {
+                                    $syncclass = 'nosync';
+                                }
+                                echo '<p class="' . esc_attr($syncclass) . '"><label for="dest-select-' . strtolower($id) . '"><input class="checkbox" id="dest-select-' . strtolower(esc_attr($id)) . '" type="checkbox" ' . checked(true, in_array($id, S3Testing_Option::get($jobid, 'destinations'), true), false) . ' name="destinations[]" value="' . esc_attr($id) . '" ' . disabled(!empty($dest['error']), true, false) . ' /> ' . esc_attr($dest['info']['description']);
+                                if (!empty($dest['error'])) {
+                                    echo '<br><span class="description">' . esc_attr($dest['error']) . '</span>';
+                                }
+                                echo '</label></p>';
+                            }
+                            ?></fieldset>
+                    </td>
+                </tr>
+            </table>
+            <?php
+            break;
+        case 'cron':
+            ?>
+                <div class="table" id="info-tab-cron">
+                    <h3 class="title"><?php esc_html_e('Job Schedule'); ?></h3>
+                    <p></p>
+                    <table class="form-table">
+                        <tr>
+                            <th scope="row"><?php esc_html_e('Start job'); ?></th>
+                            <td>
+                                <fieldset>
+                                    <legend class="screen-reader-text"><span><?php esc_html_e('Start job'); ?></span></legend>
+                                    <label for="idactivetype">
+                                        <input class="radio"
+                                               type="radio" <?php checked('', S3Testing_Option::get($jobid, 'activetype'), true) ?>
+                                               name="activetype"
+                                                id="activetype"
+                                                value=""/>
+                                        <?php esc_html_e('manually only'); ?>
+                                    </label><br/>
+                                    <label for="idactivetype-wpcron">
+                                        <input class="radio"
+                                                type="radio"
+                                                name="activetype"
+                                                id="activetype-wpcron"
+                                                value="wpcron"/>
+                                        <?php esc_html_e('with WordPress cron'); ?>
+                                    </label><br/>
+                                </fieldset>
+                            </td>
+                        </tr>
+                    </table>
+                    <h3 class="title wpcron"><?php esc_html_e('Schedule execution time'); ?></h3>
+                </div>
+            <?php
+            break;
         default:
             echo '<div class="table" id="info-tab-' . $_GET['tab'] . '">';
             if (strstr((string)$_GET['tab'], 'dest-')) {
