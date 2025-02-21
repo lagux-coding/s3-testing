@@ -33,9 +33,19 @@ if(!class_exists(\S3Testing::class, false)) {
                 S3Testing_Install::activate();
             }
 
-            if(!empty($_GET['s3testing_run']) && class_exists(\S3Testing_Job::class)) {
-                add_action('wp_loaded', [\S3Testing_Cron::class, 'cron_active'], PHP_INT_MAX);
+            if (defined('DOING_CRON') && DOING_CRON) {
+                if(!empty($_GET['s3testing_run']) && class_exists(\S3Testing_Job::class)) {
+
+                    S3Testing_Job::disable_caches();
+
+                    add_action('wp_loaded', [\S3Testing_Cron::class, 'cron_active'], PHP_INT_MAX);
+                } else {
+                    //add cron actions
+                }
             }
+
+            //Deactivation hook
+            register_deactivation_hook(__FILE__, [\S3Testing_Install::class, 'deactivate']);
 
             $admin = new S3Testing_Admin();
             $admin->init();

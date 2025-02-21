@@ -679,4 +679,19 @@ class S3Testing_Job
 
         return $job_max_execution_time - $execution_time - 3;
     }
+
+    public static function disable_caches()
+    {
+        //Special settings
+        @putenv('nokeepalive=1');
+        @ini_set('zlib.output_compression', 'Off');
+
+        // deactivate caches
+        if (!defined('DONOTCACHEDB')) {
+            define('DONOTCACHEDB', true);
+        }
+        if (!defined('DONOTCACHEPAGE')) {
+            define('DONOTCACHEPAGE', true);
+        }
+    }
 }
