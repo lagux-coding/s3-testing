@@ -41,7 +41,11 @@ if(!class_exists(\S3Testing::class, false)) {
                     add_action('wp_loaded', [\S3Testing_Cron::class, 'cron_active'], PHP_INT_MAX);
                 } else {
                     //add cron actions
+                    add_action('s3testing_cron', [\S3Testing_Cron::class, 'run']);
+                    add_action('s3testing_check_cleanup', [\S3Testing_Cron::class, 'check_cleanup']);
                 }
+
+                return;
             }
 
             //Deactivation hook
