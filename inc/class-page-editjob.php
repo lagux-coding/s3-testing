@@ -350,6 +350,26 @@ class S3Testing_Page_EditJob
                         </tr>
                     </table>
                     <h3 class="title wpcron"><?php esc_html_e('Schedule execution time'); ?></h3>
+                    <table class="form-table wpcron">
+                        <tr>
+                            <th scope="row"><?php _e('Scheduler'); ?></th>
+                            <td>
+                                <table>
+                                    <tr>
+                                        <th>
+                                            <?php _e('Type'); ?>
+                                        </th>
+                                        <th>
+                                            <?php _e('Minute'); ?>
+                                        </th>
+                                    </tr>
+                                    <tr>
+
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
                 </div>
             <?php
             break;
