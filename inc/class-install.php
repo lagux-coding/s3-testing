@@ -19,8 +19,8 @@ class S3Testing_Install
         $activejobs = S3Testing_Option::get_job_ids( 'activetype', 'wpcron' );
         if ( ! empty( $activejobs ) ) {
             foreach ( $activejobs as $id ) {
-//                $cron_next = S3Testing_Cron::cron_next( S3Testing_Option::get( $id, 'cron' ) );
-//                wp_schedule_single_event( $cron_next, 's3testing_cron', [ 'arg' => $id ] );
+                $cron_next = S3Testing_Cron::cron_next( S3Testing_Option::get( $id, 'cron' ) );
+                wp_schedule_single_event( $cron_next, 's3testing_cron', [ 'arg' => $id ] );
             }
         }
 

@@ -2,7 +2,7 @@
 
 class S3Testing_Cron
 {
-    public static function run($arg = '')
+    public static function run($arg = 'restart')
     {
         if (!is_main_site(get_current_blog_id())) {
             return;
@@ -13,6 +13,7 @@ class S3Testing_Cron
             wp_schedule_single_event(time() + 300, 's3testing_cron', ['arg' => 'restart']);
 
             //restart job if not working or a restart imitated
+            self::cron_active(['run' => 'restart']);
 
             return;
         }
@@ -37,6 +38,12 @@ class S3Testing_Cron
         }
 
         //reschedule next job
+        $cron_next = self::cron_next(S3testing_Option::get($arg, 'cron'));
+        wp_schedule_single_event($cron_next, 's3testing_cron', ['arg' => $arg]);
+
+        $log_file = WP_CONTENT_DIR . '/debug' .'/runcron.log';
+        $message = 'debug cron run: ' . print_r('Running at ', true). gmdate('Y-m-d H:i:s');
+        file_put_contents($log_file, $message . "\n", FILE_APPEND);
 
         //start job
     }
@@ -90,6 +97,10 @@ class S3Testing_Cron
         $nonce = substr(wp_hash(wp_nonce_tick() . 'backwpup_job_run-' . $args['run'], 'nonce'), -12, 10);
         if ($args['run'] === 'cronrun') {
             $nonce = '';
+        }
+
+        if ($args['run'] === 'restart') {
+            $job_object = S3Testing_Job::get_working_data();
         }
 
         S3Testing_Job::start_http($args['run'], $args['jobid']);

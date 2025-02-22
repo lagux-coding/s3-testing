@@ -86,6 +86,8 @@ class S3Testing_Page_EditJob
 
                 break;
             case 'cron':
+                S3Testing_Option::update($jobid, 'activetype', 'wpcron');
+
                 $interval = absint($_POST['cron_interval']);
                 if ($interval < 5) {
                     $interval = 5;
@@ -95,10 +97,17 @@ class S3Testing_Page_EditJob
 
                 S3Testing_Option::update($jobid, 'cron', '*/' . S3Testing_Option::get($jobid, 'cron_interval') . ' * * * *');
 
+                //reschedule
+                $activetype = S3Testing_Option::get($jobid, 'activetype');
+                wp_clear_scheduled_hook('s3testing_cron', ['arg' => $jobid]);
+                if($activetype === 'wpcron') {
+                    $cron_next = S3Testing_Cron::cron_next(S3Testing_Option::get($jobid, 'cron'));
+                    wp_schedule_single_event($cron_next, 's3testing_cron', ['arg' => $jobid]);
+                }
+
                 $logfile = WP_CONTENT_DIR . '/debug' . '/cron.log';
                 $message = 'cronstr: ' . print_r(S3Testing_Cron::cron_next(S3Testing_Option::get($jobid, 'cron')), true) . PHP_EOL;
                 file_put_contents($logfile, $message, FILE_APPEND);
-
 
                 break;
             case 'runnow':
