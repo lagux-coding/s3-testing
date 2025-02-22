@@ -27,7 +27,7 @@ class S3Testing_Destination_S3
 //            's3ssencrypt' => '',
 //            's3storageclass' => '',
             's3dir' => trailingslashit(sanitize_file_name(get_bloginfo('name'))),
-//            's3maxbackups' => 15,
+            's3maxbackups' => 15,
 //            's3syncnodelete' => true,
         ];
     }
@@ -212,9 +212,29 @@ class S3Testing_Destination_S3
                         ); ?></p>
                 </td>
             </tr>
+            <tr>
+                <th scope="row"><?php esc_html_e('File deletion'); ?></th>
+                <td>
+                    <?php
+                        if (S3Testing_Option::get($jobid, 'backuptype') === 'archive') {
+                    ?>
+                    <label for="ids3maxbackups">
+                        <input id="ids3maxbackups"
+                               name="s3maxbackups"
+                               type="number"
+                               min="0"
+                               step="1"
+                                value="<?php echo esc_attr(S3Testing_Option::get($jobid, 's3maxbackups')); ?>"
+                                class="small-text"
+                        />
+                        <?php esc_html_e('Number of files to keep in folder.'); ?>
+                    </label>
+                </td>
+            </tr>
         </table>
 
         <?php
+        }
     }
 
     public function edit_ajax($args = [], $bucket = true)
@@ -430,6 +450,7 @@ class S3Testing_Destination_S3
         S3Testing_Option::update($jobid, 's3dir', $_POST['s3dir']);
         S3Testing_Option::update($jobid, 's3dircreate', $_POST['s3dircreate']);
         S3Testing_Option::update($jobid, 's3newfolder', $_POST['s3newfolder'] == null ? '' : $_POST['s3newfolder']);
+        S3Testing_Option::update($jobid, 's3maxbackups', !empty($_POST['s3maxbackups']) ? absint($_POST['s3maxbackups']) : 0);
     }
 
     public function job_run_archive(S3Testing_Job $job_object)
@@ -607,6 +628,40 @@ class S3Testing_Destination_S3
                 $files[$filecounter]['time'] = $changetime;
 
                 ++$filecounter;
+            }
+        }
+
+        //delete if > maxbackups
+        if($delete && $job_object && $job_object->job['s3maxbackups'] > 0 && is_object($s3)) {
+            if (count($backupfilelist) > $job_object->job['s3maxbackups']) {
+                ksort($backupfilelist);
+                $numdeltefiles = 0;
+
+                while ($file = array_shift($backupfilelist)) {
+                    if (count($backupfilelist) < $job_object->job['s3maxbackups']) {
+                        break;
+                    }
+
+                    //delete files on S3
+                    $args = [
+                        'Bucket' => $job_object->job['s3bucket'],
+                    ];
+
+                    if($job_object->job['s3newfolder']) {
+                        $args['Key'] = $job_object->job['s3dircreate'] . $file;
+                    } else {
+                        $args['Key'] = $file;
+                    }
+
+                    if ($s3->deleteObject($args)) {
+                        foreach ($files as $key => $filedata) {
+                            if ($filedata['file'] == $job_object->job['s3dircreate'] . $file) {
+                                unset($files[$key]);
+                            }
+                        }
+                        ++$numdeltefiles;
+                    }
+                }
             }
         }
 
