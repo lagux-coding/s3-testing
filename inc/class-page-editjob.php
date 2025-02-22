@@ -86,7 +86,12 @@ class S3Testing_Page_EditJob
 
                 break;
             case 'cron':
-                S3Testing_Option::update($jobid, 'activetype', 'wpcron');
+                $activetype = in_array($_POST['activetype'], [
+                    '',
+                    'wpcron',
+                ], true) ? $_POST['activetype'] : '';
+
+                S3Testing_Option::update($jobid, 'activetype', $activetype);
 
                 $interval = absint($_POST['cron_interval']);
                 if ($interval < 5) {
@@ -348,6 +353,32 @@ class S3Testing_Page_EditJob
                     <table class="form-table">
                         <tr>
                             <th scope="row"><?php esc_html_e('Start job'); ?></th>
+                        </tr>
+                        <td>
+                                <legend class="screen-reader-text"><span><?php esc_html_e('Start job'); ?></span></legend>
+                                <label for="idactivetype">
+                                    <input class="radio"
+                                            type="radio"<?php checked('', S3Testing_Option::get($jobid, 'activetype'), true);?>
+                                           name="activetype" id="idactivetype"
+                                           value=""
+                                    />
+                                    <?php esc_html_e('manually only'); ?>
+                                </label></br>
+                                <label for="idactivetype-wpcron">
+                                    <input class="radio"
+                                           type="radio" <?php checked('wpcron', S3Testing_Option::get($jobid, 'activetype'), true); ?>
+                                           name="activetype" id="idactivetype-wpcron"
+                                           value="wpcron"
+                                    />
+                                    <?php esc_html_e('with WordPress cron'); ?>
+                                </label><br/>
+                            </fieldset>
+                        </td>
+                    </table>
+                    <h3 class="title wpcron"><?php esc_html_e('Schedule execution time'); ?></h3>
+                    <table class="form-table wpcron">
+                        <tr>
+                            <th scope="row"><?php esc_html_e('Schedule execution time'); ?></th>
                             <td>
                                 <select name="cron_interval" id="cron_interval">
                                     <option value="5" <?php selected($interval, '5'); ?>>5 minutes</option>

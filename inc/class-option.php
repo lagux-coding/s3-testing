@@ -104,7 +104,7 @@ final class S3Testing_Option
         $default['type'] = ['FILE', 'DBDUMP'];
         $default['destinations'] = ['S3'];
         $default['name'] = 'New Job';
-        $default['activetype'] = 'wpcron';
+        $default['activetype'] = '';
         $default['logfile'] = '';
         $default['lastbackupdownloadurl'] = '';
         $default['cron_interval'] = '10';
