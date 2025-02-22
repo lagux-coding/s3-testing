@@ -7,9 +7,9 @@
     <list default="true" id="14453ea8-162e-42dd-95e9-1168a72971e1" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/inc/class-cron.php" beforeDir="false" afterPath="$PROJECT_DIR$/inc/class-cron.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/inc/class-destination-s3.php" beforeDir="false" afterPath="$PROJECT_DIR$/inc/class-destination-s3.php" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/inc/class-install.php" beforeDir="false" afterPath="$PROJECT_DIR$/inc/class-install.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/inc/class-option.php" beforeDir="false" afterPath="$PROJECT_DIR$/inc/class-option.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/inc/class-page-editjob.php" beforeDir="false" afterPath="$PROJECT_DIR$/inc/class-page-editjob.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/inc/class-job.php" beforeDir="false" afterPath="$PROJECT_DIR$/inc/class-job.php" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -111,7 +111,7 @@
       <workItem from="1740015651246" duration="26070000" />
       <workItem from="1740054962448" duration="11071000" />
       <workItem from="1740111558265" duration="14705000" />
-      <workItem from="1740191866699" duration="7786000" />
+      <workItem from="1740191866699" duration="12759000" />
     </task>
     <servers />
   </component>

@@ -105,10 +105,6 @@ class S3Testing_Page_EditJob
                     wp_schedule_single_event($cron_next, 's3testing_cron', ['arg' => $jobid]);
                 }
 
-                $logfile = WP_CONTENT_DIR . '/debug' . '/cron.log';
-                $message = 'cronstr: ' . print_r(S3Testing_Cron::cron_next(S3Testing_Option::get($jobid, 'cron')), true) . PHP_EOL;
-                file_put_contents($logfile, $message, FILE_APPEND);
-
                 break;
             case 'runnow':
                 $jobid = absint($_GET['jobid']);

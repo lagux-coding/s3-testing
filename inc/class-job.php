@@ -36,6 +36,21 @@ class S3Testing_Job
             return false;
         }
 
+        if ($starttype !== 'restart') {
+            //check job id exists
+            if ((int) $jobid !== (int) S3Testing_Option::get($jobid, 'jobid')) {
+                return false;
+            }
+
+            //check folders
+            $folder_message_temp = S3Testing_File::check_folder(S3Testing::get_plugin_data('TEMP'), true);
+            if (!empty($folder_message_temp)) {
+                S3Testing_Admin::message($folder_message_temp, true);
+
+                return false;
+            }
+        }
+
         $random = random_int(10, 90) * 10000;
         usleep($random);
 
@@ -44,11 +59,15 @@ class S3Testing_Job
             $starttype,
             [
                 'runnow',
+                'cronrun',
             ],
             true
         );
 
         if(!$s3testing_job_object && $starttype_exists && $jobid) {
+            // Schedule restart event.
+            wp_schedule_single_event(time() + 60, 's3testing_cron', ['arg' => 'restart']);
+
             $s3testing_job_object = new self();
             $s3testing_job_object->create($starttype, $jobid);
         }
@@ -141,11 +160,11 @@ class S3Testing_Job
             '_nonce' => substr(wp_hash(wp_nonce_tick() . 's3testing_job_run-' . $starttype, 'nonce'), -12, 10),
         ];
 
-        if (in_array($starttype, ['runnow'], true)) {
+        if (in_array($starttype, ['runnow', 'cronrun'], true)) {
             $query_args['s3testing_run'] = $starttype;
         }
 
-        if (in_array($starttype, ['runnowlink', 'runnow'], true) && !empty($jobid)) {
+        if (in_array($starttype, ['runnowlink', 'runnow', 'cronrun'], true) && !empty($jobid)) {
             $query_args['jobid'] = $jobid;
         }
 
@@ -175,7 +194,7 @@ class S3Testing_Job
     {
         if (!in_array(
             $start_type,
-            ['runnow'],
+            ['runnow', 'cronrun'],
             true)) {
             return;
         }

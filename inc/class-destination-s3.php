@@ -578,10 +578,15 @@ class S3Testing_Destination_S3
         $backupfilelist = [];
         $filecounter = 0;
         $files = [];
-
         $args = [
             'Bucket' => S3Testing_Option::get($jobid, 's3bucket'),
         ];
+
+        if($job_object->job['s3newfolder']) {
+            $args['Prefix'] = $job_object->job['s3dircreate'];
+        } else {
+            $args['Prefix'] = '';
+        }
 
         $objects = $s3->getIterator('ListObjects', $args);
         if (is_object($objects)) {
