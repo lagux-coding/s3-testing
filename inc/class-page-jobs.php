@@ -188,7 +188,32 @@ class S3Testing_Page_Jobs extends WP_List_Table
     }
     public function column_next($item)
     {
+        $r = '';
+        $job_normal_hide = '';
+        if (is_object($this->job_object)) {
+            $job_normal_hide = ' style="display:none;"';
+        }
+        if (is_object($this->job_object) && $this->job_object->job['jobid'] == $item) {
+            $runtime = current_time('timestamp') - $this->job_object->start_time;
+            $r .= '<div class="job-run">' . sprintf(esc_html__('Running for: %s seconds'), '<span id="runtime">' . $runtime . '</span>') . '</div>';
+        }
+        if (is_object($this->job_object) && $this->job_object->job['jobid'] == $item) {
+            $r .= '<div class="job-normal"' . $job_normal_hide . '>';
+        }
+        if (S3Testing_Option::get($item, 'activetype') == 'wpcron') {
+            if ($nextrun = wp_next_scheduled('s3testing_cron', ['arg' => $item]) + (get_option('gmt_offset') * 3600)) {
+                $r .= '<span title="' . sprintf(esc_html__('Cron: %s'), S3Testing_Option::get($item, 'cron')) . '">' . sprintf(__('%1$s at %2$s by WP-Cron'), date_i18n(get_option('date_format'), $nextrun, true), date_i18n(get_option('time_format'), $nextrun, true)) . '</span><br />';
+            } else {
+                $r .= __('Not scheduled!') . '<br />';
+            }
+        } else {
+            $r .= __('Inactive');
+        }
+        if (is_object($this->job_object) && $this->job_object->job['jobid'] == $item) {
+            $r .= '</div>';
+        }
 
+        return $r;
     }
 
     public function column_last($item)
