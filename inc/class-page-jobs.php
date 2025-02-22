@@ -218,7 +218,7 @@ class S3Testing_Page_Jobs extends WP_List_Table
                     check_admin_referer('bulk-jobs');
 
                     foreach ($_GET['jobs'] as $jobid) {
-
+                        wp_clear_scheduled_hook('s3testing_cron', ['arg' => absint($jobid)]);
                         S3Testing_Option::delete_job(absint($jobid));
                     }
                 }

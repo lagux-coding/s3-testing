@@ -373,6 +373,8 @@ class S3Testing_Job
         $this->substeps_done = 1;
         $this->steps_done[] = 'END';
 
+        sleep(5);
+
         self::clean_temp_folder();
         exit();
     }
