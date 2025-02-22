@@ -94,4 +94,103 @@ class S3Testing_Cron
 
         S3Testing_Job::start_http($args['run'], $args['jobid']);
     }
+
+    public static function cron_next($cronstring)
+    {
+        $cronstr = [];
+        $cron = [];
+        $cronarray = [];
+
+        [
+            $cronstr['minutes'],
+            $cronstr['hours'],
+            $cronstr['day'],
+            $cronstr['month'],
+            $cronstr['weekday']
+        ] = explode(' ', trim($cronstring), 5);
+
+       foreach($cronstr as $key => $value) {
+           if(strstr($value, ',')) {
+               $cronarr[$key] = explode(',', $value);
+           } else {
+                $cronarr[$key] = [0 => $value];
+           }
+       }
+
+       foreach($cronarr as $cronarrkey => $cronarrvalue) {
+           $cron[$cronarrkey] = [];
+           foreach($cronarrvalue as $value) {
+               $step = 1;
+                if(strstr($value, '/')) {
+                     [$value, $step] = explode('/', $value, 2);
+                }
+
+                if($value === '*') {
+                    $range = [];
+                    if($cronarrkey === 'minutes') {
+                        if ($step < 5) { //set step minimum to 5 min.
+                            $step = 5;
+                        }
+
+                        for($i = 0; $i <= 59; $i = $i + $step) {
+                            $range[] = $i;
+                        }
+                    }
+                    if ($cronarrkey === 'hours') {
+                        for ($i = 0; $i <= 23; $i = $i + $step) {
+                            $range[] = $i;
+                        }
+                    }
+                    if ($cronarrkey === 'day') {
+                        for ($i = $step; $i <= 31; $i = $i + $step) {
+                            $range[] = $i;
+                        }
+                    }
+                    if ($cronarrkey === 'month') {
+                        for ($i = $step; $i <= 12; $i = $i + $step) {
+                            $range[] = $i;
+                        }
+                    }
+                    if ($cronarrkey === 'weekday') {
+                        for ($i = 0; $i <= 6; $i = $i + $step) {
+                            $range[] = $i;
+                        }
+                    }
+                    $cron[$cronarrkey] = array_merge($cron[$cronarrkey], $range);
+                }
+           }
+       }
+
+        //generate years
+        $year = (int) gmdate('Y');
+        for ($i = $year; $i < $year + 100; ++$i) {
+            $cron['year'][] = $i;
+        }
+
+        $current_timestamp = (int) current_time('timestamp');
+
+        foreach ($cron['year'] as $year) {
+            foreach ($cron['month'] as $month) {
+                foreach ($cron['day'] as $day) {
+                    foreach ($cron['hours'] as $hours) {
+                        foreach ($cron['minutes'] as $minutes) {
+                            $timestamp = gmmktime($hours, $minutes, 0, $month, $day, $year);
+                            if ($timestamp && in_array(
+                                    (int) gmdate('j', $timestamp),
+                                    $cron['day'],
+                                    true
+                                ) && in_array(
+                                    (int) gmdate('w', $timestamp),
+                                    $cron['day'],
+                                    true
+                                ) && $timestamp > $current_timestamp) {
+                                return $timestamp - ((int) get_option('gmt_offset') * 3600);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+            return PHP_INT_MAX;
+    }
 }

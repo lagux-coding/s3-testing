@@ -93,7 +93,12 @@ class S3Testing_Page_EditJob
                 update_site_option('s3testing_cron_interval', $interval);
                 S3Testing_Option::update($jobid, 'cron_interval', $interval);
 
-                S3Testing_Option::update($jobid, 'cron', S3Testing_Option::get($jobid, 'cron_interval') . ' * * * *');
+                S3Testing_Option::update($jobid, 'cron', '*/' . S3Testing_Option::get($jobid, 'cron_interval') . ' * * * *');
+
+                $logfile = WP_CONTENT_DIR . '/debug' . '/cron.log';
+                $message = 'cronstr: ' . print_r(S3Testing_Cron::cron_next(S3Testing_Option::get($jobid, 'cron')), true) . PHP_EOL;
+                file_put_contents($logfile, $message, FILE_APPEND);
+
 
                 break;
             case 'runnow':
