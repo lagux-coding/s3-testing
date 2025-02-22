@@ -157,6 +157,9 @@ final class S3Testing_Admin
 
         //add more actions
         add_action('admin_enqueue_scripts', [$this, 'admin_css']);
+
+        //cron
+        add_action('s3testing_cron_interval', '10');
     }
 
     public function admin_init()

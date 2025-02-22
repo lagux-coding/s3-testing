@@ -107,6 +107,7 @@ final class S3Testing_Option
         $default['activetype'] = '';
         $default['logfile'] = '';
         $default['lastbackupdownloadurl'] = '';
+        $default['cron_interval'] = '10';
         $default['cronselect']            = 'basic';
         $default['cron']                  = '0 3 * * *';
         $default['mailaddresslog']        = sanitize_email( get_bloginfo( 'admin_email' ) );

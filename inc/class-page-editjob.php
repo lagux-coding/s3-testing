@@ -85,6 +85,17 @@ class S3Testing_Page_EditJob
                 S3Testing_Option::update($jobid, 'archivename', sanitize_text_field($_POST['archivename']));
 
                 break;
+            case 'cron':
+                $interval = absint($_POST['cron_interval']);
+                if ($interval < 5) {
+                    $interval = 5;
+                }
+                update_site_option('s3testing_cron_interval', $interval);
+                S3Testing_Option::update($jobid, 'cron_interval', $interval);
+
+                S3Testing_Option::update($jobid, 'cron', S3Testing_Option::get($jobid, 'cron_interval') . ' * * * *');
+
+                break;
             case 'runnow':
                 $jobid = absint($_GET['jobid']);
                 if ($jobid) {
@@ -319,6 +330,7 @@ class S3Testing_Page_EditJob
             <?php
             break;
         case 'cron':
+            $interval = get_site_option('s3testing_cron_interval', '10');
             ?>
                 <div class="table" id="info-tab-cron">
                     <h3 class="title"><?php esc_html_e('Job Schedule'); ?></h3>
@@ -327,46 +339,15 @@ class S3Testing_Page_EditJob
                         <tr>
                             <th scope="row"><?php esc_html_e('Start job'); ?></th>
                             <td>
-                                <fieldset>
-                                    <legend class="screen-reader-text"><span><?php esc_html_e('Start job'); ?></span></legend>
-                                    <label for="idactivetype">
-                                        <input class="radio"
-                                               type="radio" <?php checked('', S3Testing_Option::get($jobid, 'activetype'), true) ?>
-                                               name="activetype"
-                                                id="activetype"
-                                                value=""/>
-                                        <?php esc_html_e('manually only'); ?>
-                                    </label><br/>
-                                    <label for="idactivetype-wpcron">
-                                        <input class="radio"
-                                                type="radio"
-                                                name="activetype"
-                                                id="activetype-wpcron"
-                                                value="wpcron"/>
-                                        <?php esc_html_e('with WordPress cron'); ?>
-                                    </label><br/>
-                                </fieldset>
-                            </td>
-                        </tr>
-                    </table>
-                    <h3 class="title wpcron"><?php esc_html_e('Schedule execution time'); ?></h3>
-                    <table class="form-table wpcron">
-                        <tr>
-                            <th scope="row"><?php _e('Scheduler'); ?></th>
-                            <td>
-                                <table>
-                                    <tr>
-                                        <th>
-                                            <?php _e('Type'); ?>
-                                        </th>
-                                        <th>
-                                            <?php _e('Minute'); ?>
-                                        </th>
-                                    </tr>
-                                    <tr>
-
-                                    </tr>
-                                </table>
+                                <select name="cron_interval" id="cron_interval">
+                                    <option value="5" <?php selected($interval, '5'); ?>>5 minutes</option>
+                                    <option value="10" <?php selected($interval, '10'); ?>>10 minutes</option>
+                                    <option value="30" <?php selected($interval, '30'); ?>>30 minutes</option>
+                                    <option value="60" <?php selected($interval, '60'); ?>>1 hour</option>
+                                    <option value="360" <?php selected($interval, '360'); ?>>6 hours</option>
+                                    <option value="720" <?php selected($interval, '720'); ?>>12 hours</option>
+                                    <option value="1440" <?php selected($interval, '1440'); ?>>daily</option>
+                                </select>
                             </td>
                         </tr>
                     </table>
