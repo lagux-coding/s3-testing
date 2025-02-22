@@ -65,12 +65,8 @@ class S3Testing_Destination_S3
                         ); ?>
                 </th>
                 <td>
-                    <input type="text" name="s3base_region" value="<?php echo esc_attr(
-                        S3Testing_Option::get($jobid, 's3base_region')
-                    ); ?>" class="regular-text" autocomplete="off">
-                    <p class="description"><?php esc_html_e(
-                            'Specify S3 region like "us-west-1"',
-                        ); ?></p>
+                    <input type="text" name="s3region" value="" class="regular-text" autocomplete="off" readonly />
+
                 </td>
             </tr>
         </table>
@@ -132,7 +128,6 @@ class S3Testing_Destination_S3
                                 's3base_url' => S3Testing_Option::get($jobid, 's3base_url'),
                                 's3accesskey' => S3Testing_Option::get($jobid, 's3accesskey'),
                                 's3secretkey' => S3Testing_Option::get($jobid, 's3secretkey'),
-                                's3base_region' => S3Testing_Option::get($jobid, 's3base_region'),
                                 's3bucketselected' => S3Testing_Option::get($jobid, 's3bucket'),
                             ], true
                         );
@@ -184,7 +179,6 @@ class S3Testing_Destination_S3
                                 's3base_url' => S3Testing_Option::get($jobid, 's3base_url'),
                                 's3accesskey' => S3Testing_Option::get($jobid, 's3accesskey'),
                                 's3secretkey' => S3Testing_Option::get($jobid, 's3secretkey'),
-                                's3base_region' => S3Testing_Option::get($jobid, 's3base_region'),
                                 's3bucketselected' => S3Testing_Option::get($jobid, 's3bucket'),
                             ]
                         );
@@ -251,7 +245,6 @@ class S3Testing_Destination_S3
             $args['s3secretkey'] = sanitize_text_field($_POST['s3secretkey']);
             $args['s3base_url'] = s3testing_esc_url_default_secure($_POST['s3base_url'], ['http', 'https']);
             $args['s3bucketselected'] = sanitize_text_field($_POST['s3bucketselected']);
-            $args['s3base_region'] = sanitize_text_field($_POST['s3base_region']);
             $ajax = true;
         }
 
@@ -267,7 +260,6 @@ class S3Testing_Destination_S3
                 $options = [
                     'label' => __('Custom S3 destination'),
                     'endpoint' => $args['s3base_url'],
-                    'region' => $args['s3base_region'],
                 ];
                 $aws = S3Testing_S3_Destination::fromOptionArray($options);
             }
@@ -331,7 +323,6 @@ class S3Testing_Destination_S3
             check_ajax_referer('s3testing_ajax_nonce');
             $args['s3accesskey'] = sanitize_text_field($_POST['s3accesskey']);
             $args['s3secretkey'] = sanitize_text_field($_POST['s3secretkey']);
-            $args['s3base_region'] = sanitize_text_field($_POST['s3base_region']);
             $args['s3base_url'] = s3testing_esc_url_default_secure($_POST['s3base_url'], ['http', 'https']);
             $args['s3bucketselected'] = sanitize_text_field($_POST['s3bucketselected']);
             $args['s3dirselected'] = sanitize_text_field($_POST['s3dirselected']);
@@ -351,7 +342,6 @@ class S3Testing_Destination_S3
                 $options = [
                     'label' => __('Custom S3 destination'),
                     'endpoint' => $args['s3base_url'],
-                    'region' => $args['s3base_region'],
                 ];
                 $aws = S3Testing_S3_Destination::fromOptionArray($options);
             }
@@ -535,13 +525,7 @@ class S3Testing_Destination_S3
 
         if(S3Testing_Option::get($jobid, 's3accesskey') && S3Testing_Option::get($jobid, 's3secretkey') && S3Testing_Option::get($jobid, 's3bucket')) {
             try {
-                $region = S3Testing_Option::get($jobid, 's3base_url');
-                if(empty($region)) {
-                    $region = S3Testing_Option::get($jobid, 's3region');
-                    $aws = S3Testing_S3_Destination::fromOption($region);
-                } else {
-                    $aws = S3Testing_S3_Destination::fromJobId($jobid);
-                }
+                $aws = S3Testing_S3_Destination::fromJobId($jobid);
 
                 $s3 = $aws->client(
                     S3Testing_Option::get($jobid, 's3accesskey'),
@@ -684,10 +668,8 @@ class S3Testing_Destination_S3
                         action: 's3testing_dest_s3',
                         s3accesskey: $('input[name="s3accesskey"]').val(),
                         s3secretkey: $('input[name="s3secretkey"]').val(),
-                        s3base_region: $('input[name="s3base_region"]').val(),
                         s3bucketselected: $('input[name="s3bucketselected"]').val(),
                         s3base_url      : $( 'input[name="s3base_url"]' ).val(),
-                        s3region: $('#s3region').val(),
                         _ajax_nonce: $('#s3testingajaxnonce').val(),
                         isBucket: $('#isBucket').val(),
                     };
@@ -720,7 +702,6 @@ class S3Testing_Destination_S3
                         action: 's3testing_dest_s3_dir',
                         s3accesskey: $('input[name="s3accesskey"]').val(),
                         s3secretkey: $('input[name="s3secretkey"]').val(),
-                        s3base_region: $('input[name="s3base_region"]').val(),
                         s3bucketselected: $('#s3bucket').val(),
                         s3dirselected: $('input[name="s3dirselected"]').val(),
                         s3base_url: $('input[name="s3base_url"]').val(),

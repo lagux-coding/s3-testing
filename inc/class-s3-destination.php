@@ -205,7 +205,7 @@ class S3Testing_S3_Destination
                 'key' => $accessKey,
                 'secret' => $secretKey,
             ],
-            'region' => $this->region(),
+            'region' => $this->options['region'],
             'http' => [
                 'verify' => false,
             ],
@@ -215,9 +215,6 @@ class S3Testing_S3_Destination
 
         if ($this->endpoint()) {
             $s3Options['endpoint'] = $this->endpoint();
-            if (!$this->region()) {
-                $s3Options['bucket_endpoint'] = true;
-            }
         }
 
         $s3Options = apply_filters('s3_testing_options', $s3Options);
@@ -241,7 +238,6 @@ class S3Testing_S3_Destination
         $options = [
             'label' => __('Custom S3 destination'),
             'endpoint' => S3Testing_Option::get($jobId, 's3base_url'),
-            'region' => S3Testing_Option::get($jobId, 's3base_region'),
         ];
 
         return self::fromOptionArray($options);
