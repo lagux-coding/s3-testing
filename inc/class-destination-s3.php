@@ -447,6 +447,15 @@ class S3Testing_Destination_S3
     {
         $job_object->substeps_todo = 2 + $job_object->backup_filesize;
 
+        if ($job_object->steps_data[$job_object->step_working]['SAVE_STEP_TRY'] != $job_object->steps_data[$job_object->step_working]['STEP_TRY']) {
+            $job_object->log(
+                sprintf(
+                    __('%d. Trying to send backup file to S3 Service&#160;&hellip;'),
+                    $job_object->steps_data[$job_object->step_working]['STEP_TRY']
+                )
+            );
+        }
+
         try {
             if (empty($job_object->job['s3base_url'])) {
                 $aws_destination = S3Testing_S3_Destination::fromOption($job_object->job['s3region']);
@@ -458,6 +467,18 @@ class S3Testing_Destination_S3
             $s3 = $aws_destination->client(
                 $job_object->job['s3accesskey'],
                 $job_object->job['s3secretkey']
+            );
+
+            $job_object->log(
+                sprintf(
+                    __('Connected to S3 Bucket "%1$s"'),
+                    $job_object->job['s3bucket']
+                )
+            );
+            $job_object->log(
+                sprintf(
+                    __('Starting upload to S3 Service&#160;&hellip;')
+                )
             );
 
             if (!$up_file_handle = fopen($job_object->backup_folder . $job_object->backup_file, 'rb')) {
@@ -492,6 +513,25 @@ class S3Testing_Destination_S3
                 'Key' => $job_object->job['s3newfolder'] . $job_object->backup_file,
             ]);
 
+            if ($result->get('ContentLength') == filesize($job_object->backup_folder . $job_object->backup_file)) {
+                $job_object->substeps_done = 1 + $job_object->backup_filesize;
+                $job_object->log(
+                    sprintf(
+                        __('Backup transferred to %s.'),
+                        $s3->getObjectUrl($job_object->job['s3bucket'], $job_object->job['s3dir'] . $job_object->backup_file)
+                    )
+                );
+            } else {
+                $job_object->log(
+                    sprintf(
+                        __('Cannot transfer backup to S3! (%1$d) %2$s'),
+                        $result->get('status'),
+                        $result->get('Message')
+                    ),
+                    E_USER_ERROR
+                );
+            }
+
         } catch (Exception $e) {
             $errorMessage = $e->getMessage();
             if ($e instanceof AwsException) {
@@ -513,6 +553,13 @@ class S3Testing_Destination_S3
         }
 
         $job_object->substeps_done = 2 + $job_object->backup_filesize;
+
+        $job_object->log(
+            sprintf(
+                __('Upload to S3 Service done!'),
+            ),
+            E_USER_NOTICE
+        );
 
         return true;
     }

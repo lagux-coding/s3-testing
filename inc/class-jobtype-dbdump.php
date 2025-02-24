@@ -113,6 +113,11 @@ class S3Testing_JobType_DBDump extends S3Testing_JobTypes
     public function job_run(S3Testing_Job $job_object)
     {
         $job_object->substeps_todo = 1;
+
+        if ($job_object->steps_data[$job_object->step_working]['SAVE_STEP_TRY'] != $job_object->steps_data[$job_object->step_working]['STEP_TRY']) {
+            $job_object->log(sprintf(__('%d. Try to backup database&#160;&hellip;'), $job_object->steps_data[$job_object->step_working]['STEP_TRY']));
+        }
+
         //build filename
         if ( empty( $job_object->steps_data[ $job_object->step_working ]['dbdumpfile'] ) ) {
             $job_object->steps_data[ $job_object->step_working ]['dbdumpfile'] = $job_object->generate_db_dump_filename( $job_object->job['dbdumpfile'], 'sql' ) . $job_object->job['dbdumpfilecompression'];
@@ -124,6 +129,10 @@ class S3Testing_JobType_DBDump extends S3Testing_JobTypes
                 'dumpfile' => S3Testing::get_plugin_data('TEMP') . $job_object->steps_data[$job_object->step_working]['dbdumpfile'],
             ]);
 
+            if ($job_object->steps_data[$job_object->step_working]['SAVE_STEP_TRY'] != $job_object->steps_data[$job_object->step_working]['STEP_TRY']) {
+                $job_object->log(sprintf(__('Connected to database %1$s on %2$s'), DB_NAME, DB_HOST));
+            }
+
             //Exclude tables
             foreach ($sql_dump->tables_to_dump as $key => $table) {
                 if (in_array($table, $job_object->job['dbdumpexclude'], true)) {
@@ -134,9 +143,10 @@ class S3Testing_JobType_DBDump extends S3Testing_JobTypes
             //set steps must done
             $job_object->substeps_todo = count($sql_dump->tables_to_dump);
 
-            if($job_object->substeps_todo == 0) {
-                throw new S3Testing_MySQLDump_Exception(__('No tables to backup'));
+            if ($job_object->substeps_todo == 0) {
+                $job_object->log(__('No tables to backup.'), E_USER_WARNING);
                 unset($sql_dump);
+
                 return true;
             }
 
@@ -200,14 +210,18 @@ class S3Testing_JobType_DBDump extends S3Testing_JobTypes
         $filesize = filesize(S3Testing::get_plugin_data('TEMP') . $job_object->steps_data[$job_object->step_working]['dbdumpfile']);
 
         if (!is_file(S3Testing::get_plugin_data('TEMP') . $job_object->steps_data[$job_object->step_working]['dbdumpfile']) || $filesize < 1) {
-
+            $job_object->log(__('MySQL backup file not created'), E_USER_ERROR);
             return false;
         }
 
         $job_object->additional_files_to_backup[] = S3Testing::get_plugin_data('TEMP') . $job_object->steps_data[$job_object->step_working]['dbdumpfile'];
+        $job_object->log(sprintf(__('Added database dump "%1$s" with %2$s to backup file list',), $job_object->steps_data[$job_object->step_working]['dbdumpfile'], size_format($filesize, 2)));
+
 
         //cleanups
         unset($job_object->steps_data[$job_object->step_working]['tables']);
+
+        $job_object->log(__('Database backup done!'));
 
         return true;
     }

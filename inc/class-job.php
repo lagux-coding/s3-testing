@@ -25,6 +25,10 @@ class S3Testing_Job
     public $timestamp_last_update = 0;
     public $user_abort = false;
     public $logfile = '';
+    public $lastmsg = '';
+    public $lasterrormsg = '';
+    public $warnings = 0;
+    public $errors = 0;
 
     public static function start_http($starttype, $jobid = 0)
     {
@@ -339,6 +343,8 @@ class S3Testing_Job
 
     public function run()
     {
+        $this->log('This is a test');
+
         // Job can't run it is not created
         if (empty($this->steps_todo)) {
             $running_file = S3Testing::get_plugin_data('running_file');
@@ -374,6 +380,7 @@ class S3Testing_Job
             //do step tries
             while(true) {
                 if($this->steps_data[$this->step_working]['STEP_TRY'] >= get_site_option('s3testing_cfg_jobstepretry')) {
+                    $this->log(__('Step aborted: too many attempts!'), E_USER_ERROR);
                     $this->temp = [];
                     $this->steps_done[] = $this->step_working;
                     $this->substeps_done = 0;
@@ -424,6 +431,10 @@ class S3Testing_Job
             return;
         }
 
+        if (!file_exists(S3Testing::get_plugin_data('running_file'))) {
+            return;
+        }
+
         return;
     }
 
@@ -431,6 +442,10 @@ class S3Testing_Job
     {
         $this->step_working = 'END';
         $this->substeps_todo = 1;
+
+        if (!file_exists(S3Testing::get_plugin_data('running_file'))) {
+            $this->log(__('Aborted by user!'), E_USER_ERROR);
+        }
 
         //update job options
         $this->job['lastruntime'] = current_time('timestamp') - $this->start_time;
@@ -494,8 +509,28 @@ class S3Testing_Job
             unlink($this->backup_folder . $this->backup_file);
         }
 
+        if ($this->steps_data[$this->step_working]['SAVE_STEP_TRY'] != $this->steps_data[$this->step_working]['STEP_TRY']) {
+            $this->log(
+                sprintf(
+                    __('%d. Trying to create backup archive &hellip;'),
+                    $this->steps_data[$this->step_working]['STEP_TRY']
+                ),
+                E_USER_NOTICE
+            );
+        }
+
         try {
             $backup_archive = new S3Testing_Create_Archive($this->backup_folder . $this->backup_file);
+
+            if ($this->substeps_done == 0) {
+                $this->log(sprintf(
+                    _x(
+                        'Compressing files as %s. Please be patient, this may take a moment.',
+                        'Archive compression method',
+                    ),
+                    $backup_archive->get_method()
+                ));
+            }
 
             //add extra file
             if ($this->substeps_done == 0) {
@@ -571,7 +606,7 @@ class S3Testing_Job
             }
             $backup_archive->close();
             unset($backup_archive);
-
+            $this->log(__('Backup archive created.'), E_USER_NOTICE);
         } catch (Exception $e) {
             return false;
         }
@@ -579,6 +614,37 @@ class S3Testing_Job
         if ($this->backup_filesize === false) {
             $this->backup_filesize = PHP_INT_MAX;
         }
+
+        if ($this->backup_filesize >= PHP_INT_MAX) {
+            $this->log(
+                __(
+                    'The Backup archive will be too large for file operations with this PHP Version.'
+                ),
+                E_USER_ERROR
+            );
+            $this->end();
+        } else {
+            $this->log(
+                sprintf(__('Archive size is %s.'), size_format($this->backup_filesize, 2)),
+                E_USER_NOTICE
+            );
+        }
+
+        $this->log(
+            sprintf(
+                __('%1$d Files with %2$s in Archive.'),
+                $this->count_files,
+                size_format($this->count_files_size, 2)
+            ),
+            E_USER_NOTICE
+        );
+
+        $this->log(
+            sprintf(
+                __('Create backup archive done!')
+            ),
+            E_USER_NOTICE
+        );
 
         return true;
     }
@@ -683,6 +749,69 @@ class S3Testing_Job
             $this->timestamp_last_update = microtime(true); //last update of working file
             $this->write_running_file();
         }
+    }
+
+    public function log($message, $type = E_USER_NOTICE)
+    {
+        if (error_reporting() == 0) {
+            return true;
+        }
+
+        $error = false;
+        $warning = false;
+
+        switch ($type) {
+            case E_NOTICE:
+            case E_USER_NOTICE:
+                break;
+            case E_WARNING:
+            case E_USER_WARNING:
+                $this->warnings++;
+                $warning = true;
+                $message = __('WARNING:') . ' ' . $message;
+                break;
+            case E_ERROR:
+            case E_USER_ERROR:
+                $this->errors++;
+                $error = true;
+                $message = __('ERROR:') . ' ' . $message;
+                break;
+            default:
+                $message = $type . ': ' . $message;
+                break;
+        }
+
+        //timestamp for log file
+        $debug_info = '';
+        $timestamp = '<span datetime="' . date('c') . '" ' . $debug_info . '>[' . date(
+                'd-M-Y H:i:s',
+                current_time('timestamp')
+            ) . ']</span> ';
+
+        //set last Message
+        if ($error) {
+            $output_message = '<span style="background-color:#ff6766;color:black;padding:0 2px;">' . esc_html($message) . '</span>';
+            $this->lasterrormsg = $output_message;
+        } elseif ($warning) {
+            $output_message = '<span style="background-color:#ffc766;color:black;padding:0 2px;">' . esc_html($message) . '</span>';
+            $this->lasterrormsg = $output_message;
+        } else {
+            $output_message = esc_html($message);
+            $this->lastmsg = $output_message;
+        }
+
+        if ($this->logfile) {
+            if (!file_put_contents(
+                $this->logfile,
+                $timestamp . $output_message . '<br />' . PHP_EOL,
+                FILE_APPEND
+            )) {
+                $this->logfile = '';
+                restore_error_handler();
+                trigger_error(esc_html($message), $type);
+            }
+        }
+        return true;
     }
 
     public static function user_abort() {
