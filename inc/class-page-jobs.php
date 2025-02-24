@@ -363,12 +363,38 @@ class S3Testing_Page_Jobs extends WP_List_Table
         echo '<h1>' . esc_html(sprintf(__('%s &rsaquo; Jobs'), S3Testing::get_plugin_data('name'))). '&nbsp;<a href="' . wp_nonce_url(network_admin_url('admin.php') . '?page=s3testingeditjob', 'edit-job') . '" class="add-new-h2">' . esc_html__('Add new') . '</a></h1>';
         S3Testing_Admin::display_message();
         $job_object = S3Testing_Job::get_working_data();
-        if(is_object($job_object)){?>
+        if(is_object($job_object)){
+            //read existing logfile
+            $logfiledata = file_get_contents($job_object->logfile);
+            preg_match('/<body[^>]*>/si', $logfiledata, $match);
+            if (!empty($match[0])) {
+                $startpos = strpos($logfiledata, $match[0]) + strlen($match[0]);
+            } else {
+                $startpos = 0;
+            }
+            $endpos = stripos($logfiledata, '</body>');
+            if (empty($endpos)) {
+                $endpos = strlen($logfiledata);
+            }
+            $length = strlen($logfiledata) - (strlen($logfiledata) - $endpos) - $startpos;
+            ?>
             <div id="runningjob">
-                <a href="<?php echo wp_nonce_url(network_admin_url('admin.php') . '?page=s3testingjobs&action=abort', 'abort-job'); ?>" id="abortbutton" class="s3testing-fancybox button button-s3"><?php esc_html_e('Abort'); ?></a>
+                <div id="runniginfos">
+                    <h2 id="runningtitle"><?php esc_html(sprintf(__('Job currently running: %s'), $job_object->job['name'])); ?></h2>
+                </div>
+                <div class="infobuttons">
+                    <a href="#TB_inline?height=440&width=630&inlineId=tb-showworking" id="showworkingbutton" class="thickbox button button-primary button-primary-bwp" title="<?php esc_attr_e('Log of running job'); ?>"><?php esc_html_e('Display working log'); ?></a>
+                    <a href="<?php echo wp_nonce_url(network_admin_url('admin.php') . '?page=s3testingjobs&action=abort', 'abort-job'); ?>" id="abortbutton" class="s3testing-fancybox button button-s3"><?php esc_html_e('Abort'); ?></a>
+                    <a href="#" id="showworkingclose" title="<?php esc_html_e('Close working screen'); ?>" class="button button-bwp" style="display:none" ><?php esc_html_e('Close'); ?></a>
 
-                <div class="progressbar"><div id="progressstep" class="s3tt-progress" style="width:<?php echo ($job_object->step_percent); ?>%;"><?php echo esc_html($job_object->step_percent);?>%</div></div>
-                <div id="onstep"><?php echo esc_html($job_object->steps_data[$job_object->step_working]['NAME']); ?></div>
+                    <input type="hidden" name="logpos" id="logpos" value="<?php echo strlen($logfiledata); ?>">
+                    <div id="lasterrormsg"></div>
+                    <div class="progressbar"><div id="progressstep" class="s3tt-progress" style="width:<?php echo ($job_object->step_percent); ?>%;"><?php echo esc_html($job_object->step_percent);?>%</div></div>
+                    <div id="onstep"><?php echo esc_html($job_object->steps_data[$job_object->step_working]['NAME']); ?></div>
+                    <div id="tb-showworking" style="display:none;">
+                        <div id="showworking"><?php echo substr($logfiledata, $startpos, $length); ?></div>
+                    </div>
+                </div>
             </div>
         <?php
         }
@@ -392,6 +418,8 @@ class S3Testing_Page_Jobs extends WP_List_Table
                         cache: false,
                         data:{
                             action: 's3testing_working',
+                            logpos: $('#logpos').val(),
+                            logfile: '<?php echo basename((string) $job_object->logfile); ?>',
                             _ajax_nonce: '<?php echo wp_create_nonce('s3testingworking_ajax_nonce'); ?>'
                         },
                         dataType: 'json',
@@ -403,6 +431,14 @@ class S3Testing_Page_Jobs extends WP_List_Table
                                 $(".job-run").hide();
                                 $("#message").hide();
                                 $(".job-normal").show();
+                                $('#showworkingclose').show();
+                            }
+                            if (0 < rundata.log_pos) {
+                                $('#logpos').val(rundata.log_pos);
+                            }
+                            if ('' != rundata.log_text) {
+                                $('#showworking').append(rundata.log_text);
+                                $('#TB_ajaxContent').scrollTop(rundata.log_pos * 15);
                             }
                             if (0 < rundata.step_percent) {
                                 $('#progressstep').replaceWith('<div id="progressstep" class="s3tt-progress">' + rundata.step_percent + '%</div>');
@@ -420,6 +456,7 @@ class S3Testing_Page_Jobs extends WP_List_Table
                                 $(".job-run").hide();
                                 $("#message").hide();
                                 $(".job-normal").show();
+                                $('#showworkingclose').show();
                             } else {
                                 setTimeout('s3testing_show_working()', 750);
                             }
@@ -431,6 +468,10 @@ class S3Testing_Page_Jobs extends WP_List_Table
                     });
                 };
                 s3testing_show_working();
+                $('#showworkingclose').click( function() {
+                    $("#runningjob").hide( 'slow' );
+                    return false;
+                });
             });
         </script>
         <?php
@@ -439,6 +480,17 @@ class S3Testing_Page_Jobs extends WP_List_Table
     public static function ajax_working()
     {
         check_ajax_referer('s3testingworking_ajax_nonce');
+
+        $log_folder = get_site_option('s3testing_cfg_logfolder');
+        $log_folder = S3Testing_File::get_absolute_path($log_folder);
+
+        try {
+            $logfile = self::get_logfile_path($log_folder, $_GET['logfile'] ?? null);
+        } catch (\InvalidArgumentException $e) {
+            exit(0);
+        }
+
+        $logpos = isset($_GET['logpos']) ? absint($_GET['logpos']) : 0;
 
         $job_object = S3Testing_Job::get_working_data();
         $done = 0;
@@ -453,11 +505,47 @@ class S3Testing_Page_Jobs extends WP_List_Table
             $done = 1;
         }
 
+        $logfiledata = file_get_contents($logfile, false, null, $logpos);
+
+        preg_match('/<body[^>]*>/si', $logfiledata, $match);
+        if (!empty($match[0])) {
+            $startpos = strpos($logfiledata, $match[0]) + strlen($match[0]);
+        } else {
+            $startpos = 0;
+        }
+
+        $endpos = stripos($logfiledata, '</body>');
+        if (false === $endpos) {
+            $endpos = strlen($logfiledata);
+        }
+
+        $length = strlen($logfiledata) - (strlen($logfiledata) - $endpos) - $startpos;
+
         wp_send_json([
+            'log_pos' => strlen($logfiledata) + $logpos,
+            'log_text' => substr($logfiledata, $startpos, $length),
             'step_percent' => $step_percent,
             'on_step' => $onstep,
             'sub_step_percent' => $substep_percent,
             'job_done' => $done,
         ]);
+    }
+
+    private static function get_logfile_path(string $folder, ?string $filename): string
+    {
+        if (!$filename) {
+            throw new \InvalidArgumentException('Log file cannot be null.');
+        }
+
+        $filename = basename(trim($filename));
+
+        if (
+            preg_match('/^[a-zA-Z0-9_-]+\.[a-zA-Z0-9]{1,5}$/', $filename) === 0
+            || strpos($filename, 's3testing_log_') === false
+        ) {
+            throw new \InvalidArgumentException('Invalidly formatted log filename passed.');
+        }
+
+        return $folder . $filename;
     }
 }

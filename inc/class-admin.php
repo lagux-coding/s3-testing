@@ -56,6 +56,7 @@ final class S3Testing_Admin
                 'page'
             ]
         );
+        add_action('load-' . $this->page_hooks['s3testing'], [\S3Testing_Admin::class, 'init_general']);
 
         $this->page_hooks = apply_filters('s3testing_admin_pages', $this->page_hooks);
     }
@@ -73,7 +74,7 @@ final class S3Testing_Admin
                 'page'
             ]
         );
-
+        add_action('load-' . $this->page_hooks['s3testingjobs'], [\S3Testing_Admin::class, 'init_general']);
         add_action('load-' . $this->page_hooks['s3testingjobs'], [\S3Testing_Page_Jobs::class, 'load']);
         add_action(
             'admin_print_styles-' . $this->page_hooks['s3testingjobs'],
