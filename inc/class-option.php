@@ -10,7 +10,19 @@ final class S3Testing_Option
         //jobs
         add_site_option( 's3testing_cfg_jobmaxexecutiontime', 30 );
         add_site_option('s3testing_cfg_jobstepretry', 3);
+        //Logs
+        add_site_option('s3testing_cfg_maxlogs', 30);
+        $upload_dir   = wp_upload_dir( null, false, true );
+        $logs_dir     = trailingslashit(
+            str_replace(
+                '\\',
+                '/',
+                $upload_dir['basedir']
+        )). 's3testing/' . S3Testing::get_plugin_data('hash') . '/log/';
 
+        $content_path = trailingslashit( str_replace( '\\', '/', (string) WP_CONTENT_DIR ) );
+        $logs_dir     = str_replace( $content_path, '', $logs_dir );
+        add_site_option( 's3testing_cfg_logfolder', $logs_dir );
     }
 
     public static function get($jobid, $option, $default = null, $use_cache = true)

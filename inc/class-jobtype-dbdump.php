@@ -42,7 +42,7 @@ class S3Testing_JobType_DBDump extends S3Testing_JobTypes
     {
     global $wpdb; ?>
     <input name="dbdumpwpony" type="hidden" value="1"/>
-    <h3 class="title"><?php _e('Settings for database backup', 'backwpup'); ?></h3>
+    <h3 class="title"><?php _e('Settings for database backup'); ?></h3>
     <p></p>
     <table class="form-table">
         <tr>

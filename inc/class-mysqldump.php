@@ -63,7 +63,7 @@ class S3Testing_MySQLDump
         $res = $this->mysqli->query('SHOW FULL TABLES FROM `' . $this->dbname . '`');
         ++$GLOBALS[\wpdb::class]->num_queries;
         if ($this->mysqli->error) {
-            throw new S3testing_MySQLDump_Exception(sprintf(__('Database error %1$s for query %2$s', 'backwpup'), $this->mysqli->error, 'SHOW FULL TABLES FROM `' . $this->dbname . '`'));
+            throw new S3testing_MySQLDump_Exception(sprintf(__('Database error %1$s for query %2$s'), $this->mysqli->error, 'SHOW FULL TABLES FROM `' . $this->dbname . '`'));
         }
 
         while ($table = $res->fetch_array(MYSQLI_NUM)) {
@@ -278,7 +278,7 @@ class S3Testing_MySQLDump
         $res = $this->mysqli->query('SHOW CREATE TABLE `' . $table . '`');
         ++$GLOBALS[\wpdb::class]->num_queries;
         if ($this->mysqli->error) {
-            trigger_error(sprintf(__('Database error %1$s for query %2$s', 'backwpup'), $this->mysqli->error, 'SHOW CREATE TABLE `' . $table . '`'), E_USER_WARNING);
+            trigger_error(sprintf(__('Database error %1$s for query %2$s'), $this->mysqli->error, 'SHOW CREATE TABLE `' . $table . '`'), E_USER_WARNING);
         } else {
             $createtable = str_replace( '"', '`', $res->fetch_assoc() );
             $res->close();
@@ -680,7 +680,7 @@ class S3Testing_MySQLDump
         }
         ++$GLOBALS[\wpdb::class]->num_queries;
         if ($this->mysqli->error) {
-            throw new BackWPup_MySQLDump_Exception($this->mysqli->error);
+            throw new S3Testing_MySQLDump_Exception($this->mysqli->error);
         }
 
         return $res;

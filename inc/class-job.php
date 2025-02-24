@@ -24,6 +24,7 @@ class S3Testing_Job
 
     public $timestamp_last_update = 0;
     public $user_abort = false;
+    public $logfile = '';
 
     public static function start_http($starttype, $jobid = 0)
     {
@@ -43,8 +44,11 @@ class S3Testing_Job
             }
 
             //check folders
+            $log_folder = get_site_option('s3testing_cfg_logfolder');
+            $folder_message_log = S3Testing_File::check_folder(S3Testing_File::get_absolute_path($log_folder));
             $folder_message_temp = S3Testing_File::check_folder(S3Testing::get_plugin_data('TEMP'), true);
-            if (!empty($folder_message_temp)) {
+            if (!empty($folder_message_log) || !empty($folder_message_temp)) {
+                S3Testing_Admin::message($folder_message_log, true);
                 S3Testing_Admin::message($folder_message_temp, true);
 
                 return false;
@@ -206,8 +210,18 @@ class S3Testing_Job
         }
 
         $this->start_time = current_time('timestamp');
-        //write settings to job
+
+        //set log file
+        $log_folder = get_site_option('s3testing_cfg_logfolder');
+        $log_folder = S3Testing_File::get_absolute_path($log_folder);
+        $this->logfile = $log_folder . 's3testing_log_' . S3Testing::get_plugin_data('hash') . date(
+                'Y-m-d_H-i-s',
+                current_time('timestamp')
+            ) . '.html';
+
+        //write settings
         S3Testing_Option::update( $this->job['jobid'], 'lastrun', $this->start_time );
+        S3Testing_Option::update($this->job['jobid'], 'logfile', $this->logfile);
 
         $this->timestamp_last_update = microtime( true );
 
@@ -259,6 +273,59 @@ class S3Testing_Job
         $this->steps_data['END']['NAME'] = __('End of Job');
         $this->steps_data['END']['STEP_TRY'] = 1;
         $this->write_running_file();
+
+        //create log file
+        $head = '';
+        $info = '';
+        $head .= '<!DOCTYPE html>' . PHP_EOL;
+        $head .= '<html lang="' . str_replace('_', '-', get_locale()) . '">' . PHP_EOL;
+        $head .= '<head>' . PHP_EOL;
+        $head .= '<meta charset="' . get_bloginfo('charset') . '" />' . PHP_EOL;
+        $head .= '<title>' . sprintf(
+                __('S3Testing log for %1$s from %2$s at %3$s'),
+                esc_attr($this->job['name']),
+                date_i18n(get_option('date_format')),
+                date_i18n(get_option('time_format'))
+            ) . '</title>' . PHP_EOL;
+        $head .= '<meta name="robots" content="noindex, nofollow" />' . PHP_EOL;
+        $head .= '<meta name="copyright" content="Copyright &copy; 2012 - ' . date('Y') . ' WP Media, Inc." />' . PHP_EOL;
+        $head .= '<meta name="author" content="WP Media" />' . PHP_EOL;
+        $head .= '<meta name="generator" content="S3Testing ' . S3Testing::get_plugin_data('Version') . '" />' . PHP_EOL;
+        $head .= '<meta http-equiv="cache-control" content="no-cache" />' . PHP_EOL;
+        $head .= '<meta http-equiv="pragma" content="no-cache" />' . PHP_EOL;
+        $head .= '<meta name="date" content="' . date('c') . '" />' . PHP_EOL;
+        $head .= str_pad('<meta name="s3testing_errors" content="0" />', 100) . PHP_EOL;
+        $head .= str_pad('<meta name="s3testing_warnings" content="0" />', 100) . PHP_EOL;
+        $head .= '<meta name="s3testing_jobid" content="' . $this->job['jobid'] . '" />' . PHP_EOL;
+        $head .= '<meta name="s3testing_jobname" content="' . esc_attr($this->job['name']) . '" />' . PHP_EOL;
+        $head .= '<meta name="s3testing_jobtype" content="' . esc_attr(implode('+', $this->job['type'])) . '" />' . PHP_EOL;
+        $head .= str_pad('<meta name="s3testing_backupfilesize" content="0" />', 100) . PHP_EOL;
+        $head .= str_pad('<meta name="s3testing_jobruntime" content="0" />', 100) . PHP_EOL;
+        $head .= '</head>' . PHP_EOL;
+        $head .= '<body style="margin:0;padding:3px;font-family:monospace;font-size:12px;line-height:15px;background-color:black;color:#c0c0c0;white-space:nowrap;">' . PHP_EOL;
+        $info .= sprintf(
+                _x(
+                    '[INFO] %1$s %2$s; A project of Me',
+                    'Plugin name; Plugin Version; plugin url',
+                ),
+                S3Testing::get_plugin_data('name'),
+                S3Testing::get_plugin_data('Version'),
+            ) . '<br />' . PHP_EOL;
+        $info .= sprintf(
+                _x('[INFO] WordPress %1$s on %2$s', 'WordPress Version; Blog url'),
+                S3Testing::get_plugin_data('wp_version'),
+                esc_attr(site_url('/'))
+            ) . '<br />' . PHP_EOL;
+        $job_name = esc_attr($this->job['name']);
+        $info .= sprintf(__('[INFO] S3Testing job: %1$s'), $job_name) . '<br />' . PHP_EOL;
+        $logfile = basename($this->logfile);
+        $info .= sprintf(__('[INFO] Logfile is: %s'), $logfile) . '<br />' . PHP_EOL;
+        $backupfile = $this->backup_file;
+        $info .= sprintf(__('[INFO] Backup file is: %s'), $backupfile) . '<br />' . PHP_EOL;
+
+        if (!file_put_contents($this->logfile, $head . $info, FILE_APPEND)) {
+            $this->logfile = '';
+        }
 
         if(!empty($this->backup_folder)) {
             $folder_message = S3Testing_File::check_folder($this->backup_folder, true);
@@ -376,6 +443,8 @@ class S3Testing_Job
         sleep(5);
 
         self::clean_temp_folder();
+
+        file_put_contents($this->logfile, '</body>' . PHP_EOL . '</html>', FILE_APPEND);
         exit();
     }
 

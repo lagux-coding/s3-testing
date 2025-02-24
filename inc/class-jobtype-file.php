@@ -65,7 +65,7 @@ class S3Testing_JobType_File extends S3Testing_JobTypes
                 </td>
             </tr>
             <tr>
-                <th scope="row"><label for="idbackupplugins"><?php _e('Backup plugins', 'backwpup'); ?></label></th>
+                <th scope="row"><label for="idbackupplugins"><?php _e('Backup plugins'); ?></label></th>
                 <td>
                     <?php
                     $this->show_folder('plugins', $main, WP_PLUGIN_DIR); ?>

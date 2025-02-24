@@ -111,7 +111,7 @@ class S3Testing_Cron
             }
         }
 
-        $nonce = substr(wp_hash(wp_nonce_tick() . 'backwpup_job_run-' . $args['run'], 'nonce'), -12, 10);
+        $nonce = substr(wp_hash(wp_nonce_tick() . 's3testing_job_run-' . $args['run'], 'nonce'), -12, 10);
         if ($args['run'] === 'cronrun') {
             $nonce = '';
         }

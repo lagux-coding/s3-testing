@@ -21,7 +21,7 @@ class S3Testing_Install
             }
         }
 
-        if (!wp_next_scheduled('backwpup_check_cleanup')) {
+        if (!wp_next_scheduled('s3testing_check_cleanup')) {
             wp_schedule_event(time(), 'twicedaily', 's3testing_check_cleanup');
         }
 
