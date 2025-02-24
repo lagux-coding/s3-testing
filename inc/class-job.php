@@ -447,6 +447,52 @@ class S3Testing_Job
             $this->log(__('Aborted by user!'), E_USER_ERROR);
         }
 
+        //delete old logs
+        if (get_site_option('s3testing_cfg_maxlogs')) {
+            $log_file_list = [];
+            $log_folder = trailingslashit(dirname($this->logfile));
+            if (is_readable($log_folder)) { //make file list
+                try {
+                    $dir = new S3Testing_Directory($log_folder);
+
+                    foreach ($dir as $file) {
+                        if (!$file->isDot() && strpos(
+                                $file->getFilename(),
+                                's3testing_log_'
+                            ) === 0 && strpos($file->getFilename(), '.html') !== false) {
+                            $log_file_list[$file->getMTime()] = clone $file;
+                        }
+                    }
+                } catch (UnexpectedValueException $e) {
+                    $this->log(sprintf(__('Could not open path: %s'), $e->getMessage()), E_USER_WARNING);
+                }
+            }
+            if (count($log_file_list) > 0) {
+                krsort($log_file_list, SORT_NUMERIC);
+                $num_delete_files = 0;
+                $i = -1;
+
+                foreach ($log_file_list as $log_file) {
+                    ++$i;
+                    if ($i < get_site_option('s3testing_cfg_maxlogs')) {
+                        continue;
+                    }
+                    unlink($log_file->getPathname());
+                    ++$num_delete_files;
+                }
+                if ($num_delete_files > 0) {
+                    $this->log(sprintf(
+                        _n(
+                            'One old log deleted',
+                            '%d old logs deleted',
+                            $num_delete_files,
+                        ),
+                        $num_delete_files
+                    ));
+                }
+            }
+        }
+
         //update job options
         $this->job['lastruntime'] = current_time('timestamp') - $this->start_time;
         S3Testing_Option::update($this->job['jobid'], 'lastruntime', $this->job['lastruntime']);
