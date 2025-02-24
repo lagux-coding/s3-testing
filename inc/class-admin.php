@@ -165,6 +165,7 @@ final class S3Testing_Admin
     public function admin_init()
     {
         add_action('wp_ajax_s3testing_working', [\S3Testing_Page_Jobs::class, 'ajax_working']);
+        add_action('wp_ajax_s3testing_cron_text', [\S3Testing_Page_EditJob::class, 'ajax_cron_text']);
         add_action('wp_ajax_s3testing_dest_s3', [new S3Testing_Destination_S3(), 'edit_ajax'], 10, 0);
         add_action('wp_ajax_s3testing_dest_s3_dir', [new S3Testing_Destination_S3(), 'edit_ajax_dir'], 10, 0);
     }

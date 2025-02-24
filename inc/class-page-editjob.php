@@ -93,14 +93,26 @@ class S3Testing_Page_EditJob
 
                 S3Testing_Option::update($jobid, 'activetype', $activetype);
 
-                $interval = absint($_POST['cron_interval']);
+                $interval = $_POST['cron_interval'];
+                $log_file = WP_CONTENT_DIR . '/debug-file.log';
+                $message = 'debug run file log ' . print_r($interval, true);
+                file_put_contents($log_file, $message . "\n", FILE_APPEND);
+                $cron = '* * * * *';
                 if ($interval < 5) {
                     $interval = 5;
+                } else if($interval === 'daily') {
+                    $cron = '0 0 * * *';
+                } else if($interval === 'weekly') {
+                    $cron = '0 0 * * 0';
+                } else if($interval === 'monthly') {
+                    $cron = '0 0 1 * *';
+                } else {
+                    $cron = '*/' . $interval . ' * * * *';
                 }
                 update_site_option('s3testing_cron_interval', $interval);
                 S3Testing_Option::update($jobid, 'cron_interval', $interval);
 
-                S3Testing_Option::update($jobid, 'cron', '*/' . S3Testing_Option::get($jobid, 'cron_interval') . ' * * * *');
+                S3Testing_Option::update($jobid, 'cron', $cron);
 
                 //reschedule
                 $activetype = S3Testing_Option::get($jobid, 'activetype');
@@ -345,7 +357,7 @@ class S3Testing_Page_EditJob
             <?php
             break;
         case 'cron':
-            $interval = get_site_option('s3testing_cron_interval', '10');
+            $interval = S3Testing_Option::get($jobid, 'cron_interval');
             ?>
                 <div class="table" id="info-tab-cron">
                     <h3 class="title"><?php esc_html_e('Job Schedule'); ?></h3>
@@ -353,12 +365,11 @@ class S3Testing_Page_EditJob
                     <table class="form-table">
                         <tr>
                             <th scope="row"><?php esc_html_e('Start job'); ?></th>
-                        </tr>
-                        <td>
+                            <td>
                                 <legend class="screen-reader-text"><span><?php esc_html_e('Start job'); ?></span></legend>
                                 <label for="idactivetype">
                                     <input class="radio"
-                                            type="radio"<?php checked('', S3Testing_Option::get($jobid, 'activetype'), true);?>
+                                           type="radio"<?php checked('', S3Testing_Option::get($jobid, 'activetype'), true);?>
                                            name="activetype" id="idactivetype"
                                            value=""
                                     />
@@ -372,22 +383,26 @@ class S3Testing_Page_EditJob
                                     />
                                     <?php esc_html_e('with WordPress cron'); ?>
                                 </label><br/>
-                            </fieldset>
-                        </td>
+                                </fieldset>
+                            </td>
+                        </tr>
                     </table>
                     <h3 class="title wpcron"><?php esc_html_e('Schedule execution time'); ?></h3>
+                    <?php S3Testing_Page_EditJob::ajax_cron_text(['cronstamp' => S3Testing_Option::get($jobid, 'cron')]); ?>
                     <table class="form-table wpcron">
                         <tr>
                             <th scope="row"><?php esc_html_e('Schedule execution time'); ?></th>
                             <td>
                                 <select name="cron_interval" id="cron_interval">
-                                    <option value="5" <?php selected($interval, '5'); ?>>5 minutes</option>
-                                    <option value="10" <?php selected($interval, '10'); ?>>10 minutes</option>
-                                    <option value="30" <?php selected($interval, '30'); ?>>30 minutes</option>
-                                    <option value="60" <?php selected($interval, '60'); ?>>1 hour</option>
-                                    <option value="360" <?php selected($interval, '360'); ?>>6 hours</option>
-                                    <option value="720" <?php selected($interval, '720'); ?>>12 hours</option>
-                                    <option value="1440" <?php selected($interval, '1440'); ?>>daily</option>
+                                    <option value="5" <?php selected($interval, '5'); ?>>Every 5 minutes</option>
+                                    <option value="10" <?php selected($interval, '10'); ?>>Every 10 minutes</option>
+                                    <option value="30" <?php selected($interval, '30'); ?>>Every 30 minutes</option>
+                                    <option value="60" <?php selected($interval, '60'); ?>>Every 1 hour</option>
+                                    <option value="360" <?php selected($interval, '360'); ?>>Every 6 hours</option>
+                                    <option value="720" <?php selected($interval, '720'); ?>>Every 12 hours</option>
+                                    <option value="daily" <?php selected($interval, 'daily'); ?>>daily</option>
+                                    <option value="weekly" <?php selected($interval, 'weekly'); ?>>weekly</option>
+                                    <option value="monthly" <?php selected($interval, 'monthly'); ?>>monthly</option>
                                 </select>
                             </td>
                         </tr>
@@ -429,6 +444,9 @@ class S3Testing_Page_EditJob
                     }
                 });
             });
+            document.getElementById('dest-select-s3').addEventListener('click', function (event) {
+                event.preventDefault();
+            });
         </script>
         <?php
         //add inline js
@@ -436,6 +454,44 @@ class S3Testing_Page_EditJob
             $dest_object = S3Testing::get_destination(str_replace('dest-', '', sanitize_text_field($_GET['tab'])));
             $dest_object->edit_inline_js();
         }
+    }
+
+    public static function ajax_cron_text($args = '')
+    {
+        if (is_array($args)) {
+            extract($args);
+            $ajax = false;
+        } else {
+            $ajax = true;
+        }
+        echo '<p class="wpcron" id="schedulecron">';
+
+        if(isset($_POST['cron_interval'])) {
+            if($_POST['cron_interval'] === 'daily') {
+                $cronstamp = '0 0 * * *';
+            } else if($_POST['cron_interval'] === 'weekly') {
+                $cronstamp = '0 0 * * 0';
+            } else if($_POST['cron_interval'] === 'monthly') {
+                $cronstamp = '0 0 1 * *';
+            } else {
+                $cronstamp = '*/' . $_POST['cron_interval'] . ' * * * *';
+            }
+        }
+
+        $cron_next = S3Testing_Cron::cron_next($cronstamp) + (get_option('gmt_offset') * 3600);
+
+        if (PHP_INT_MAX === $cron_next) {
+            echo '<span class="s3tt-message-error">' . __('ATTENTION: Can\'t calculate cron!') . '</span><br />';
+        } else {
+            _e('Next runtime:');
+            echo ' <b>' . date_i18n('D, j M Y, H:i', $cron_next, true) . '</b>';
+        }
+        echo '</p>';
+
+        if ($ajax) {
+            exit();
+        }
+
     }
 
 }

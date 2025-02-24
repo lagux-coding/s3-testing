@@ -181,6 +181,11 @@ class S3Testing_Cron
                         }
                     }
                     $cron[$cronarrkey] = array_merge($cron[$cronarrkey], $range);
+                } else {
+                    if (!is_numeric($value) || (int) $value > 60) {
+                        return PHP_INT_MAX;
+                    }
+                    $cron[$cronarrkey] = array_merge($cron[$cronarrkey], [0 => absint($value)]);
                 }
            }
        }
@@ -205,7 +210,7 @@ class S3Testing_Cron
                                     true
                                 ) && in_array(
                                     (int) gmdate('w', $timestamp),
-                                    $cron['day'],
+                                    $cron['weekday'],
                                     true
                                 ) && $timestamp > $current_timestamp) {
                                 return $timestamp - ((int) get_option('gmt_offset') * 3600);
@@ -215,6 +220,6 @@ class S3Testing_Cron
                 }
             }
         }
-            return PHP_INT_MAX;
+        return PHP_INT_MAX;
     }
 }
