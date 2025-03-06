@@ -37,3 +37,60 @@
     padding: 5px 0;
     text-align: center;
 }
+
+#TB_overlay {
+    background-color: rgba(0, 0, 0, 0.3) !important;
+}
+
+#TB_window {
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.15);
+    padding: 20px;
+    color: #333;
+    font-family: 'Arial', sans-serif;
+}
+
+/* Thanh tiêu đề */
+#TB_title {
+    background: transparent;
+    font-size: 18px;
+    font-weight: bold;
+    text-align: center;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #ddd;
+    color: #333;
+}
+
+/* Nội dung bên trong */
+#TB_ajaxContent {
+    font-size: 16px;
+    color: #c3c4c6;
+    padding: 15px;
+}
+
+
+#TB_closeWindowButton {
+    background: #fff;
+    color: white;
+    font-size: 14px;
+    font-weight: bold;
+    padding: 8px 12px;
+    border: 5px;
+    cursor: pointer;
+    position: absolute;
+    right: 15px;
+    top: 15px;
+}
+
+#TB_closeWindowButton:hover {
+    background: #498aef;
+    color: white;
+}
+
+@media (max-width: 768px) {
+    #TB_window {
+        width: 90% !important;
+        max-width: 90%;
+    }
+}

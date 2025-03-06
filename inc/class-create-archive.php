@@ -212,7 +212,6 @@ class S3Testing_Create_Archive
                 // 35 works with PHP 5.2.4 on win.
                 if ($this->file_count > 20) {
                     if (!$this->ziparchive->close()) {
-                        sleep(1);
                     }
 
                     $this->ziparchive = null;

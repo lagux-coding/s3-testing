@@ -94,9 +94,12 @@ class S3Testing_Job
         }
 
         $file_data = file_get_contents(S3Testing::get_plugin_data('running_file'), false, null, 8);
+
         if (empty($file_data)) {
             return false;
         }
+
+        sleep(4);
 
         if ($job_object = unserialize($file_data)) {
             if ($job_object instanceof S3Testing_Job) {
@@ -276,6 +279,7 @@ class S3Testing_Job
         $this->steps_todo[] = 'END';
         $this->steps_data['END']['NAME'] = __('End of Job');
         $this->steps_data['END']['STEP_TRY'] = 1;
+
         $this->write_running_file();
 
         //create log file
@@ -345,6 +349,13 @@ class S3Testing_Job
     {
         $this->log('This is a test');
 
+        //disable output buffering
+        if ($level = ob_get_level()) {
+            for ($i = 0; $i < $level; ++$i) {
+                ob_end_clean();
+            }
+        }
+
         // Job can't run it is not created
         if (empty($this->steps_todo)) {
             $running_file = S3Testing::get_plugin_data('running_file');
@@ -363,6 +374,7 @@ class S3Testing_Job
 
         //go step by step
         foreach($this->steps_todo as $this->step_working) {
+
             //check if step already done
             if(in_array($this->step_working, $this->steps_done, true)) {
                 continue;
@@ -377,6 +389,7 @@ class S3Testing_Job
             } else {
                 $this->step_percent = 1;
             }
+
             //do step tries
             while(true) {
                 if($this->steps_data[$this->step_working]['STEP_TRY'] >= get_site_option('s3testing_cfg_jobstepretry')) {
@@ -395,6 +408,7 @@ class S3Testing_Job
                 if($this->step_working == 'CREATE_ARCHIVE') {
                     $done = $this->create_archive();
                 } elseif ($this->step_working == 'END') {
+
                     $this->end();
                     break 2;
                 } elseif (strstr((string) $this->step_working, 'JOB_')) {
@@ -411,6 +425,7 @@ class S3Testing_Job
                     $this->steps_done[] = $this->step_working;
                     $this->substeps_done = 0;
                     $this->substeps_todo = 0;
+
                     $this->update_working_data(true);
                 }
 
@@ -418,6 +433,9 @@ class S3Testing_Job
                     $this->do_restart();
                 }
 
+                $run_file = file_get_contents(S3Testing::get_plugin_data('running_file'), false, null, 8);
+                $data = unserialize($run_file);
+                $percent = $data->step_percent;
                 if ($done === true) {
                     break;
                 }
@@ -440,6 +458,8 @@ class S3Testing_Job
 
     private function end()
     {
+
+
         $this->step_working = 'END';
         $this->substeps_todo = 1;
 
@@ -456,10 +476,7 @@ class S3Testing_Job
                     $dir = new S3Testing_Directory($log_folder);
 
                     foreach ($dir as $file) {
-                        if (!$file->isDot() && strpos(
-                                $file->getFilename(),
-                                's3testing_log_'
-                            ) === 0 && strpos($file->getFilename(), '.html') !== false) {
+                        if (!$file->isDot() && strpos($file->getFilename(), 's3testing_log_') === 0 && strpos($file->getFilename(), '.html') !== false) {
                             $log_file_list[$file->getMTime()] = clone $file;
                         }
                     }
@@ -501,11 +518,10 @@ class S3Testing_Job
         $this->substeps_done = 1;
         $this->steps_done[] = 'END';
 
-        sleep(5);
-
         self::clean_temp_folder();
 
         file_put_contents($this->logfile, '</body>' . PHP_EOL . '</html>', FILE_APPEND);
+
         exit();
     }
 
@@ -764,6 +780,7 @@ class S3Testing_Job
         $data = '<?php //' . serialize($clone);
 
         $write = file_put_contents(S3Testing::get_plugin_data('running_file'), $data);
+
         if (!$write || $write < strlen($data)) {
             unlink(S3Testing::get_plugin_data('running_file'));
         }
@@ -780,12 +797,7 @@ class S3Testing_Job
 
         @set_time_limit(300);
 
-        //Calc substep percent
-        if ($this->substeps_todo > 0 && $this->substeps_done > 0) {
-            $this->substep_percent = min(round($this->substeps_done / $this->substeps_todo * 100), 100);
-        } else {
-            $this->substep_percent = 1;
-        }
+        $wpdb->check_connection(false);
 
         if (!file_exists(S3Testing::get_plugin_data('running_file'))) {
             if ($this->step_working !== 'END') {
@@ -857,6 +869,7 @@ class S3Testing_Job
                 trigger_error(esc_html($message), $type);
             }
         }
+        $this->update_working_data($error || $warning);
         return true;
     }
 

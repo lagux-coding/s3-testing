@@ -307,11 +307,12 @@ class S3Testing_Page_Jobs extends WP_List_Table
                     break;
                 }
                 S3Testing_Job::user_abort();
+                S3Testing_Admin::message(__('Job will be terminated.'));
+                break;
+            default:
+                do_action('s3testing_page_jobs_load', self::$listtable->current_action());
                 break;
         }
-
-        do_action('s3testing_page_jobs_load', self::$listtable->current_action());
-
 
         self::$listtable->prepare_items();
     }
@@ -363,6 +364,7 @@ class S3Testing_Page_Jobs extends WP_List_Table
         echo '<h1>' . esc_html(sprintf(__('%s &rsaquo; Jobs'), S3Testing::get_plugin_data('name'))). '&nbsp;<a href="' . wp_nonce_url(network_admin_url('admin.php') . '?page=s3testingeditjob', 'edit-job') . '" class="add-new-h2">' . esc_html__('Add new') . '</a></h1>';
         S3Testing_Admin::display_message();
         $job_object = S3Testing_Job::get_working_data();
+
         if(is_object($job_object)){
             //read existing logfile
             $logfiledata = file_get_contents($job_object->logfile);
@@ -409,6 +411,8 @@ class S3Testing_Page_Jobs extends WP_List_Table
             <div id="ajax-response"></div>
         </form>
 
+        <?php
+        if (!empty($job_object->logfile)) { ?>
         <script type="text/javascript">
             jQuery(document).ready(function ($) {
                 s3testing_show_working = function () {
@@ -426,6 +430,7 @@ class S3Testing_Page_Jobs extends WP_List_Table
                         success:function (rundata) {
                             console.log(rundata);
                             console.log(rundata.step_percent);
+                            console.log("log_pos:", logpos);
                             if ( rundata == 0 ) {
                                 $("#abortbutton").remove();
                                 $(".job-run").hide();
@@ -457,13 +462,14 @@ class S3Testing_Page_Jobs extends WP_List_Table
                                 $("#message").hide();
                                 $(".job-normal").show();
                                 $('#showworkingclose').show();
-                            } else {
-                                setTimeout('s3testing_show_working()', 750);
+                            }
+
+                            else {
+                                setTimeout('s3testing_show_working()', 400);
                             }
                         },
                         error:function( ) {
-                            console.log(rundata);
-                            setTimeout('s3testing_show_working()', 750);
+                            setTimeout('s3testing_show_working()', 400);
                         }
                     });
                 };
@@ -474,7 +480,7 @@ class S3Testing_Page_Jobs extends WP_List_Table
                 });
             });
         </script>
-        <?php
+        <?php }
     }
 
     public static function ajax_working()
@@ -493,6 +499,7 @@ class S3Testing_Page_Jobs extends WP_List_Table
         $logpos = isset($_GET['logpos']) ? absint($_GET['logpos']) : 0;
 
         $job_object = S3Testing_Job::get_working_data();
+
         $done = 0;
         if (is_object($job_object)) {
             $step_percent = $job_object->step_percent;

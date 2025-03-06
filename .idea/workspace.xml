@@ -6,7 +6,13 @@
   <component name="ChangeListManager">
     <list default="true" id="14453ea8-162e-42dd-95e9-1168a72971e1" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/inc/class-admin.php" beforeDir="false" afterPath="$PROJECT_DIR$/inc/class-admin.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/css/main.min.css" beforeDir="false" afterPath="$PROJECT_DIR$/assets/css/main.min.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/inc/class-create-archive.php" beforeDir="false" afterPath="$PROJECT_DIR$/inc/class-create-archive.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/inc/class-destination-s3.php" beforeDir="false" afterPath="$PROJECT_DIR$/inc/class-destination-s3.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/inc/class-job.php" beforeDir="false" afterPath="$PROJECT_DIR$/inc/class-job.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/inc/class-jobtype-file.php" beforeDir="false" afterPath="$PROJECT_DIR$/inc/class-jobtype-file.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/inc/class-option.php" beforeDir="false" afterPath="$PROJECT_DIR$/inc/class-option.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/inc/class-page-editjob.php" beforeDir="false" afterPath="$PROJECT_DIR$/inc/class-page-editjob.php" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/inc/class-page-jobs.php" beforeDir="false" afterPath="$PROJECT_DIR$/inc/class-page-jobs.php" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -58,7 +64,7 @@
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
     &quot;git-widget-placeholder&quot;: &quot;main&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/lagux/Local Sites/wps3testing/app/public/wp-content/plugins/s3-testing&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/lagux/Local Sites/wp-test-site/app/public/wp-content/plugins/backwpup&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
@@ -110,7 +116,10 @@
       <workItem from="1740054962448" duration="11071000" />
       <workItem from="1740111558265" duration="14705000" />
       <workItem from="1740191866699" duration="20802000" />
-      <workItem from="1740363637210" duration="23759000" />
+      <workItem from="1740363637210" duration="24062000" />
+      <workItem from="1741224052571" duration="27197000" />
+      <workItem from="1741267241386" duration="4299000" />
+      <workItem from="1741272133272" duration="12417000" />
     </task>
     <servers />
   </component>

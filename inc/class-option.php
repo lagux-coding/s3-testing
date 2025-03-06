@@ -10,6 +10,7 @@ final class S3Testing_Option
         //jobs
         add_site_option( 's3testing_cfg_jobmaxexecutiontime', 30 );
         add_site_option('s3testing_cfg_jobstepretry', 3);
+        add_site_option('s3testing_cfg_jobdooutput', 0);
         //Logs
         add_site_option('s3testing_cfg_maxlogs', 30);
         $upload_dir   = wp_upload_dir( null, false, true );
@@ -122,13 +123,9 @@ final class S3Testing_Option
         $default['cron_interval'] = '10';
         $default['cronselect']            = 'basic';
         $default['cron']                  = '0 3 * * *';
-        $default['mailaddresslog']        = sanitize_email( get_bloginfo( 'admin_email' ) );
-        $default['mailaddresssenderlog']  = 's3testing ' . get_bloginfo( 'name' ) . ' <' . sanitize_email( get_bloginfo( 'admin_email' ) ) . '>';
-        $default['mailerroronly']         = true;
         $default['backuptype']            = 'archive';
         $default['archiveformat']         = '.tar';
         $default['archivename']           = 'my-backup';
-        $default['archivenamenohash']     = '%Y-%m-%d_%H-%i-%s_%hash%';
         // defaults vor destinations.
         foreach ( S3Testing::get_registered_destinations() as $dest_key => $dest ) {
             if ( ! empty( $dest['class'] ) ) {

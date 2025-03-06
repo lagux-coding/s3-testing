@@ -14,10 +14,8 @@ class S3Testing_Destination_S3
     {
         return [
             's3base_url' => '',
-            's3base_multipart' => true,
+            's3base_multipart' => false,
             's3base_pathstylebucket' => false,
-            's3base_version' => 'latest',
-            's3base_signature' => 'v4',
             's3accesskey' => '',
             's3secretkey' => '',
             's3bucket' => '',
@@ -514,7 +512,6 @@ class S3Testing_Destination_S3
             ]);
 
             if ($result->get('ContentLength') == filesize($job_object->backup_folder . $job_object->backup_file)) {
-                $job_object->substeps_done = 1 + $job_object->backup_filesize;
                 $job_object->log(
                     sprintf(
                         __('Backup transferred to %s.'),
@@ -551,8 +548,6 @@ class S3Testing_Destination_S3
 
             return false;
         }
-
-        $job_object->substeps_done = 2 + $job_object->backup_filesize;
 
         $job_object->log(
             sprintf(

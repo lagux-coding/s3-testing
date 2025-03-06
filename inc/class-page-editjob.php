@@ -94,9 +94,7 @@ class S3Testing_Page_EditJob
                 S3Testing_Option::update($jobid, 'activetype', $activetype);
 
                 $interval = $_POST['cron_interval'];
-                $log_file = WP_CONTENT_DIR . '/debug-file.log';
-                $message = 'debug run file log ' . print_r($interval, true);
-                file_put_contents($log_file, $message . "\n", FILE_APPEND);
+
                 $cron = '* * * * *';
                 if ($interval < 5) {
                     $interval = 5;

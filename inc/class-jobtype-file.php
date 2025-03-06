@@ -131,7 +131,6 @@ class S3Testing_JobType_File extends S3Testing_JobTypes
         if ($job_object->steps_data[$job_object->step_working]['SAVE_STEP_TRY'] != $job_object->steps_data[$job_object->step_working]['STEP_TRY']) {
             $job_object->log(sprintf(__('%d. Trying to make a list of folders to back up&#160;&hellip;'), $job_object->steps_data[$job_object->step_working]['STEP_TRY']));
         }
-        $job_object->substeps_todo = 7;
 
         $abs_path = realpath(S3Testing_Path_Fixer::fix_path(ABSPATH));
         $abs_path = trailingslashit(str_replace('\\', '/', $abs_path));
@@ -213,10 +212,6 @@ class S3Testing_JobType_File extends S3Testing_JobTypes
             $job_object->update_working_data();
         }
 
-        $log_file = WP_CONTENT_DIR . '/debug-file-2.log';
-        $message = 'debug run file log ' . print_r($job_object->count_folder, true);
-        file_put_contents($log_file, $message . "\n", FILE_APPEND);
-
         if ($job_object->count_folder === 0 && count($job_object->additional_files_to_backup) === 0) {
             $job_object->log(__('No files/folder for the backup.'), E_USER_WARNING);
         } elseif ($job_object->count_folder > 1) {
@@ -224,7 +219,6 @@ class S3Testing_JobType_File extends S3Testing_JobTypes
         }
 
         $job_object->substeps_done = 7;
-
         return true;
     }
 
