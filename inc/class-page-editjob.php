@@ -96,8 +96,8 @@ class S3Testing_Page_EditJob
                 $interval = $_POST['cron_interval'];
 
                 $cron = '* * * * *';
-                if ($interval < 5) {
-                    $interval = 5;
+                if ($interval < 2) {
+                    $interval = 2;
                 } else if($interval === 'daily') {
                     $cron = '0 0 * * *';
                 } else if($interval === 'weekly') {
@@ -105,7 +105,7 @@ class S3Testing_Page_EditJob
                 } else if($interval === 'monthly') {
                     $cron = '0 0 1 * *';
                 } else {
-                    $cron = '*/' . $interval . ' * * * *';
+                    $cron = "0 */{$interval} * * *";
                 }
                 update_site_option('s3testing_cron_interval', $interval);
                 S3Testing_Option::update($jobid, 'cron_interval', $interval);
@@ -392,12 +392,11 @@ class S3Testing_Page_EditJob
                             <th scope="row"><?php esc_html_e('Schedule execution time'); ?></th>
                             <td>
                                 <select name="cron_interval" id="cron_interval">
-                                    <option value="5" <?php selected($interval, '5'); ?>>Every 5 minutes</option>
-                                    <option value="10" <?php selected($interval, '10'); ?>>Every 10 minutes</option>
-                                    <option value="30" <?php selected($interval, '30'); ?>>Every 30 minutes</option>
-                                    <option value="60" <?php selected($interval, '60'); ?>>Every 1 hour</option>
-                                    <option value="360" <?php selected($interval, '360'); ?>>Every 6 hours</option>
-                                    <option value="720" <?php selected($interval, '720'); ?>>Every 12 hours</option>
+                                    <option value="2" <?php selected($interval, '5'); ?>>Every 2 hours</option>
+                                    <option value="4" <?php selected($interval, '10'); ?>>Every 4 hours</option>
+                                    <option value="6" <?php selected($interval, '30'); ?>>Every 6 hours</option>
+                                    <option value="8" <?php selected($interval, '60'); ?>>Every 8 hours</option>
+                                    <option value="12" <?php selected($interval, '360'); ?>>Every 12 hours</option>
                                     <option value="daily" <?php selected($interval, 'daily'); ?>>daily</option>
                                     <option value="weekly" <?php selected($interval, 'weekly'); ?>>weekly</option>
                                     <option value="monthly" <?php selected($interval, 'monthly'); ?>>monthly</option>
@@ -472,7 +471,7 @@ class S3Testing_Page_EditJob
             } else if($_POST['cron_interval'] === 'monthly') {
                 $cronstamp = '0 0 1 * *';
             } else {
-                $cronstamp = '*/' . $_POST['cron_interval'] . ' * * * *';
+                $cronstamp = "0 */{$_POST['cron_interval']} * * *";
             }
         }
 

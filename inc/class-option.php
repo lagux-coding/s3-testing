@@ -120,7 +120,7 @@ final class S3Testing_Option
         $default['activetype'] = '';
         $default['logfile'] = '';
         $default['lastbackupdownloadurl'] = '';
-        $default['cron_interval'] = '10';
+        $default['cron_interval'] = '2';
         $default['cronselect']            = 'basic';
         $default['cron']                  = '0 3 * * *';
         $default['backuptype']            = 'archive';
