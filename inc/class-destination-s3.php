@@ -14,7 +14,7 @@ class S3Testing_Destination_S3
     {
         return [
             's3base_url' => '',
-            's3base_multipart' => false,
+            's3base_multipart' => true,
             's3base_pathstylebucket' => false,
             's3accesskey' => '',
             's3secretkey' => '',
@@ -454,6 +454,8 @@ class S3Testing_Destination_S3
             );
         }
 
+
+
         try {
             if (empty($job_object->job['s3base_url'])) {
                 $aws_destination = S3Testing_S3_Destination::fromOption($job_object->job['s3region']);
@@ -534,6 +536,12 @@ class S3Testing_Destination_S3
             if ($e instanceof AwsException) {
                 $errorMessage = $e->getAwsErrorMessage();
             }
+            $job_object->log(
+                E_USER_ERROR,
+                sprintf(__('S3 Service API: %s'), $errorMessage),
+                $e->getFile(),
+                $e->getLine()
+            );
 
             return false;
         }
@@ -545,6 +553,12 @@ class S3Testing_Destination_S3
             if ($e instanceof AwsException) {
                 $errorMessage = $e->getAwsErrorMessage();
             }
+            $job_object->log(
+                E_USER_ERROR,
+                sprintf(__('S3 Service API: %s'), $errorMessage),
+                $e->getFile(),
+                $e->getLine()
+            );
 
             return false;
         }
@@ -649,7 +663,7 @@ class S3Testing_Destination_S3
                 $files[$filecounter]['file'] = $object['Key'];
                 $files[$filecounter]['filename'] = basename((string) $object['Key']);
 
-//                $files[$filecounter]['downloadurl'] = network_admin_url('admin.php') . '?page=backwpupbackups&action=downloads3&file=' . $object['Key'] . '&local_file=' . basename((string) $object['Key']) . '&jobid=' . $jobid;
+                $files[$filecounter]['downloadurl'] = network_admin_url('admin-ajax.php') . '?page=s3testingbackups&action=download_file&file=' . $object['Key'] . '&local_file=' . basename((string) $object['Key']) . '&jobid=' . $jobid;
                 $files[$filecounter]['filesize'] = (int) $object['Size'];
                 $files[$filecounter]['time'] = $changetime;
 

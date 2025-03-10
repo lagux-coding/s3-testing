@@ -132,6 +132,8 @@ class S3Testing_JobType_File extends S3Testing_JobTypes
             $job_object->log(sprintf(__('%d. Trying to make a list of folders to back up&#160;&hellip;'), $job_object->steps_data[$job_object->step_working]['STEP_TRY']));
         }
 
+        $job_object->substeps_todo = 7;
+
         $abs_path = realpath(S3Testing_Path_Fixer::fix_path(ABSPATH));
         $abs_path = trailingslashit(str_replace('\\', '/', $abs_path));
 

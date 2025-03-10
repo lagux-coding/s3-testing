@@ -31,11 +31,15 @@
 .progressbar #progresssteps {
     background-color: #007fb6;
 }
-.progressbar .bwpu-progress {
+.progressbar .s3testing-progress {
     background-color: #1d94cf;
     color: #fff;
     padding: 5px 0;
     text-align: center;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 #TB_overlay {
@@ -51,7 +55,6 @@
     font-family: 'Arial', sans-serif;
 }
 
-/* Thanh tiêu đề */
 #TB_title {
     background: transparent;
     font-size: 18px;
@@ -62,7 +65,6 @@
     color: #333;
 }
 
-/* Nội dung bên trong */
 #TB_ajaxContent {
     font-size: 16px;
     color: #c3c4c6;
@@ -86,6 +88,18 @@
 #TB_closeWindowButton:hover {
     background: #498aef;
     color: white;
+}
+
+#download-file-waiting {
+    font-size: 18px;
+    font-weight: bold;
+    color: #004de6;
+}
+
+#download-file-success {
+    font-size: 18px;
+    font-weight: bold;
+    color: #4CAF50;
 }
 
 @media (max-width: 768px) {

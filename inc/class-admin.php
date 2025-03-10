@@ -137,6 +137,13 @@ final class S3Testing_Admin
                 'admin_print_styles',
             ]
         );
+        add_action(
+            'admin_print_scripts-' . $this->page_hooks['s3testingbackups'],
+            [
+                \S3Testing_Page_Backups::class,
+                'admin_print_scripts',
+            ]
+        );
         return $page_hooks;
     }
 
@@ -169,6 +176,8 @@ final class S3Testing_Admin
         add_action('wp_ajax_s3testing_cron_text', [\S3Testing_Page_EditJob::class, 'ajax_cron_text']);
         add_action('wp_ajax_s3testing_dest_s3', [new S3Testing_Destination_S3(), 'edit_ajax'], 10, 0);
         add_action('wp_ajax_s3testing_dest_s3_dir', [new S3Testing_Destination_S3(), 'edit_ajax_dir'], 10, 0);
+        add_action('wp_ajax_download_backup', [\S3Testing_Destination_Downloader::class, 'download_by_ajax']);
+        add_action('wp_ajax_download_file', [\S3Testing_Destination_Downloader::class, 'download_file']);
     }
 
     public function save_post_form()
@@ -239,7 +248,7 @@ final class S3Testing_Admin
             $message_id = '';
         }
         if (!empty($message_error)) {
-            $message_error = '<div' . $message_id . ' class="bwu-message-error">' . $message_error . '</div>';
+            $message_error = '<div' . $message_id . ' class="s3-message-error">' . $message_error . '</div>';
         }
 
         if ($echo) {

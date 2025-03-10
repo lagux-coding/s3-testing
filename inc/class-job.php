@@ -433,9 +433,6 @@ class S3Testing_Job
                     $this->do_restart();
                 }
 
-                $run_file = file_get_contents(S3Testing::get_plugin_data('running_file'), false, null, 8);
-                $data = unserialize($run_file);
-                $percent = $data->step_percent;
                 if ($done === true) {
                     break;
                 }

@@ -263,6 +263,15 @@ class S3Testing_Page_Backups extends WP_List_Table
 
         $actions['delete'] = $this->delete_item_action($item);
 
+        if (!empty($item['downloadurl'])) {
+            try {
+                $actions['download'] = $this->download_item_action($item);
+
+            } catch (Exception $e) {
+                $actions['download'] = sprintf('<a href="%1$s">%2$s</a>', wp_nonce_url($item['downloadurl'], 's3testing_action_nonce'), __('Download'));
+            }
+        }
+
         $r .= $this->row_actions($actions);
         return $r;
     }
@@ -334,7 +343,13 @@ class S3Testing_Page_Backups extends WP_List_Table
                 }
                 break;
             default:
+                if (isset($_GET['jobid'])) {
+                    $jobid = absint($_GET['jobid']);
+                    check_admin_referer('s3testing_action_nonce');
 
+//                    $filename = untrailingslashit(S3Testing::get_plugin_data('temp')) . '/' . $_GET['file'];
+
+                }
                 break;
         }
 
@@ -382,7 +397,24 @@ class S3Testing_Page_Backups extends WP_List_Table
                     <?php self::$listtable->display(); ?>
                     <div id="ajax-response"></div>
                 </form>
-        </div><?php
+        </div>
+
+        <div id="tb_download_file" style="display: none;">
+            <div id="tb_container">
+                <p id="download-file-waiting">
+                    <?php esc_html_e('Please wait &hellip;'); ?>
+                </p>
+                <p id="download-file-success" style="display: none;">
+                    <?php esc_html_e(
+                        'Your download has been generated. It should begin downloading momentarily.'
+                    ); ?>
+                </p>
+                <div class="progressbar" style="display: none;">
+                    <div id="progresssteps" class="s3testing-progress" style="width:0%;">0%</div>
+                </div>
+            </div>
+        </div>
+        <?php
     }
 
     public static function admin_print_styles()
@@ -407,6 +439,49 @@ class S3Testing_Page_Backups extends WP_List_Table
         <?php
     }
 
+    public static function admin_print_scripts()
+    {
+        $suffix = (defined('SCRIPT_DEBUG') && SCRIPT_DEBUG) ? '' : '.min';
+        $plugin_url = S3Testing::get_plugin_data('url');
+        $plugin_dir = S3Testing::get_plugin_data('plugindir');
+        $plugin_scripts_url = "{$plugin_url}/assets/js";
+        $plugin_scripts_dir = "{$plugin_dir}/assets/js";
+
+        wp_register_script(
+            's3testing_functions',
+            "{$plugin_scripts_url}/backup-functions{$suffix}.js",
+            ['underscore', 'jquery'],
+            filemtime("{$plugin_scripts_dir}/backup-functions{$suffix}.js"),
+            true
+        );
+
+        wp_register_script(
+            's3testing_state',
+            "{$plugin_scripts_url}/backup-state{$suffix}.js",
+            [
+                's3testing_functions',
+            ],
+            filemtime("{$plugin_scripts_dir}/backup-state{$suffix}.js"),
+            true
+        );
+
+        $dependencies = [
+            'jquery',
+            'underscore',
+            's3testinggeneral',
+            's3testing_functions',
+            's3testing_state',
+        ];
+
+        wp_enqueue_script(
+            's3testing-backup-downloader',
+            "{$plugin_scripts_url}/backup-downloader{$suffix}.js",
+            $dependencies,
+            filemtime("{$plugin_scripts_dir}/backup-downloader{$suffix}.js"),
+            true
+        );
+    }
+
     private function delete_item_action($item) {
         $query = sprintf(
             '?page=s3testingbackups&action=delete&jobdest-top=%1$s&paged=%2$s&backupfiles[]=%3$s',
@@ -429,6 +504,25 @@ class S3Testing_Page_Backups extends WP_List_Table
             $url,
             $js,
             __('Delete')
+        );
+    }
+
+    private function download_item_action($item) {
+        return sprintf(
+            '<a href="#TB_inline?height=300&width=630&inlineId=tb_download_file" 
+				class="backup-download-link thickbox" 
+				id="backup-download-link"
+				data-jobid="%1$s" 
+				data-destination="%2$s" 
+				data-file="%3$s"  
+				data-nonce="%4$s" 
+				data-url="%5$s">%6$s</a>',
+            intval($this->jobid),
+            esc_attr($this->dest),
+            esc_attr($item['file']),
+            wp_create_nonce('s3testing_action_nonce'),
+            wp_nonce_url($item['downloadurl'], 's3testing_action_nonce'),
+            __('Download')
         );
     }
 }
