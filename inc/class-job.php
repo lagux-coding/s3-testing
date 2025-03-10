@@ -171,7 +171,7 @@ class S3Testing_Job
             '_nonce' => substr(wp_hash(wp_nonce_tick() . 's3testing_job_run-' . $starttype, 'nonce'), -12, 10),
         ];
 
-        if (in_array($starttype, ['runnow', 'cronrun'], true)) {
+        if (in_array($starttype, ['restart', 'runnow', 'cronrun'], true)) {
             $query_args['s3testing_run'] = $starttype;
         }
 
@@ -184,6 +184,10 @@ class S3Testing_Job
             $query_args['page'] = 's3testingjobs';
             $query_args['action'] = 'runnow';
             unset($query_args['_nonce']);
+        }
+
+        if ($starttype === 'restart') {
+            $query_args['_nonce'] = null;
         }
 
         $request = [
@@ -347,8 +351,6 @@ class S3Testing_Job
 
     public function run()
     {
-        $this->log('This is a test');
-
         //disable output buffering
         if ($level = ob_get_level()) {
             for ($i = 0; $i < $level; ++$i) {
@@ -450,7 +452,21 @@ class S3Testing_Job
             return;
         }
 
-        return;
+        $execution_time = microtime(true) - $this->timestamp_script_start;
+        if (!$must && $execution_time < 3) {
+            return;
+        }
+
+        if ($execution_time !== 0) {
+            $this->log(sprintf(__('Restart after %1$d seconds.'), ceil($execution_time)));
+        }
+
+        $this->write_running_file();
+        wp_clear_scheduled_hook('s3testing_cron', ['arg' => 'restart']);
+        wp_schedule_single_event(time() + 5, 's3testing_cron', ['arg' => 'restart']);
+        self::get_jobrun_url('restart');
+
+        exit();
     }
 
     private function end()
