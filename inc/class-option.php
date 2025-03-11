@@ -125,7 +125,8 @@ final class S3Testing_Option
         $default['cron']                  = '0 3 * * *';
         $default['backuptype']            = 'archive';
         $default['archiveformat']         = '.tar';
-        $default['archivename']           = 'my-backup';
+        $default['archivename']           = '%Y-%m-%d_%H-%i-%s_%hash%';
+        $default['archivenamedefault']    = '%Y-%m-%d_%H-%i-%s_%hash%';
         // defaults vor destinations.
         foreach ( S3Testing::get_registered_destinations() as $dest_key => $dest ) {
             if ( ! empty( $dest['class'] ) ) {
@@ -237,5 +238,36 @@ final class S3Testing_Option
                 )
             )) .
             sprintf('%02d', $jobid);
+    }
+
+    public static function substitute_date_vars($archivename)
+    {
+        $current_time = current_time('timestamp');
+        $date_vars = [
+            '%d',
+            '%m',
+            '%Y',
+            '%H',
+            '%i',
+            '%s',
+        ];
+        $date_values = [
+            date('d', $current_time),
+            date('m', $current_time),
+            date('Y', $current_time),
+            date('H', $current_time),
+            date('i', $current_time),
+            date('s', $current_time),
+        ];
+
+        //replace temp hash
+        $archivename = str_replace('%hash%', '[hash]', $archivename);
+        $archivename = str_replace(
+            $date_vars,
+            $date_values,
+            $archivename
+        );
+        $archivename = str_replace('[hash]', '%hash%', $archivename);
+        return S3Testing_Job::sanitize_file_name($archivename);
     }
 }

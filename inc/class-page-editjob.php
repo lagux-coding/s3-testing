@@ -82,7 +82,12 @@ class S3Testing_Page_EditJob
                 ], true) ? $_POST['archiveformat'] : '.zip';
 
                 S3Testing_Option::update($jobid, 'archiveformat', $archiveformat);
-                S3Testing_Option::update($jobid, 'archivename', sanitize_text_field($_POST['archivename']));
+
+                if(empty($_POST['archivename'])) {
+                    S3Testing_Option::update($jobid, 'archivename', S3Testing_Option::normalize_archive_name(S3Testing_Option::substitute_date_vars(S3Testing_Option::get($jobid, 'archivenamedefault')), $jobid, false));
+                } else {
+                    S3Testing_Option::update($jobid, 'archivename', S3Testing_Job::sanitize_file_name(S3Testing_Option::normalize_archive_name(S3Testing_Option::substitute_date_vars($_POST['archivename']), $jobid, false)));
+                }
 
                 break;
             case 'cron':
@@ -294,9 +299,27 @@ class S3Testing_Page_EditJob
                 <tr class="nosync">
                     <th scope="row"><label for="archivename"><?php esc_html_e('Archive name'); ?></label></th>
                     <td>
-                        <input name="archivename" type="text" id="archivename" placeholder="my-backup"
-                               value="<?php echo esc_attr(S3Testing_Option::get($jobid, 'archivename')); ?>"
+                        <input name="archivename" type="text" id="archivename" placeholder="%Y-%m-%d_%H-%i-%s_%hash%"
+                               value="<?php echo esc_attr(S3Testing_Option::get($jobid, 'archivenamedefault')); ?>"
                                class="regular-text code"/>
+                        <p><?php _e('<em>Note</em>: In order for backup file tracking to work, %hash% must be included anywhere in the archive name.'); ?></p>
+                        <?php
+
+                        $archivename = S3Testing_Option::substitute_date_vars(
+                            S3Testing_Option::get($jobid, 'archivenamedefault')
+                        );
+                        echo '<p>' . esc_html__('Preview: ') . '<code><span id="archivefilename">' . esc_attr($archivename) . '</span><span id="archiveformat">' . esc_attr($archive_format_option) . '</span></code></p>';
+                        echo '<p class="description">';
+                        echo '<strong>' . esc_attr__('Replacement patterns:') . '</strong><br />';
+                        echo esc_attr__('%d = Two digit day of the month, with leading zeros') . '<br />';
+                        echo esc_attr__('%m = Two-digit representation of the month, with leading zeros') . '<br />';
+                        echo esc_attr__('%Y = Four digit representation of the year') . '<br />';
+                        echo esc_attr__('%H = Two-digit hour in 24-hour format, with leading zeros') . '<br />';
+                        echo esc_attr__('%i = Two digit representation of the minute') . '<br />';
+                        echo esc_attr__('%s = Two digit representation of the second') . '<br />';
+                        echo '</p>';
+                        ?>
+
                     </td>
                 </tr>
                 <tr>
@@ -305,18 +328,18 @@ class S3Testing_Page_EditJob
                         <fieldset>
                             <legend class="screen-reader-text"><span><?php esc_html_e('Archive Format'); ?></span></legend>
                             <?php
+                            echo '<p><label for="idarchiveformat-tar"><input class="radio" type="radio"' . checked('.tar', $archive_format_option, false) . ' name="archiveformat" id="idarchiveformat-tar" value=".tar" /> ' . esc_html__('Tar') . '</label></p>';
                             if (class_exists(\ZipArchive::class)) {
                                 echo '<p><label for="idarchiveformat-zip">
-                                       <input class="radio" type="radio"' . checked('.zip', $archive_format_option, false) . ' name="archiveformat" id="archiveformat-zip" value=".zip"/> ' . esc_html__('Zip') . '
+                                       <input class="radio" type="radio"' . checked('.zip', $archive_format_option, false) . ' name="archiveformat" id="archiveformat-zip" value=".zip" disabled="disabled"/> ' . esc_html__('Zip') . '
                                         </label></p>';
                             } else {
                                 echo '<p><label for="idarchiveformat-zip"><input class="radio" type="radio"' . checked('.zip', $archive_format_option, false) . ' name="archiveformat" id="idarchiveformat-zip" value=".zip" disabled="disabled" /> ' . esc_html__('Zip') . '</label>';
                                 echo '<br /><span class="description">' . esc_html(__('ZipArchive PHP class is missing, so s3testing will use PclZip instead.')) . '</span></p>';
                             }
-                            echo '<p><label for="idarchiveformat-tar"><input class="radio" type="radio"' . checked('.tar', $archive_format_option, false) . ' name="archiveformat" id="idarchiveformat-tar" value=".tar" /> ' . esc_html__('Tar') . '</label></p>';
 
                             if (function_exists('gzopen')) {
-                                echo '<p><label for="idarchiveformat-targz"><input class="radio" type="radio"' . checked('.tar.gz', $archive_format_option, false) . ' name="archiveformat" id="idarchiveformat-targz" value=".tar.gz" /> ' . esc_html__('Tar GZip') . '</label></p>';
+                                echo '<p><label for="idarchiveformat-targz"><input class="radio" type="radio"' . checked('.tar.gz', $archive_format_option, false) . ' name="archiveformat" id="idarchiveformat-targz" value=".tar.gz" disabled="disabled" /> ' . esc_html__('Tar GZip') . '</label></p>';
                             } else {
                                 echo '<p><label for="idarchiveformat-targz"><input class="radio" type="radio"' . checked('.tar.gz', $archive_format_option, false) . ' name="archiveformat" id="idarchiveformat-targz" value=".tar.gz" disabled="disabled" /> ' . esc_html__('Tar GZip') . '</label>';
                                 echo '<br /><span class="description">' . esc_html(sprintf(__('Disabled due to missing %s PHP function.'), 'gzopen()')) . '</span></p>';
