@@ -116,6 +116,7 @@ class ComposerStaticInitcd624fb20f889334c9790014fe69762d
         'AWS\\CRT\\Options' => __DIR__ . '/..' . '/aws/aws-crt-php/src/AWS/CRT/Options.php',
         'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',
         'S3Testing_Admin' => __DIR__ . '/../..' . '/inc/class-admin.php',
+        'S3Testing_Adminbar' => __DIR__ . '/../..' . '/inc/class-adminbar.php',
         'S3Testing_Create_Archive' => __DIR__ . '/../..' . '/inc/class-create-archive.php',
         'S3Testing_Create_Archive_Exception' => __DIR__ . '/../..' . '/inc/class-create-archive-exception.php',
         'S3Testing_Cron' => __DIR__ . '/../..' . '/inc/class-cron.php',

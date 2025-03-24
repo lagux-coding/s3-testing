@@ -7,6 +7,7 @@ final class S3Testing_Option
     {
         add_site_option('s3testing_version', '1.0.0');
         add_site_option( 's3testing_jobs', [] );
+        add_site_option( 's3testing_cfg_showadminbar', true );
         //jobs
         add_site_option( 's3testing_cfg_jobmaxexecutiontime', 30 );
         add_site_option('s3testing_cfg_jobstepretry', 3);

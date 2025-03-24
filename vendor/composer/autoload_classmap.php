@@ -31,6 +31,7 @@ return array(
     'AWS\\CRT\\Options' => $vendorDir . '/aws/aws-crt-php/src/AWS/CRT/Options.php',
     'Composer\\InstalledVersions' => $vendorDir . '/composer/InstalledVersions.php',
     'S3Testing_Admin' => $baseDir . '/inc/class-admin.php',
+    'S3Testing_Adminbar' => $baseDir . '/inc/class-adminbar.php',
     'S3Testing_Create_Archive' => $baseDir . '/inc/class-create-archive.php',
     'S3Testing_Create_Archive_Exception' => $baseDir . '/inc/class-create-archive-exception.php',
     'S3Testing_Cron' => $baseDir . '/inc/class-cron.php',

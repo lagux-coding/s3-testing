@@ -5,7 +5,7 @@
  * Version: 1.0
  * Author: Me
  */
-if(!class_exists(\S3Testing::class, false)) {
+if (!class_exists(\S3Testing::class, false)) {
     final class S3Testing
     {
         private static $instance;
@@ -20,21 +20,21 @@ if(!class_exists(\S3Testing::class, false)) {
 
         private function __construct()
         {
-            if(!is_main_network() && !is_main_site()) {
+            if (!is_main_network() && !is_main_site()) {
                 return;
             }
 
             require_once __DIR__ . '/inc/functions.php';
-            if(file_exists(__DIR__ . '/vendor/autoload.php')) {
+            if (file_exists(__DIR__ . '/vendor/autoload.php')) {
                 require_once __DIR__ . '/vendor/autoload.php';
             }
 
-            if(!wp_next_scheduled('s3testing_check_cleanup')){
+            if (!wp_next_scheduled('s3testing_check_cleanup')) {
                 S3Testing_Install::activate();
             }
 
             if (defined('DOING_CRON') && DOING_CRON) {
-                if(!empty($_GET['s3testing_run']) && class_exists(\S3Testing_Job::class)) {
+                if (!empty($_GET['s3testing_run']) && class_exists(\S3Testing_Job::class)) {
 
                     S3Testing_Job::disable_caches();
 
@@ -53,11 +53,19 @@ if(!class_exists(\S3Testing::class, false)) {
 
             $admin = new S3Testing_Admin();
             $admin->init();
+
+            $is_admin_bar = (bool)apply_filters('s3testing_admin_bar', (bool)get_site_option('s3testing_cfg_showadminbar'));
+
+            if (true === $is_admin_bar) {
+                $admin_bar = new S3Testing_Adminbar($admin);
+                add_action('init', [$admin_bar, 'init']);
+            }
+
         }
 
         public static function get_instance()
         {
-            if(null === self::$instance) {
+            if (null === self::$instance) {
                 self::$instance = new self();
             }
 
@@ -66,11 +74,11 @@ if(!class_exists(\S3Testing::class, false)) {
 
         public static function get_plugin_data($name)
         {
-            if($name) {
+            if ($name) {
                 $name = strtolower(trim($name));
             }
 
-            if(empty(self::$plugin_data)) {
+            if (empty(self::$plugin_data)) {
                 self::$plugin_data = get_file_data(
                     __FILE__,
                     [
@@ -80,15 +88,15 @@ if(!class_exists(\S3Testing::class, false)) {
                     'plugin'
                 );
 
-                self::$plugin_data['name']              = trim(self::$plugin_data['name']);
-                self::$plugin_data['hash']              = get_site_option( 's3testing_cfg_hash' );
-                self::$plugin_data['plugindir']         = untrailingslashit( __DIR__ );
-                if ( empty( self::$plugin_data['hash'] ) || strlen( self::$plugin_data['hash'] ) < 6
+                self::$plugin_data['name'] = trim(self::$plugin_data['name']);
+                self::$plugin_data['hash'] = get_site_option('s3testing_cfg_hash');
+                self::$plugin_data['plugindir'] = untrailingslashit(__DIR__);
+                if (empty(self::$plugin_data['hash']) || strlen(self::$plugin_data['hash']) < 6
                     || strlen(
                         self::$plugin_data['hash']
-                    ) > 12 ) {
-                    self::$plugin_data['hash'] = self::get_generated_hash( 6 );
-                    update_site_option( 's3testing_cfg_hash', self::$plugin_data['hash'] );
+                    ) > 12) {
+                    self::$plugin_data['hash'] = self::get_generated_hash(6);
+                    update_site_option('s3testing_cfg_hash', self::$plugin_data['hash']);
                 }
                 if (defined('WP_TEMP_DIR') && is_dir(WP_TEMP_DIR)) {
                     self::$plugin_data['temp'] = str_replace(
@@ -111,7 +119,7 @@ if(!class_exists(\S3Testing::class, false)) {
                 self::$plugin_data['wp_version'] = $wp_version;
             }
 
-            if(!empty($name)){
+            if (!empty($name)) {
                 return self::$plugin_data[$name];
             }
 
@@ -151,7 +159,7 @@ if(!class_exists(\S3Testing::class, false)) {
 
         public static function get_registered_destinations()
         {
-            if(!empty(self::$registered_destinations)) {
+            if (!empty(self::$registered_destinations)) {
                 return self::$registered_destinations;
             }
 

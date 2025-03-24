@@ -1,7 +1,8 @@
 <?php
-if ( ! class_exists( 'WP_List_Table' ) ) {
+if (!class_exists('WP_List_Table')) {
     require_once ABSPATH . 'wp-admin/includes/class-wp-list-table.php';
 }
+
 class S3Testing_Page_Jobs extends WP_List_Table
 {
     private static $listtable;
@@ -17,6 +18,7 @@ class S3Testing_Page_Jobs extends WP_List_Table
             'ajax' => true,
         ]);
     }
+
     public function prepare_items()
     {
         $this->items = S3Testing_Option::get_job_ids();
@@ -27,16 +29,16 @@ class S3Testing_Page_Jobs extends WP_List_Table
             return;
         }
 
-        if (strtolower((string) $_GET['order']) === 'asc') {
+        if (strtolower((string)$_GET['order']) === 'asc') {
             $order = SORT_ASC;
         } else {
             $order = SORT_DESC;
         }
 
-        if (empty($_GET['orderby']) || !in_array(strtolower((string) $_GET['orderby']), ['jobname', 'type', 'dest', 'next', 'last'], true)) {
+        if (empty($_GET['orderby']) || !in_array(strtolower((string)$_GET['orderby']), ['jobname', 'type', 'dest', 'next', 'last'], true)) {
             $orderby = 'jobname';
         } else {
-            $orderby = strtolower((string) $_GET['orderby']);
+            $orderby = strtolower((string)$_GET['orderby']);
         }
 
         //sorting
@@ -130,8 +132,8 @@ class S3Testing_Page_Jobs extends WP_List_Table
         $actions['copy'] = '<a href="' . wp_nonce_url(network_admin_url('admin.php') . '?page=s3testingjobs&action=copy&jobid=' . $item, 'copy-job_' . $item) . '">' . esc_html__('Copy') . '</a>';
         $actions['delete'] = '<a class="submitdelete" href="' . wp_nonce_url(network_admin_url('admin.php') . '?page=s3testingjobs&action=delete&jobs[]=' . $item, 'bulk-jobs') . '" onclick="return showNotice.warn();">' . esc_html__('Delete') . '</a>';
 
-            $url = S3Testing_Job::get_jobrun_url('runnowlink', $item);
-            $actions['runnow'] = '<a href="' . esc_attr($url['url']) . '">' . esc_html__('Run now') . '</a>';
+        $url = S3Testing_Job::get_jobrun_url('runnowlink', $item);
+        $actions['runnow'] = '<a href="' . esc_attr($url['url']) . '">' . esc_html__('Run now') . '</a>';
 
 
         $actions = apply_filters('s3testing_page_jobs_actions', $actions, $item, false);
@@ -186,6 +188,7 @@ class S3Testing_Page_Jobs extends WP_List_Table
 
         return $r;
     }
+
     public function column_next($item)
     {
         $r = '';
@@ -220,7 +223,7 @@ class S3Testing_Page_Jobs extends WP_List_Table
     {
         $r = '';
 
-        if(S3Testing_Option::get($item, 'lastrun')) {
+        if (S3Testing_Option::get($item, 'lastrun')) {
             $lastrun = S3Testing_Option::get($item, 'lastrun');
             $r .= sprintf(__('%1$s at %2$s'), date_i18n(get_option('date_format'), $lastrun, true), date_i18n(get_option('time_format'), $lastrun, true));
             if (S3Testing_Option::get($item, 'lastruntime')) {
@@ -294,7 +297,7 @@ class S3Testing_Page_Jobs extends WP_List_Table
                         }
 
                         $log_messages = S3Testing_Admin::get_messages();
-                        if(empty($log_messages)) {
+                        if (empty($log_messages)) {
                             S3Testing_Job::get_jobrun_url('runnow', $jobid);
                             S3Testing_Admin::message(sprintf(__('Job "%s" started.'), esc_attr(S3Testing_Option::get($jobid, 'name'))));
                         }
@@ -332,17 +335,17 @@ class S3Testing_Page_Jobs extends WP_List_Table
             }
 
             #runningjob {
-                padding:10px;
-                position:relative;
+                padding: 10px;
+                position: relative;
                 margin: 15px 0 25px 0;
-                padding-bottom:25px;
+                padding-bottom: 25px;
             }
 
             .progressbar {
                 margin-top: 20px;
                 background: #f6f6f6 url('<?php echo S3Testing::get_plugin_data('URL'); ?>/assets/images/progressbarhg.jpg');
             }
-            
+
             .s3tt-progress {
                 background-color: #1d94cf;
                 color: #fff;
@@ -361,11 +364,11 @@ class S3Testing_Page_Jobs extends WP_List_Table
     public static function page()
     {
         echo '<div class="wrap" id="s3testing-page">';
-        echo '<h1>' . esc_html(sprintf(__('%s &rsaquo; Jobs'), S3Testing::get_plugin_data('name'))). '&nbsp;<a href="' . wp_nonce_url(network_admin_url('admin.php') . '?page=s3testingeditjob', 'edit-job') . '" class="add-new-h2">' . esc_html__('Add new') . '</a></h1>';
+        echo '<h1>' . esc_html(sprintf(__('%s &rsaquo; Jobs'), S3Testing::get_plugin_data('name'))) . '&nbsp;<a href="' . wp_nonce_url(network_admin_url('admin.php') . '?page=s3testingeditjob', 'edit-job') . '" class="add-new-h2">' . esc_html__('Add new') . '</a></h1>';
         S3Testing_Admin::display_message();
         $job_object = S3Testing_Job::get_working_data();
 
-        if(is_object($job_object)){
+        if (is_object($job_object)) {
             //read existing logfile
             $logfiledata = file_get_contents($job_object->logfile);
             preg_match('/<body[^>]*>/si', $logfiledata, $match);
@@ -385,101 +388,108 @@ class S3Testing_Page_Jobs extends WP_List_Table
                     <h2 id="runningtitle"><?php esc_html(sprintf(__('Job currently running: %s'), $job_object->job['name'])); ?></h2>
                 </div>
                 <div class="infobuttons">
-                    <a href="#TB_inline?height=440&width=630&inlineId=tb-showworking" id="showworkingbutton" class="thickbox button button-primary button-primary-bwp" title="<?php esc_attr_e('Log of running job'); ?>"><?php esc_html_e('Display working log'); ?></a>
-                    <a href="<?php echo wp_nonce_url(network_admin_url('admin.php') . '?page=s3testingjobs&action=abort', 'abort-job'); ?>" id="abortbutton" class="s3testing-fancybox button button-s3"><?php esc_html_e('Abort'); ?></a>
-                    <a href="#" id="showworkingclose" title="<?php esc_html_e('Close working screen'); ?>" class="button button-bwp" style="display:none" ><?php esc_html_e('Close'); ?></a>
+                    <a href="#TB_inline?height=440&width=630&inlineId=tb-showworking" id="showworkingbutton"
+                       class="thickbox button button-primary button-primary-bwp"
+                       title="<?php esc_attr_e('Log of running job'); ?>"><?php esc_html_e('Display working log'); ?></a>
+                    <a href="<?php echo wp_nonce_url(network_admin_url('admin.php') . '?page=s3testingjobs&action=abort', 'abort-job'); ?>"
+                       id="abortbutton" class="s3testing-fancybox button button-s3"><?php esc_html_e('Abort'); ?></a>
+                    <a href="#" id="showworkingclose" title="<?php esc_html_e('Close working screen'); ?>"
+                       class="button button-bwp" style="display:none"><?php esc_html_e('Close'); ?></a>
 
                     <input type="hidden" name="logpos" id="logpos" value="<?php echo strlen($logfiledata); ?>">
                     <div id="lasterrormsg"></div>
-                    <div class="progressbar"><div id="progressstep" class="s3tt-progress" style="width:<?php echo ($job_object->step_percent); ?>%;"><?php echo esc_html($job_object->step_percent);?>%</div></div>
+                    <div class="progressbar">
+                        <div id="progressstep" class="s3tt-progress"
+                             style="width:<?php echo($job_object->step_percent); ?>%;"><?php echo esc_html($job_object->step_percent); ?>
+                            %
+                        </div>
+                    </div>
                     <div id="onstep"><?php echo esc_html($job_object->steps_data[$job_object->step_working]['NAME']); ?></div>
                     <div id="tb-showworking" style="display:none;">
                         <div id="showworking"><?php echo substr($logfiledata, $startpos, $length); ?></div>
                     </div>
                 </div>
             </div>
-        <?php
+            <?php
         }
 
-        //display jobs table?>
+        //display jobs table
+        ?>
         <form id="posts-filter" action="" method="get">
-            <input type="hidden" name="page" value="s3testingjobs" />
+            <input type="hidden" name="page" value="s3testingjobs"/>
             <?php
-        echo wp_nonce_field('s3testing_ajax_nonce', 's3testingajaxnonce', false);
-        self::$listtable->display();
-?>
+            echo wp_nonce_field('s3testing_ajax_nonce', 's3testingajaxnonce', false);
+            self::$listtable->display();
+            ?>
             <div id="ajax-response"></div>
         </form>
 
         <?php
         if (!empty($job_object->logfile)) { ?>
-        <script type="text/javascript">
-            jQuery(document).ready(function ($) {
-                s3testing_show_working = function () {
-                    $.ajax({
-                        type: 'GET',
-                        url: ajaxurl,
-                        cache: false,
-                        data:{
-                            action: 's3testing_working',
-                            logpos: $('#logpos').val(),
-                            logfile: '<?php echo basename((string) $job_object->logfile); ?>',
-                            _ajax_nonce: '<?php echo wp_create_nonce('s3testingworking_ajax_nonce'); ?>'
-                        },
-                        dataType: 'json',
-                        success:function (rundata) {
-                            console.log(rundata);
-                            console.log(rundata.step_percent);
-                            console.log("log_pos:", logpos);
-                            if ( rundata == 0 ) {
-                                $("#abortbutton").remove();
-                                $(".job-run").hide();
-                                $("#message").hide();
-                                $(".job-normal").show();
-                                $('#showworkingclose').show();
-                            }
-                            if (0 < rundata.log_pos) {
-                                $('#logpos').val(rundata.log_pos);
-                            }
-                            if ('' != rundata.log_text) {
-                                $('#showworking').append(rundata.log_text);
-                                $('#TB_ajaxContent').scrollTop(rundata.log_pos * 15);
-                            }
-                            if (0 < rundata.step_percent) {
-                                $('#progressstep').replaceWith('<div id="progressstep" class="s3tt-progress">' + rundata.step_percent + '%</div>');
-                                $('#progressstep').css('width', parseFloat(rundata.step_percent) + '%');
-                            }
-                            if (0 < rundata.sub_step_percent) {
-                                $('#progresssteps').replaceWith('<div id="progresssteps" class="s3tt-progress">' + rundata.sub_step_percent + '%</div>');
-                                $('#progresssteps').css('width', parseFloat(rundata.sub_step_percent) + '%');
-                            }
-                            if ( '' != rundata.onstep ) {
-                                $('#onstep').replaceWith('<div id="onstep">' + rundata.on_step + '</div>');
-                            }
-                            if ( rundata.job_done == 1 ) {
-                                $("#abortbutton").remove();
-                                $(".job-run").hide();
-                                $("#message").hide();
-                                $(".job-normal").show();
-                                $('#showworkingclose').show();
-                            }
-
-                            else {
+            <script type="text/javascript">
+                jQuery(document).ready(function ($) {
+                    s3testing_show_working = function () {
+                        $.ajax({
+                            type: 'GET',
+                            url: ajaxurl,
+                            cache: false,
+                            data: {
+                                action: 's3testing_working',
+                                logpos: $('#logpos').val(),
+                                logfile: '<?php echo basename((string)$job_object->logfile); ?>',
+                                _ajax_nonce: '<?php echo wp_create_nonce('s3testingworking_ajax_nonce'); ?>'
+                            },
+                            dataType: 'json',
+                            success: function (rundata) {
+                                if (rundata == 0) {
+                                    $("#abortbutton").remove();
+                                    $("#s3testing-adminbar-running").remove();
+                                    $(".job-run").hide();
+                                    $("#message").hide();
+                                    $(".job-normal").show();
+                                    $('#showworkingclose').show();
+                                }
+                                if (0 < rundata.log_pos) {
+                                    $('#logpos').val(rundata.log_pos);
+                                }
+                                if ('' != rundata.log_text) {
+                                    $('#showworking').append(rundata.log_text);
+                                    $('#TB_ajaxContent').scrollTop(rundata.log_pos * 15);
+                                }
+                                if (0 < rundata.step_percent) {
+                                    $('#progressstep').replaceWith('<div id="progressstep" class="s3tt-progress">' + rundata.step_percent + '%</div>');
+                                    $('#progressstep').css('width', parseFloat(rundata.step_percent) + '%');
+                                }
+                                if (0 < rundata.sub_step_percent) {
+                                    $('#progresssteps').replaceWith('<div id="progresssteps" class="s3tt-progress">' + rundata.sub_step_percent + '%</div>');
+                                    $('#progresssteps').css('width', parseFloat(rundata.sub_step_percent) + '%');
+                                }
+                                if ('' != rundata.onstep) {
+                                    $('#onstep').replaceWith('<div id="onstep">' + rundata.on_step + '</div>');
+                                }
+                                if (rundata.job_done == 1) {
+                                    $("#abortbutton").remove();
+                                    $("#s3testing-adminbar-running").remove();
+                                    $(".job-run").hide();
+                                    $("#message").hide();
+                                    $(".job-normal").show();
+                                    $('#showworkingclose').show();
+                                } else {
+                                    setTimeout('s3testing_show_working()', 400);
+                                }
+                            },
+                            error: function () {
                                 setTimeout('s3testing_show_working()', 400);
                             }
-                        },
-                        error:function( ) {
-                            setTimeout('s3testing_show_working()', 400);
-                        }
+                        });
+                    };
+                    s3testing_show_working();
+                    $('#showworkingclose').click(function () {
+                        $("#runningjob").hide('slow');
+                        return false;
                     });
-                };
-                s3testing_show_working();
-                $('#showworkingclose').click( function() {
-                    $("#runningjob").hide( 'slow' );
-                    return false;
                 });
-            });
-        </script>
+            </script>
         <?php }
     }
 

@@ -21,7 +21,6 @@ class S3Testing_Job
     public $count_files_size = 0;
     private $timestamp_script_start = 0;
     public $additional_files_to_backup = [];
-
     public $timestamp_last_update = 0;
     public $user_abort = false;
     public $logfile = '';

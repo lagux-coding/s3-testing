@@ -1,3 +1,38 @@
+@font-face {
+    font-family: "interdata";
+    src: url("../fonts/interdata.eot");
+    src: url("../fonts/interdata.eot?#iefix") format("embedded-opentype"),
+    url("../fonts/interdata.ttf") format("truetype"),
+    url("../fonts/interdata.woff") format("woff"),
+    url("../fonts/interdata.svg#interdata") format("svg");
+    font-weight: normal;
+    font-style: normal;
+}
+
+#wp-admin-bar-s3testing .ab-icon {
+    font: normal 20px/1 "interdata" !important;
+}
+#wp-admin-bar-s3testing .ab-icon::before {
+    content: "\e900";
+    top: 2px;
+}
+@media screen and (max-width: 48.875em) {
+    #wp-admin-bar-s3testing .ab-icon {
+        font: normal 32px/1 "interdata" !important;
+        display: block;
+        text-indent: 0;
+        speak: none;
+        top: 7px;
+        width: 50px;
+        text-align: center;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+    #wp-admin-bar-s3testing::before {
+        top: 0;
+    }
+}
+
 #s3testing-page .s3testing-message {
     background-color: #fff;
     border: none;
