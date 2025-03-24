@@ -1,9 +1,6 @@
 jQuery(document).ready(function ($) {
     //change size of thickbox
     s3testing_tb_position = function() {
-        console.log(
-            'test'
-        );
         var tbWindow = $('#TB_window'), width = $(window).width(), height = $(window).height(), W = ( 720 < width ) ? 720 : width,  H = ( 525 < height ) ? 525 : height, adminbar_height = 0;
 
         if ( tbWindow.length > 0 ) {

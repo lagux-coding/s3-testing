@@ -328,18 +328,17 @@ class S3Testing_Page_EditJob
                         <fieldset>
                             <legend class="screen-reader-text"><span><?php esc_html_e('Archive Format'); ?></span></legend>
                             <?php
-                            echo '<p><label for="idarchiveformat-tar"><input class="radio" type="radio"' . checked('.tar', $archive_format_option, false) . ' name="archiveformat" id="idarchiveformat-tar" value=".tar" /> ' . esc_html__('Tar') . '</label></p>';
                             if (class_exists(\ZipArchive::class)) {
                                 echo '<p><label for="idarchiveformat-zip">
-                                       <input class="radio" type="radio"' . checked('.zip', $archive_format_option, false) . ' name="archiveformat" id="archiveformat-zip" value=".zip" disabled="disabled"/> ' . esc_html__('Zip') . '
+                                       <input class="radio" type="radio"' . checked('.zip', $archive_format_option, false) . ' name="archiveformat" id="archiveformat-zip" value=".zip"/> ' . esc_html__('Zip') . '
                                         </label></p>';
                             } else {
-                                echo '<p><label for="idarchiveformat-zip"><input class="radio" type="radio"' . checked('.zip', $archive_format_option, false) . ' name="archiveformat" id="idarchiveformat-zip" value=".zip" disabled="disabled" /> ' . esc_html__('Zip') . '</label>';
+                                echo '<p><label for="idarchiveformat-zip"><input class="radio" type="radio"' . checked('.zip', $archive_format_option, false) . ' name="archiveformat" id="idarchiveformat-zip" value=".zip" /> ' . esc_html__('Zip') . '</label>';
                                 echo '<br /><span class="description">' . esc_html(__('ZipArchive PHP class is missing, so s3testing will use PclZip instead.')) . '</span></p>';
                             }
-
+                            echo '<p><label for="idarchiveformat-tar"><input class="radio" type="radio"' . checked('.tar', $archive_format_option, false) . ' name="archiveformat" id="idarchiveformat-tar" value=".tar" /> ' . esc_html__('Tar') . '</label></p>';
                             if (function_exists('gzopen')) {
-                                echo '<p><label for="idarchiveformat-targz"><input class="radio" type="radio"' . checked('.tar.gz', $archive_format_option, false) . ' name="archiveformat" id="idarchiveformat-targz" value=".tar.gz" disabled="disabled" /> ' . esc_html__('Tar GZip') . '</label></p>';
+                                echo '<p><label for="idarchiveformat-targz"><input class="radio" type="radio"' . checked('.tar.gz', $archive_format_option, false) . ' name="archiveformat" id="idarchiveformat-targz" value=".tar.gz" /> ' . esc_html__('Tar GZip') . '</label></p>';
                             } else {
                                 echo '<p><label for="idarchiveformat-targz"><input class="radio" type="radio"' . checked('.tar.gz', $archive_format_option, false) . ' name="archiveformat" id="idarchiveformat-targz" value=".tar.gz" disabled="disabled" /> ' . esc_html__('Tar GZip') . '</label>';
                                 echo '<br /><span class="description">' . esc_html(sprintf(__('Disabled due to missing %s PHP function.'), 'gzopen()')) . '</span></p>';

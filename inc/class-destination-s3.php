@@ -23,11 +23,8 @@ class S3Testing_Destination_S3
             's3dircreate' => '',
             's3newfolder' => '',
             's3region' => 'ap-southeast-2',
-//            's3ssencrypt' => '',
-//            's3storageclass' => '',
             's3dir' => trailingslashit(sanitize_file_name(get_bloginfo('name'))),
             's3maxbackups' => 15,
-//            's3syncnodelete' => true,
         ];
     }
 
@@ -97,14 +94,7 @@ class S3Testing_Destination_S3
                            value="<?php echo esc_attr(S3Testing_Encryption::decrypt(S3Testing_Option::get(
                                $jobid,
                                's3secretkey'
-                           )));
-                           $log_file = WP_CONTENT_DIR . '/debug-encryption.log';
-                           $message = 'debug run file log ' . print_r(S3Testing_Encryption::decrypt(S3Testing_Option::get(
-                                   $jobid,
-                                   's3secretkey'
-                               )), true);
-                           file_put_contents($log_file, $message . "\n", FILE_APPEND);
-                           ?>" class="regular-text" autocomplete="off"/>
+                           ))); ?>" class="regular-text" autocomplete="off"/>
                 </td>
             </tr>
         </table>
@@ -741,9 +731,8 @@ class S3Testing_Destination_S3
                         _ajax_nonce: $('#s3testingajaxnonce').val(),
                         isBucket: $('#isBucket').val(),
                     };
-                    console.log("Sending AJAX request with data:", data);
+
                     $.post(ajaxurl, data, function (response) {
-                        console.log("Response from server:", response);
                         $('#s3bucketerror').remove();
                         $('#s3bucket').remove();
                         $('#s3bucketselected').after(response);
@@ -776,10 +765,7 @@ class S3Testing_Destination_S3
                         _ajax_nonce: $('#s3testingajaxnonce').val(),
                     };
 
-                    console.log("Selected bucket:", data);
-
                     $.post(ajaxurl, data, function (response) {
-                        console.log("Response from server:", response);
                         $('#s3direrror').remove();
                         $('#s3dir').remove();
                         $('#s3dirselected').after(response);

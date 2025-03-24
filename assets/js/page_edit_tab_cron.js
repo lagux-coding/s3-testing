@@ -22,7 +22,6 @@ jQuery(document).ready(function ($) {
             cron_interval: cron_interval,
             _ajax_nonce: $('#s3testingajaxnonce').val()
         };
-        console.log(data);
         $.post(ajaxurl, data, function (response) {
             $('#schedulecron').replaceWith(response);
         })

@@ -8,6 +8,7 @@ class S3Testing_Create_Archive
     private $pclzip;
     private $pclzip_file_list = [];
     private $filehandler;
+    private $file_count = 0;
 
     public function __construct($file)
     {
@@ -21,7 +22,6 @@ class S3Testing_Create_Archive
         if (!is_dir(dirname($file)) || !is_writable(dirname($file))) {
             throw new S3Testing_Create_Archive_Exception(
                 sprintf(
-                // translators: $1 is the file path
                     esc_html_x('Folder %s for archive not found', '%s = Folder name'),
                     dirname($file)
                 )
@@ -76,12 +76,23 @@ class S3Testing_Create_Archive
 
                     throw new S3Testing_Create_Archive_Exception(
                         sprintf(
-                        // translators: $1 is a directory name
                             esc_html_x('Cannot create zip archive: %d', 'ZipArchive open() result'),
                             $ziparchive_open
                         )
                     );
                 }
+            }
+
+            if (\PclZip::class === $this->method) {
+                $this->method = \PclZip::class;
+
+                if (!defined('PCLZIP_TEMPORARY_DIR')) {
+                    define('PCLZIP_TEMPORARY_DIR', S3Testing::get_plugin_data('TEMP'));
+                }
+
+                require_once ABSPATH . 'wp-admin/includes/class-pclzip.php';
+
+                $this->pclzip = new PclZip($this->file);
             }
 
             // Must be set to true to prevent issues. Monkey patch.
@@ -104,18 +115,52 @@ class S3Testing_Create_Archive
             $this->filehandler = $this->fopen($this->file, 'w');
         }
 
-//        if ('' === $this->method) {
-//            throw new S3Testing_Create_Archive_Exception(
-////                sprintf(
-////                    esc_html_x('Method to archive file %s not detected', '%s = file name'),
-////                    basename($this->file)
-////                )
-//            );
-//        }
+        if ('' === $this->method) {
+            throw new S3Testing_Create_Archive_Exception(
+                sprintf(
+                    esc_html_x('Method to archive file %s not detected', '%s = file name'),
+                    basename($this->file)
+                )
+            );
+        }
 
-//        if (null === $this->filehandler) {
-//            throw new S3Testing_Create_Archive_Exception(__('Cannot open archive file'));
-//        }
+        if (null === $this->filehandler) {
+            throw new S3Testing_Create_Archive_Exception(__('Cannot open archive file'));
+        }
+    }
+
+    public function __destruct()
+    {
+        // Close PclZip.
+        if (is_object($this->pclzip)) {
+            if (count($this->pclzip_file_list) > 0) {
+                if (0 == $this->pclzip->add($this->pclzip_file_list)) {
+                    trigger_error(
+                        sprintf(
+                            esc_html__('PclZip archive add error: %s'),
+                            $this->pclzip->errorInfo(true)
+                        ),
+                        E_USER_ERROR
+                    );
+                }
+            }
+            unset($this->pclzip);
+        }
+
+        // Close ZipArchive.
+        if (null !== $this->ziparchive) {
+            if (!$this->ziparchive->close()) {
+                $this->ziparchive_status();
+
+                sleep(1);
+            }
+            $this->ziparchive = null;
+        }
+
+        // Close file if open.
+        if (is_resource($this->filehandler)) {
+            $this->fclose();
+        }
     }
 
     public function add_empty_folder($folder_name, $name_in_archive)
@@ -123,12 +168,24 @@ class S3Testing_Create_Archive
         $folder_name = trim($folder_name);
 
         if (empty($folder_name)) {
-
+            trigger_error(
+                esc_html__('Folder name cannot be empty'),
+                E_USER_WARNING
+            );
             return false;
         }
 
         if (!is_dir($folder_name) || !is_readable($folder_name)) {
-
+            trigger_error(
+                sprintf(
+                    esc_html_x(
+                        'Folder %s does not exist or is not readable',
+                        'Folder path to add to archive',
+                    ),
+                    $folder_name
+                ),
+                E_USER_WARNING
+            );
             return false;
         }
 
@@ -139,9 +196,36 @@ class S3Testing_Create_Archive
         $name_in_archive = remove_invalid_characters_from_directory_name($name_in_archive);
 
         switch ($this->method) {
+            case 'gz':
+                trigger_error(
+                    esc_html__('This archive method can only add one file'),
+                    E_USER_ERROR
+                );
+
+                return false;
+                break;
+
             case 'Tar':
+            case 'TarGz':
                 $this->tar_empty_folder($folder_name, $name_in_archive);
                 return false;
+                break;
+            case \ZipArchive::class:
+                if (!$this->ziparchive->addEmptyDir($name_in_archive)) {
+                    trigger_error(
+                        sprintf(
+                            esc_html__('Cannot add "%s" to zip archive!'),
+                            $name_in_archive
+                        ),
+                        E_USER_WARNING
+                    );
+
+                    return false;
+                }
+                break;
+
+            case \PclZip::class:
+                return true;
                 break;
         }
 
@@ -153,14 +237,23 @@ class S3Testing_Create_Archive
     {
         $file_name = trim($file_name);
         if (!is_string($file_name) || empty($file_name)) {
-
+            trigger_error(
+                esc_html__('File name cannot be empty.'),
+                E_USER_WARNING
+            );
             return false;
         }
 
         clearstatcache(true, $file_name);
 
         if (!is_readable($file_name)) {
-
+            trigger_error(
+                sprintf(
+                    esc_html_x('File %s does not exist or is not readable', 'File to add to archive'),
+                    $file_name
+                ),
+                E_USER_WARNING
+            );
             return true;
         }
 
@@ -169,7 +262,35 @@ class S3Testing_Create_Archive
         }
 
         switch ($this->method) {
+            case 'gz':
+                if (!is_resource($this->filehandler)) {
+                    return false;
+                }
+
+                if ($this->file_count > 0) {
+                    trigger_error(
+                        esc_html__('This archive method can only add one file'),
+                        E_USER_WARNING
+                    );
+
+                    return false;
+                }
+
+                $fd = $this->fopen($file_name, 'rb');
+                if (!$fd) {
+                    return false;
+                }
+
+                while (!feof($fd)) {
+                    $this->fwrite(fread($fd, 8192));  // phpcs:ignore
+                }
+                fclose($fd); // phpcs:ignore
+
+                ++$this->file_count;
+                break;
+
             case 'Tar':
+            case 'TarGz':
                 if (function_exists('iconv') && stripos(PHP_OS, 'win') === 0) {
                     $test = @iconv('ISO-8859-1', 'UTF-8', $name_in_archive);
 
@@ -180,6 +301,7 @@ class S3Testing_Create_Archive
 
                 return $this->tar_file($file_name, $name_in_archive);
                 break;
+
             case \ZipArchive::class:
                 // Convert chars for archives file names.
                 if (function_exists('iconv') && stripos(PHP_OS, 'win') === 0) {
@@ -212,14 +334,26 @@ class S3Testing_Create_Archive
                 // 35 works with PHP 5.2.4 on win.
                 if ($this->file_count > 20) {
                     if (!$this->ziparchive->close()) {
+                        $this->ziparchive_status();
+                        trigger_error(
+                            esc_html__('ZIP archive cannot be closed correctly'),
+                            E_USER_ERROR
+                        );
+
+                        sleep(1);
                     }
 
                     $this->ziparchive = null;
+
+                    if (!$this->check_archive_filesize()) {
+                        return false;
+                    }
 
                     $this->ziparchive = new ZipArchive();
                     $ziparchive_open = $this->ziparchive->open($this->file, ZipArchive::CREATE);
 
                     if ($ziparchive_open !== true) {
+                        $this->ziparchive_status();
 
                         return false;
                     }
@@ -227,19 +361,79 @@ class S3Testing_Create_Archive
                     $this->file_count = 0;
                 }
 
+                if ($file_size < (1024 * 1024 * 2)) {
                     if (!$this->ziparchive->addFromString($name_in_archive, file_get_contents($file_name))) {
+                        $this->ziparchive_status();
+                        trigger_error(
+                            sprintf(
+                                esc_html__('Cannot add "%s" to zip archive!'),
+                                $name_in_archive
+                            ),
+                            E_USER_ERROR
+                        );
 
                         return false;
-                    } else {
-                        if (!$this->ziparchive->addFile($file_name, $name_in_archive)) {
-
-                            return false;
                     }
+                    $file_factor = round($file_size / (1024 * 1024), 4) * 2;
+                    $this->file_count = $this->file_count + $file_factor;
+                } else {
+                    if (!$this->ziparchive->addFile($file_name, $name_in_archive)) {
+                        $this->ziparchive_status();
+                        trigger_error(
+                            sprintf(
+                                esc_html__('Cannot add "%s" to zip archive!'),
+                                $name_in_archive
+                            ),
+                            E_USER_ERROR
+                        );
+
+                        return false;
+                    }
+                    ++$this->file_count;
+                }
+                break;
+
+            case \PclZip::class:
+                $this->pclzip_file_list[] = [
+                    PCLZIP_ATT_FILE_NAME => $file_name,
+                    PCLZIP_ATT_FILE_NEW_FULL_NAME => $name_in_archive,
+                ];
+
+                if (count($this->pclzip_file_list) >= 100) {
+                    if (0 == $this->pclzip->add($this->pclzip_file_list)) {
+                        trigger_error(
+                            sprintf(
+                                esc_html__('PclZip archive add error: %s'),
+                                $this->pclzip->errorInfo(true)
+                            ),
+                            E_USER_ERROR
+                        );
+
+                        return false;
+                    }
+                    $this->pclzip_file_list = [];
                 }
                 break;
         }
 
         return true;
+    }
+
+    private function ziparchive_status()
+    {
+        if ($this->ziparchive->status === 0) {
+            return true;
+        }
+
+        trigger_error(
+            sprintf(
+                esc_html_x('ZipArchive returns status: %s', 'Text of ZipArchive status Message'),
+                $this->ziparchive->getStatusString()
+            ),
+            E_USER_ERROR
+        );
+
+        return false;
     }
 
     private function tar_file($file_name, $name_in_archive)
@@ -251,7 +445,6 @@ class S3Testing_Create_Archive
         $chunk_size = 1024 * 1024 * 4;
         $filename = $name_in_archive;
         $filename_prefix = '';
-
 
         $filename = $name_in_archive;
         if (100 < strlen($name_in_archive)) {
@@ -267,12 +460,28 @@ class S3Testing_Create_Archive
 
             if (strlen($filename) > 100) {
                 $filename = substr($filename, -100);
+                trigger_error(
+                    sprintf(
+                        esc_html__('File name "%1$s" is too long to be saved correctly in %2$s archive!'),
+                        $name_in_archive,
+                        $this->method
+                    ),
+                    E_USER_WARNING
+                );
             }
 
             if (155 < strlen($filename_prefix)) {
-
+                trigger_error(
+                    sprintf(
+                        esc_html__('File path "%1$s" is too long to be saved correctly in %2$s archive!'),
+                        $name_in_archive,
+                        $this->method
+                    ),
+                    E_USER_WARNING
+                );
             }
         }
+        // Get file stats
         $file_stat = stat($file_name);
         if (!$file_stat) {
             return true;
@@ -300,6 +509,17 @@ class S3Testing_Create_Archive
         $fd = false;
         if ($file_stat['size'] > 0) {
             $fd = fopen($file_name, 'rb');
+
+            if (!is_resource($fd)) {
+                trigger_error(
+                    sprintf(
+                        esc_html__('Cannot open source file %s for archiving. Writing an empty file.'),
+                        $file_name
+                    ),
+                    E_USER_WARNING
+                );
+            }
+
         }
 
         if ($fd) {
@@ -348,10 +568,29 @@ class S3Testing_Create_Archive
 
             if (strlen($tar_filename) > 100) {
                 $tar_filename = substr($tar_filename, -100);
+                trigger_error(
+                    sprintf(
+                        esc_html__(
+                            'Folder name "%1$s" is too long to be saved correctly in %2$s archive!'
+                        ),
+                        $name_in_archive,
+                        $this->method
+                    ),
+                    E_USER_WARNING
+                );
             }
 
             if (strlen($tar_filename_prefix) > 155) {
-
+                trigger_error(
+                    sprintf(
+                        esc_html__(
+                            'Folder path "%1$s" is too long to be saved correctly in %2$s archive!'
+                        ),
+                        $name_in_archive,
+                        $this->method
+                    ),
+                    E_USER_WARNING
+                );
             }
         }
 
@@ -431,7 +670,7 @@ class S3Testing_Create_Archive
 
     private function make_tar_headers($name, $mode, $uid, $gid, $size, $mtime, $typeflag, $owner, $group, $prefix)
     {
-// Generate the TAR header for this file
+        // Generate the TAR header for this file
         $chunk = pack(
             'a100a8a8a8a12a12a8a1a100a6a2a32a32a8a8a155a12',
             $name, //name of file  100
@@ -470,7 +709,13 @@ class S3Testing_Create_Archive
         $fd = fopen($filename, $mode);
 
         if (!$fd) {
-            return null;
+            trigger_error(
+                sprintf(
+                    esc_html__('Cannot open source file %s.'),
+                    $filename
+                ),
+                E_USER_WARNING
+            );
         }
 
         return $fd;
@@ -483,19 +728,59 @@ class S3Testing_Create_Archive
 
     private function fwrite($content)
     {
-//        switch ($this->handlertype) {
-//            case 'bz':
-//                $content = bzcompress($content);
-//                break;
-//
-//            case 'gz':
-//                $content = gzencode($content);
-//                break;
-//
-//            default:
-//                break;
-//        }
+        switch ($this->handlertype) {
+            case 'bz':
+                $content = bzcompress($content);
+                break;
+
+            case 'gz':
+                $content = gzencode($content);
+                break;
+
+            default:
+                break;
+        }
 
         return (int) fwrite($this->filehandler, $content);
+    }
+
+    private function check_archive_filesize()
+    {
+        $file_to_add_size = 0;
+
+        if (!empty($file_to_add)) {
+            $file_to_add_size = filesize($file_to_add);
+
+            if ($file_to_add_size === false) {
+                $file_to_add_size = 0;
+            }
+        }
+
+        if (is_resource($this->filehandler)) {
+            $stats = fstat($this->filehandler);
+            $archive_size = $stats['size'];
+        } else {
+            $archive_size = filesize($this->file);
+            if ($archive_size === false) {
+                $archive_size = PHP_INT_MAX;
+            }
+        }
+
+        $archive_size = $archive_size + $file_to_add_size;
+        if ($archive_size >= PHP_INT_MAX) {
+            trigger_error(
+                sprintf(
+                    esc_html__(
+                        'If %s will be added to your backup archive, the archive will be too large for operations with this PHP Version. You might want to consider splitting the backup job in multiple jobs with less files each.'
+                    ),
+                    $file_to_add
+                ),
+                E_USER_ERROR
+            );
+
+            return false;
+        }
+
+        return true;
     }
 }
