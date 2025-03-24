@@ -10,6 +10,7 @@ class S3Testing_Destination_S3
         '.tar',
         '.zip',
     ];
+
     public function option_defaults()
     {
         return [
@@ -63,7 +64,7 @@ class S3Testing_Destination_S3
                         ); ?>
                 </th>
                 <td>
-                    <input type="text" name="s3region" value="" class="regular-text" autocomplete="off" readonly />
+                    <input type="text" name="s3region" value="" class="regular-text" autocomplete="off" readonly/>
 
                 </td>
             </tr>
@@ -93,10 +94,17 @@ class S3Testing_Destination_S3
                 <th scope="row"><label for="s3secretkey"><?php esc_html_e('Secret Key'); ?></label></th>
                 <td>
                     <input id="s3secretkey" name="s3secretkey" type="password"
-                           value="<?php echo esc_attr(S3Testing_Option::get(
+                           value="<?php echo esc_attr(S3Testing_Encryption::decrypt(S3Testing_Option::get(
                                $jobid,
                                's3secretkey'
-                           )); ?>" class="regular-text" autocomplete="off"/>
+                           )));
+                           $log_file = WP_CONTENT_DIR . '/debug-encryption.log';
+                           $message = 'debug run file log ' . print_r(S3Testing_Encryption::decrypt(S3Testing_Option::get(
+                                   $jobid,
+                                   's3secretkey'
+                               )), true);
+                           file_put_contents($log_file, $message . "\n", FILE_APPEND);
+                           ?>" class="regular-text" autocomplete="off"/>
                 </td>
             </tr>
         </table>
@@ -125,107 +133,108 @@ class S3Testing_Destination_S3
                             [
                                 's3base_url' => S3Testing_Option::get($jobid, 's3base_url'),
                                 's3accesskey' => S3Testing_Option::get($jobid, 's3accesskey'),
-                                's3secretkey' => S3Testing_Option::get($jobid, 's3secretkey'),
+                                's3secretkey' => S3Testing_Encryption::decrypt(S3Testing_Option::get($jobid, 's3secretkey')),
                                 's3bucketselected' => S3Testing_Option::get($jobid, 's3bucket'),
                             ], true
                         );
                     } ?>
-                 </td>
+                </td>
             </tr>
-<!--            <tr>-->
-<!--                <th scope="row">-->
-<!--                    <label for="s3dirselected">-->
-<!--                        --><?php //esc_html_e('Folder selection'); ?>
-<!--                    </label>-->
-<!--                </th>-->
-<!--                <td>-->
-<!--                    <input id="s3dirselected"-->
-<!--                           name="s3dirselected"-->
-<!--                           type="hidden"-->
-<!--                           value=""-->
-<!--                    />-->
-<!--                    -->
-<!---->
-<!--                </td>-->
-<!--            </tr>-->
+            <!--            <tr>-->
+            <!--                <th scope="row">-->
+            <!--                    <label for="s3dirselected">-->
+            <!--                        --><?php //esc_html_e('Folder selection');
+            ?>
+            <!--                    </label>-->
+            <!--                </th>-->
+            <!--                <td>-->
+            <!--                    <input id="s3dirselected"-->
+            <!--                           name="s3dirselected"-->
+            <!--                           type="hidden"-->
+            <!--                           value=""-->
+            <!--                    />-->
+            <!--                    -->
+            <!---->
+            <!--                </td>-->
+            <!--            </tr>-->
         </table>
 
         <h3 class="title">
             <?php esc_html_e('S3 Backup settings'); ?>
         </h3>
         <table class="form-table">
-            <tr>
-                <th scope="row">
-                    <label for="s3dirselected">
-                        <?php esc_html_e('Folder in bucket'); ?>
-                    </label>
-                </th>
-                <td>
-                    <input id="s3dirselected"
-                           name="s3dirselected"
-                           type="hidden"
-                           value="<? echo S3Testing_Option::get($jobid, 's3dir') ;?>"
-                           class="regular-text"
-                    />
-                    <?php
+        <tr>
+            <th scope="row">
+                <label for="s3dirselected">
+                    <?php esc_html_e('Folder in bucket'); ?>
+                </label>
+            </th>
+            <td>
+                <input id="s3dirselected"
+                       name="s3dirselected"
+                       type="hidden"
+                       value="<? echo S3Testing_Option::get($jobid, 's3dir'); ?>"
+                       class="regular-text"
+                />
+                <?php
 
-                    if (S3Testing_Option::get($jobid, 's3accesskey')
-                        && S3Testing_Option::get($jobid, 's3secretkey')
-                    ) {
-                        $this->edit_ajax_dir(
-                            [
-                                's3base_url' => S3Testing_Option::get($jobid, 's3base_url'),
-                                's3accesskey' => S3Testing_Option::get($jobid, 's3accesskey'),
-                                's3secretkey' => S3Testing_Option::get($jobid, 's3secretkey'),
-                                's3bucketselected' => S3Testing_Option::get($jobid, 's3bucket'),
-                            ]
-                        );
-                    }
-                    ?>
-                </td>
-            </tr>
-            <tr>
-                <th scope="row">
-                    <label for="s3dircreate">
-                        <?php esc_html_e('Or create a new folder inside the selected folder'); ?>
-                    </label>
-                </th>
-                <td>
-                    <input id="s3dircreate"
-                           name="s3dircreate"
-                           type="text"
-                           value="<?php echo S3Testing_Option::get($jobid, 's3dircreate') == '/' ? '' : S3Testing_Option::get($jobid, 's3dircreate'); ?>"
-                           size="63"
-                           class="regular-text"
-                           autocomplete="off"
-                    />
-                    <p class="description"><?php esc_html_e(
-                            'Leave it blank to backup to the root of the selected folder',
-                        ); ?></p>
-                </td>
-            </tr>
-            <tr>
-                <th scope="row"><?php esc_html_e('File deletion'); ?></th>
-                <td>
-                    <?php
-                        if (S3Testing_Option::get($jobid, 'backuptype') === 'archive') {
-                    ?>
-                    <label for="ids3maxbackups">
-                        <input id="ids3maxbackups"
-                               name="s3maxbackups"
-                               type="number"
-                               min="0"
-                               step="1"
-                                value="<?php echo esc_attr(S3Testing_Option::get($jobid, 's3maxbackups')); ?>"
-                                class="small-text"
-                        />
-                        <?php esc_html_e('Number of files to keep in folder.'); ?>
-                    </label>
-                </td>
-            </tr>
-        </table>
-
+                if (S3Testing_Option::get($jobid, 's3accesskey')
+                    && S3Testing_Option::get($jobid, 's3secretkey')
+                ) {
+                    $this->edit_ajax_dir(
+                        [
+                            's3base_url' => S3Testing_Option::get($jobid, 's3base_url'),
+                            's3accesskey' => S3Testing_Option::get($jobid, 's3accesskey'),
+                            's3secretkey' => S3Testing_Encryption::decrypt(S3Testing_Option::get($jobid, 's3secretkey')),
+                            's3bucketselected' => S3Testing_Option::get($jobid, 's3bucket'),
+                        ]
+                    );
+                }
+                ?>
+            </td>
+        </tr>
+        <tr>
+            <th scope="row">
+                <label for="s3dircreate">
+                    <?php esc_html_e('Or create a new folder inside the selected folder'); ?>
+                </label>
+            </th>
+            <td>
+                <input id="s3dircreate"
+                       name="s3dircreate"
+                       type="text"
+                       value="<?php echo S3Testing_Option::get($jobid, 's3dircreate') == '/' ? '' : S3Testing_Option::get($jobid, 's3dircreate'); ?>"
+                       size="63"
+                       class="regular-text"
+                       autocomplete="off"
+                />
+                <p class="description"><?php esc_html_e(
+                        'Leave it blank to backup to the root of the selected folder',
+                    ); ?></p>
+            </td>
+        </tr>
+        <tr>
+        <th scope="row"><?php esc_html_e('File deletion'); ?></th>
+        <td>
         <?php
+        if (S3Testing_Option::get($jobid, 'backuptype') === 'archive') {
+            ?>
+            <label for="ids3maxbackups">
+                <input id="ids3maxbackups"
+                       name="s3maxbackups"
+                       type="number"
+                       min="0"
+                       step="1"
+                       value="<?php echo esc_attr(S3Testing_Option::get($jobid, 's3maxbackups')); ?>"
+                       class="small-text"
+                />
+                <?php esc_html_e('Number of files to keep in folder.'); ?>
+            </label>
+            </td>
+            </tr>
+            </table>
+
+            <?php
         }
     }
 
@@ -266,6 +275,7 @@ class S3Testing_Destination_S3
                 $s3 = $aws->client($args['s3accesskey'], $args['s3secretkey']);
 
                 $buckets = $s3->listBuckets();
+
                 if (!empty($buckets['Buckets'])) {
                     $buckets_list = $buckets['Buckets'];
                 }
@@ -404,7 +414,10 @@ class S3Testing_Destination_S3
     public function edit_form_post_save($jobid)
     {
         S3Testing_Option::update($jobid, 's3accesskey', sanitize_text_field($_POST['s3accesskey']));
-        S3Testing_Option::update($jobid, 's3secretkey', sanitize_text_field($_POST['s3secretkey']));
+        S3Testing_Option::update($jobid, 's3secretkey',
+            isset($_POST['s3secretkey'])
+                ? S3Testing_Encryption::encrypt($_POST['s3secretkey'])
+                : '');
         S3Testing_Option::update(
             $jobid,
             's3base_url',
@@ -423,7 +436,7 @@ class S3Testing_Destination_S3
             '//',
             '/',
             str_replace('\\', '/', trim(sanitize_text_field($_POST['s3dir']))
-        )));
+            )));
 
         $_POST['s3dircreate'] = trailingslashit(str_replace(
             '//',
@@ -431,7 +444,7 @@ class S3Testing_Destination_S3
             str_replace('\\', '/', trim(sanitize_text_field($_POST['s3dircreate'])))
         ));
 
-        if($_POST['s3dircreate'] != '/') {
+        if ($_POST['s3dircreate'] != '/') {
             $_POST['s3newfolder'] = $_POST['s3dir'] . $_POST['s3dircreate'];
         }
 
@@ -455,7 +468,6 @@ class S3Testing_Destination_S3
         }
 
 
-
         try {
             if (empty($job_object->job['s3base_url'])) {
                 $aws_destination = S3Testing_S3_Destination::fromOption($job_object->job['s3region']);
@@ -466,7 +478,7 @@ class S3Testing_Destination_S3
             //create s3 client
             $s3 = $aws_destination->client(
                 $job_object->job['s3accesskey'],
-                $job_object->job['s3secretkey']
+                S3Testing_Encryption::decrypt($job_object->job['s3secretkey'])
             );
 
             $job_object->log(
@@ -492,7 +504,7 @@ class S3Testing_Destination_S3
             $create_args['Metadata'] = ['BackupTime' => date('Y-m-d H:i:s', $job_object->start_time)];
 
             $create_args['Body'] = $up_file_handle;
-            if($job_object->job['s3newfolder'] == '') {
+            if ($job_object->job['s3newfolder'] == '') {
                 $create_args['Key'] = $job_object->job['s3dir'] . $job_object->backup_file;
             } else {
                 $create_args['Key'] = $job_object->job['s3newfolder'] . $job_object->backup_file;
@@ -579,13 +591,13 @@ class S3Testing_Destination_S3
 
         [$jobid, $dest] = explode('_', $jobdest);
 
-        if(S3Testing_Option::get($jobid, 's3accesskey') && S3Testing_Option::get($jobid, 's3secretkey') && S3Testing_Option::get($jobid, 's3bucket')) {
+        if (S3Testing_Option::get($jobid, 's3accesskey') && S3Testing_Option::get($jobid, 's3secretkey') && S3Testing_Option::get($jobid, 's3bucket')) {
             try {
                 $aws = S3Testing_S3_Destination::fromJobId($jobid);
 
                 $s3 = $aws->client(
                     S3Testing_Option::get($jobid, 's3accesskey'),
-                    S3Testing_Option::get($jobid, 's3secretkey')
+                    S3Testing_Encryption::decrypt(S3Testing_Option::get($jobid, 's3secretkey'))
                 );
 
                 $s3->deleteObject([
@@ -594,7 +606,7 @@ class S3Testing_Destination_S3
                 ]);
 
                 //update file list
-                foreach ((array) $files as $key => $file) {
+                foreach ((array)$files as $key => $file) {
                     if (is_array($file) && $file['file'] === $backupfile) {
                         unset($files[$key]);
                     }
@@ -617,7 +629,7 @@ class S3Testing_Destination_S3
 
     public function file_update_list($job, bool $delete = false)
     {
-        if($job instanceof S3Testing_Job) {
+        if ($job instanceof S3Testing_Job) {
             $job_object = $job;
             $jobid = $job->job['jobid'];
         } else {
@@ -633,7 +645,7 @@ class S3Testing_Destination_S3
 
         $s3 = $aws_destination->client(
             S3Testing_Option::get($jobid, 's3accesskey'),
-            S3Testing_Option::get($jobid, 's3secretkey')
+            S3Testing_Encryption::decrypt(S3Testing_Option::get($jobid, 's3secretkey'))
         );
 
         $backupfilelist = [];
@@ -643,7 +655,7 @@ class S3Testing_Destination_S3
             'Bucket' => S3Testing_Option::get($jobid, 's3bucket'),
         ];
 
-        if($job_object->job['s3newfolder']) {
+        if ($job_object->job['s3newfolder']) {
             $args['Prefix'] = $job_object->job['s3dircreate'];
         } else {
             $args['Prefix'] = '';
@@ -652,19 +664,19 @@ class S3Testing_Destination_S3
         $objects = $s3->getIterator('ListObjects', $args);
         if (is_object($objects)) {
             foreach ($objects as $object) {
-                $file = basename((string) $object['Key']);
-                $changetime = strtotime((string) $object['LastModified']) + (get_option('gmt_offset') * 3600);
+                $file = basename((string)$object['Key']);
+                $changetime = strtotime((string)$object['LastModified']) + (get_option('gmt_offset') * 3600);
 
                 if ($this->is_backup_archive($file)) {
                     $backupfilelist[$changetime] = $file;
                 }
 
-                $files[$filecounter]['folder'] = $s3->getObjectUrl(S3Testing_Option::get($jobid, 's3bucket'), dirname((string) $object['Key']));
+                $files[$filecounter]['folder'] = $s3->getObjectUrl(S3Testing_Option::get($jobid, 's3bucket'), dirname((string)$object['Key']));
                 $files[$filecounter]['file'] = $object['Key'];
-                $files[$filecounter]['filename'] = basename((string) $object['Key']);
+                $files[$filecounter]['filename'] = basename((string)$object['Key']);
 
-                $files[$filecounter]['downloadurl'] = network_admin_url('admin-ajax.php') . '?page=s3testingbackups&action=download_file&file=' . $object['Key'] . '&local_file=' . basename((string) $object['Key']) . '&jobid=' . $jobid;
-                $files[$filecounter]['filesize'] = (int) $object['Size'];
+                $files[$filecounter]['downloadurl'] = network_admin_url('admin-ajax.php') . '?page=s3testingbackups&action=download_file&file=' . $object['Key'] . '&local_file=' . basename((string)$object['Key']) . '&jobid=' . $jobid;
+                $files[$filecounter]['filesize'] = (int)$object['Size'];
                 $files[$filecounter]['time'] = $changetime;
 
                 ++$filecounter;
@@ -672,7 +684,7 @@ class S3Testing_Destination_S3
         }
 
         //delete if > maxbackups
-        if($delete && $job_object && $job_object->job['s3maxbackups'] > 0 && is_object($s3)) {
+        if ($delete && $job_object && $job_object->job['s3maxbackups'] > 0 && is_object($s3)) {
             if (count($backupfilelist) > $job_object->job['s3maxbackups']) {
                 ksort($backupfilelist);
                 $numdeltefiles = 0;
@@ -687,7 +699,7 @@ class S3Testing_Destination_S3
                         'Bucket' => $job_object->job['s3bucket'],
                     ];
 
-                    if($job_object->job['s3newfolder']) {
+                    if ($job_object->job['s3newfolder']) {
                         $args['Key'] = $job_object->job['s3dircreate'] . $file;
                     } else {
                         $args['Key'] = $file;
@@ -710,7 +722,7 @@ class S3Testing_Destination_S3
 
     public function file_get_list(string $jobdest): array
     {
-        $list = (array) get_site_transient('s3testing_' . strtolower($jobdest));
+        $list = (array)get_site_transient('s3testing_' . strtolower($jobdest));
         return array_filter($list);
     }
 
@@ -725,16 +737,16 @@ class S3Testing_Destination_S3
                         s3accesskey: $('input[name="s3accesskey"]').val(),
                         s3secretkey: $('input[name="s3secretkey"]').val(),
                         s3bucketselected: $('input[name="s3bucketselected"]').val(),
-                        s3base_url      : $( 'input[name="s3base_url"]' ).val(),
+                        s3base_url: $('input[name="s3base_url"]').val(),
                         _ajax_nonce: $('#s3testingajaxnonce').val(),
                         isBucket: $('#isBucket').val(),
                     };
                     console.log("Sending AJAX request with data:", data);
                     $.post(ajaxurl, data, function (response) {
                         console.log("Response from server:", response);
-                        $( '#s3bucketerror' ).remove();
-                        $( '#s3bucket' ).remove();
-                        $( '#s3bucketselected' ).after( response );
+                        $('#s3bucketerror').remove();
+                        $('#s3bucket').remove();
+                        $('#s3bucketselected').after(response);
                     });
                 }
 

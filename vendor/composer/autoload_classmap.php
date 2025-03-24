@@ -38,6 +38,7 @@ return array(
     'S3Testing_Destination_Downloader' => $baseDir . '/inc/class-destination-downloader.php',
     'S3Testing_Destination_S3' => $baseDir . '/inc/class-destination-s3.php',
     'S3Testing_Directory' => $baseDir . '/inc/class-directory.php',
+    'S3Testing_Encryption' => $baseDir . '/inc/class-encryption.php',
     'S3Testing_File' => $baseDir . '/inc/class-file.php',
     'S3Testing_Install' => $baseDir . '/inc/class-install.php',
     'S3Testing_Job' => $baseDir . '/inc/class-job.php',

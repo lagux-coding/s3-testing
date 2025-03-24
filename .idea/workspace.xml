@@ -6,11 +6,8 @@
   <component name="ChangeListManager">
     <list default="true" id="14453ea8-162e-42dd-95e9-1168a72971e1" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/assets/css/main.min.css" beforeDir="false" afterPath="$PROJECT_DIR$/assets/css/main.min.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/inc/class-job.php" beforeDir="false" afterPath="$PROJECT_DIR$/inc/class-job.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/inc/class-option.php" beforeDir="false" afterPath="$PROJECT_DIR$/inc/class-option.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/inc/class-page-jobs.php" beforeDir="false" afterPath="$PROJECT_DIR$/inc/class-page-jobs.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/s3-testing.php" beforeDir="false" afterPath="$PROJECT_DIR$/s3-testing.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/inc/class-destination-downloader.php" beforeDir="false" afterPath="$PROJECT_DIR$/inc/class-destination-downloader.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/inc/class-destination-s3.php" beforeDir="false" afterPath="$PROJECT_DIR$/inc/class-destination-s3.php" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/vendor/composer/autoload_classmap.php" beforeDir="false" afterPath="$PROJECT_DIR$/vendor/composer/autoload_classmap.php" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/vendor/composer/autoload_static.php" beforeDir="false" afterPath="$PROJECT_DIR$/vendor/composer/autoload_static.php" afterDir="false" />
     </list>
@@ -138,7 +135,7 @@
       <workItem from="1741657522097" duration="6039000" />
       <workItem from="1742785216631" duration="871000" />
       <workItem from="1742786789118" duration="168000" />
-      <workItem from="1742786986575" duration="4281000" />
+      <workItem from="1742786986575" duration="10753000" />
     </task>
     <servers />
   </component>

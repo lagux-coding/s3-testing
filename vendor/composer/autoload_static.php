@@ -123,6 +123,7 @@ class ComposerStaticInitcd624fb20f889334c9790014fe69762d
         'S3Testing_Destination_Downloader' => __DIR__ . '/../..' . '/inc/class-destination-downloader.php',
         'S3Testing_Destination_S3' => __DIR__ . '/../..' . '/inc/class-destination-s3.php',
         'S3Testing_Directory' => __DIR__ . '/../..' . '/inc/class-directory.php',
+        'S3Testing_Encryption' => __DIR__ . '/../..' . '/inc/class-encryption.php',
         'S3Testing_File' => __DIR__ . '/../..' . '/inc/class-file.php',
         'S3Testing_Install' => __DIR__ . '/../..' . '/inc/class-install.php',
         'S3Testing_Job' => __DIR__ . '/../..' . '/inc/class-job.php',

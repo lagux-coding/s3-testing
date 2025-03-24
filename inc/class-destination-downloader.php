@@ -77,7 +77,7 @@ class S3Testing_Destination_Downloader
         $s3 = S3Testing_S3_Destination::fromJobId($jobid);
         $s3Client = $s3->client(
             S3Testing_Option::get($jobid, self::OPTION_ACCESS_KEY),
-            S3Testing_Option::get($jobid, self::OPTION_SECRET_KEY)
+            S3Testing_Encryption::decrypt(S3Testing_Option::get($jobid, self::OPTION_SECRET_KEY))
         );
 
         $bucket = S3Testing_Option::get($jobid, self::OPTION_BUCKET);
