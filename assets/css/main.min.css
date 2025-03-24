@@ -33,6 +33,11 @@
     }
 }
 
+#adminmenu #toplevel_page_s3testing div.wp-menu-image:before {
+    font: normal 20px/1 "interdata" !important;
+    content: "\e900";
+}
+
 #s3testing-page .s3testing-message {
     background-color: #fff;
     border: none;

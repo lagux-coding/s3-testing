@@ -43,7 +43,7 @@ final class S3Testing_Admin
                 \S3Testing_Page_S3Testing::class,
                 'page'
             ],
-            'dashicons-cloud'
+            'div'
         );
         $this->page_hooks['s3testing'] = add_submenu_page(
             's3testing',
